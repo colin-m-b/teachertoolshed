@@ -1,0 +1,100 @@
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── VARIABLES ── */
+:root {
+  --bg:            #ffffff;
+  --bg2:           #f7f5f1;
+  --bg3:           #efecea;
+  --ink:           #1a1814;
+  --ink2:          #3d3a34;
+  --mid:           #7a7060;
+  --rule:          rgba(26,24,20,0.1);
+  --forest:        #2d5a1b;
+  --forest2:       #3b6d11;
+  --forest-bg:     #eaf3de;
+  --forest-border: #c0dd97;
+  --amber:         #96580a;
+  --amber-bg:      #faeeda;
+}
+
+/* ── BASE ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SHARED LABELS ── */
+.section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--mid);
+  margin-bottom: 1.5rem;
+}
+
+/* ── SHARED BUTTONS ── */
+.btn-primary {
+  background: var(--forest);
+  color: #eaf3de;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink2);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 12px 22px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-outline:hover {
+  border-color: var(--ink2);
+  color: var(--ink);
+}
+
+.btn-forest {
+  background: var(--forest);
+  color: #eaf3de;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-forest:hover { opacity: 0.88; }
