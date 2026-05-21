@@ -207,7 +207,7 @@
       <div id="rows-opts">
         <div class="field">
           <label>Number of rows</label>
-          <select id="row-count">
+          <select id="row-count" onchange="relayout()">
             <option>2</option><option>3</option><option selected>4</option>
             <option>5</option><option>6</option><option>7</option><option>8</option>
           </select>
@@ -217,7 +217,7 @@
       <div id="islands-opts" style="display:none">
         <div class="field">
           <label>Students per island</label>
-          <select id="island-size">
+          <select id="island-size" onchange="relayout()">
             <option>2</option><option>3</option><option selected>4</option>
             <option>5</option><option>6</option>
           </select>
@@ -340,22 +340,52 @@ function generate() {
     `${students.length} students · ${template} layout · drag names to swap`;
 }
 
+// Re-apply the current layout without re-shuffling (used when dropdowns change)
+function relayout() {
+  if (!desks.length) { generate(); return; }
+  const students = desks.map(d => d.name);
+  const wrap = document.getElementById('canvas-wrap');
+  const W = Math.max(wrap.clientWidth, 800);
+  const H = Math.max(wrap.clientHeight, 500);
+
+  if (template === 'rows') {
+    const numRows = parseInt(document.getElementById('row-count').value);
+    desks = layoutRows(students, numRows, W, H);
+  } else if (template === 'islands') {
+    const perIsland = parseInt(document.getElementById('island-size').value);
+    desks = layoutIslands(students, perIsland, W, H);
+  } else {
+    desks = layoutCircle(students, W, H);
+  }
+
+  renderDesks();
+  document.getElementById('toolbar-info').textContent =
+    `${students.length} students · ${template} layout · drag names to swap`;
+}
+
 // ── LAYOUTS ──
 const DW = 108, DH = 58;
 
 function layoutRows(students, numRows, W, H) {
   const n = students.length;
-  const perRow = Math.ceil(n / numRows);
-  const gapX = 14, gapY = 20;
+  // Cap rows so we never create empty rows (can't have more rows than students)
+  const rows = Math.min(numRows, n);
+  const basePerRow = Math.floor(n / rows);
+  const extras = n % rows; // first `extras` rows get one extra student
+  const gapX = 14;
   const topOffset = 72;
   const result = [];
+  let studentIdx = 0;
 
-  for (let r = 0; r < numRows; r++) {
-    const rowStudents = students.slice(r * perRow, (r + 1) * perRow);
+  for (let r = 0; r < rows; r++) {
+    const rowSize = basePerRow + (r < extras ? 1 : 0);
+    const rowStudents = students.slice(studentIdx, studentIdx + rowSize);
+    studentIdx += rowSize;
+
     const rowW = rowStudents.length * DW + (rowStudents.length - 1) * gapX;
     const startX = (W - rowW) / 2;
     const usableH = H - topOffset - 40;
-    const startY = topOffset + (usableH / (numRows + 1)) * (r + 1) - DH / 2;
+    const startY = topOffset + (usableH / (rows + 1)) * (r + 1) - DH / 2;
 
     rowStudents.forEach((name, c) => {
       result.push({ id: 'd' + result.length, name, x: startX + c * (DW + gapX), y: startY });
