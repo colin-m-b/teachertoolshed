@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HexThinking — Hexagonal Thinking Made Easy</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;600;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #f4f1ec;
+  --bg-warm: #eae5dd;
+  --surface: #ffffff;
+  --border: #d8d2c8;
+  --border-light: #e8e3db;
+  --text: #2c2924;
+  --text-mid: #6b635a;
+  --text-dim: #9e9588;
+  --accent: #e86b30;
+  --accent-hover: #d45a22;
+  --accent-light: rgba(232,107,48,0.08);
+  --canvas-bg: #faf8f5;
+  --canvas-dot: #ddd7ce;
+  --shadow-sm: 0 1px 3px rgba(44,41,36,0.06);
+  --shadow-md: 0 4px 16px rgba(44,41,36,0.08);
+  --shadow-lg: 0 8px 32px rgba(44,41,36,0.12);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --red: #c94040;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.view { display: none; }
+.view.active { display: flex; }
+
+/* ===== SHARED ===== */
+.app-header {
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface); flex-shrink: 0;
+}
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+.brand-hex { width: 30px; height: 30px; }
+.brand h1 { font-family: 'Anybody', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; }
+.brand h1 span { color: var(--accent); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  border: none; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(232,107,48,0.25); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,107,48,0.3); }
+.btn-primary:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
+
+.tool-btn {
+  padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+  border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-mid);
+  cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+}
+.tool-btn:hover { border-color: var(--text-mid); color: var(--text); }
+.tool-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ===== TEACHER ===== */
+#teacherView { flex-direction: column; min-height: 100vh; }
+.teacher-body { flex: 1; display: flex; justify-content: center; padding: 40px 32px 80px; }
+.teacher-content { width: 100%; max-width: 680px; }
+.teacher-content > h2 { font-family: 'Anybody', sans-serif; font-weight: 800; font-size: 1.8rem; letter-spacing: -0.03em; margin-bottom: 6px; }
+.teacher-content > .subtitle { color: var(--text-mid); font-size: 0.95rem; margin-bottom: 36px; line-height: 1.55; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
+  box-shadow: var(--shadow-sm); animation: fadeUp 0.35s ease both;
+}
+.card:nth-child(2) { animation-delay: 0.04s; }
+.card:nth-child(3) { animation-delay: 0.08s; }
+.card h3 { font-family: 'Anybody', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.card .desc { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; background: var(--accent); color: #fff;
+  font-size: 0.7rem; font-weight: 700; border-radius: 50%; margin-right: 8px; vertical-align: middle;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Group blocks */
+.groups-list { display: flex; flex-direction: column; gap: 14px; }
+.group-block { border: 1.5px solid var(--border-light); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+.group-block:focus-within { border-color: var(--accent); }
+.group-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg); border-bottom: 1px solid var(--border-light); }
+.color-cycle-btn {
+  width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--surface);
+  box-shadow: 0 0 0 1.5px var(--border); cursor: pointer; transition: transform 0.15s; flex-shrink: 0;
+}
+.color-cycle-btn:hover { transform: scale(1.12); }
+.group-name-input {
+  flex: 1; padding: 6px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  color: var(--text); background: transparent; border: none;
+}
+.group-name-input:focus { outline: none; }
+.group-name-input::placeholder { color: var(--text-dim); font-weight: 500; }
+.group-remove {
+  width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent;
+  color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.group-remove:hover { color: var(--red); background: rgba(201,64,64,0.08); }
+.group-terms-area { position: relative; }
+.group-terms-input {
+  width: 100%; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+  color: var(--text); background: var(--surface); border: none; resize: vertical; min-height: 80px; line-height: 1.65;
+}
+.group-terms-input:focus { outline: none; }
+.group-terms-input::placeholder { color: var(--text-dim); }
+.char-warning {
+  position: absolute; bottom: 6px; right: 10px;
+  font-size: 0.68rem; color: var(--red); font-weight: 600;
+  display: none;
+}
+.char-warning.visible { display: block; }
+
+.add-group-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; margin-top: 4px;
+  background: transparent; border: 1.5px dashed var(--border); border-radius: 8px; color: var(--text-mid);
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; align-self: flex-start;
+}
+.add-group-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Preview */
+.preview-area {
+  display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 14px;
+  background: var(--bg); border-radius: var(--radius); border: 1.5px solid var(--border-light);
+}
+.preview-chip { display: inline-flex; align-items: center; padding: 5px 13px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; color: #fff; }
+.preview-empty { width: 100%; text-align: center; color: var(--text-dim); font-size: 0.84rem; padding: 8px; }
+.preview-stats { font-size: 0.78rem; color: var(--text-dim); margin-top: 10px; }
+.preview-error { font-size: 0.78rem; color: var(--red); margin-top: 6px; display: none; }
+.preview-error.visible { display: block; }
+
+.create-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; }
+
+/* ===== STUDENT ===== */
+#studentView { flex-direction: column; height: 100vh; overflow: hidden; }
+.header-tools { display: flex; gap: 6px; align-items: center; }
+.student-body { flex: 1; display: flex; overflow: hidden; }
+
+.back-link {
+  font-size: 0.75rem; color: var(--text-dim); text-decoration: none;
+  margin-left: 12px; transition: color 0.15s;
+}
+.back-link:hover { color: var(--accent); }
+
+/* Instructions banner */
+.instructions-banner {
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  padding: 10px 20px; background: #fdf6f0; border-bottom: 1px solid #f0ddd0;
+  font-size: 0.8rem; color: var(--text-mid); flex-shrink: 0; animation: fadeUp 0.3s ease;
+}
+.instructions-banner .step { display: flex; align-items: center; gap: 6px; }
+.instructions-banner .step-icon {
+  width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%;
+  font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.instructions-banner .dismiss {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  padding: 4px; margin-left: 8px; display: flex; align-items: center; transition: color 0.15s;
+}
+.instructions-banner .dismiss:hover { color: var(--text); }
+
+/* Tray */
+.hex-tray {
+  width: 230px; background: var(--surface); border-right: 1px solid var(--border-light);
+  display: flex; flex-direction: column; flex-shrink: 0; z-index: 50;
+  transition: width 0.25s; overflow: hidden;
+}
+.hex-tray.collapsed { width: 0; }
+.tray-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
+.tray-header h3 { font-family: 'Anybody', sans-serif; font-size: 0.85rem; font-weight: 600; }
+.tray-count { font-size: 0.72rem; color: var(--text-dim); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+.tray-items { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.tray-items::-webkit-scrollbar { width: 4px; }
+.tray-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.tray-group-label { font-size: 0.68rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 8px 3px; }
+.tray-group-label:first-child { padding-top: 4px; }
+.tray-item {
+  padding: 7px 11px; border-radius: 7px; font-size: 0.82rem; font-weight: 500;
+  cursor: grab; border-left: 3.5px solid; background: var(--bg); transition: all 0.15s; user-select: none;
+}
+.tray-item:hover { background: var(--bg-warm); }
+.tray-item.on-canvas { opacity: 0.3; text-decoration: line-through; cursor: default; pointer-events: none; }
+.tray-done { text-align: center; padding: 20px 10px; color: var(--text-dim); font-size: 0.8rem; line-height: 1.5; }
+
+/* Canvas */
+.canvas-area { flex: 1; position: relative; overflow: hidden; background: var(--canvas-bg); touch-action: none; }
+.canvas-area::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px);
+  background-size: 32px 32px; opacity: 0.45; pointer-events: none; z-index: 0;
+}
+#svgCanvas { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; cursor: grab; }
+#svgCanvas.grabbing { cursor: grabbing; }
+.canvas-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 2; }
+.canvas-empty-hint p { color: var(--text-dim); font-size: 0.9rem; opacity: 0.55; }
+.canvas-empty-hint .hint-icon { width: 56px; height: 56px; margin: 0 auto 10px; opacity: 0.18; }
+
+.canvas-controls {
+  position: absolute; bottom: 16px; right: 16px; display: flex; gap: 3px;
+  background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius);
+  padding: 3px; z-index: 30; box-shadow: var(--shadow-sm);
+}
+.canvas-controls button {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 6px; color: var(--text-mid);
+  cursor: pointer; transition: all 0.15s;
+}
+.canvas-controls button:hover { background: var(--bg); color: var(--text); }
+.zoom-label { display: flex; align-items: center; justify-content: center; min-width: 40px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); }
+.snap-btn { position: absolute; bottom: 16px; left: 16px; z-index: 30; }
+
+.conn-input-wrap { position: absolute; z-index: 100; display: none; }
+.conn-input-wrap input {
+  padding: 5px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.76rem;
+  border: 2px solid var(--accent); border-radius: 6px; background: var(--surface);
+  color: var(--text); width: 150px; box-shadow: var(--shadow-md);
+}
+.conn-input-wrap input:focus { outline: none; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(44,41,36,0.4); backdrop-filter: blur(4px);
+  z-index: 500; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg); padding: 32px;
+  width: 500px; max-width: 90vw; box-shadow: var(--shadow-lg);
+  transform: translateY(8px) scale(0.98); transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+.modal h3 { font-family: 'Anybody', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
+.modal p { color: var(--text-mid); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.5; }
+.link-box { display: flex; gap: 8px; }
+.link-box input { flex: 1; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+.link-box input:focus { outline: none; }
+.copy-btn { padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+.copy-btn:hover { background: var(--accent-hover); }
+.modal-close { display: block; margin: 16px auto 0; padding: 8px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text-mid); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; }
+.modal-close:hover { border-color: var(--text-mid); }
+
+@media (max-width: 768px) {
+  .teacher-body { padding: 20px 16px 40px; }
+  .app-header { padding: 12px 16px; }
+  .hex-tray { width: 190px; }
+  .instructions-banner { flex-wrap: wrap; gap: 10px; font-size: 0.75rem; padding: 8px 14px; }
+  .header-tools .tool-btn span.label { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TEACHER VIEW ===== -->
+<div class="view" id="teacherView">
+  <header class="app-header">
+    <a class="brand" href="#">
+      <svg class="brand-hex" viewBox="0 0 36 36" fill="none"><path d="M18 2L33 10.5V27.5L18 36L3 27.5V10.5L18 2Z" fill="rgba(232,107,48,0.12)" stroke="#e86b30" stroke-width="2"/><path d="M18 10L26 14.5V23.5L18 28L10 23.5V14.5L18 10Z" fill="rgba(232,107,48,0.25)" stroke="#e86b30" stroke-width="1.2"/></svg>
+      <h1>Hex<span>Thinking</span></h1>
+    </a>
+  </header>
+  <div class="teacher-body">
+    <div class="teacher-content">
+      <h2>Create an Activity</h2>
+      <p class="subtitle">Build your hexagon set below. Students will get a link to arrange and connect them on their own canvas.</p>
+
+      <div class="card">
+        <h3><span class="step-num">1</span>Add Your Terms</h3>
+        <p class="desc">Create groups of related terms. Each group gets its own color. Click the color dot to cycle through colors. Max 40 characters per term.</p>
+        <div class="groups-list" id="groupsList"></div>
+        <button class="add-group-btn" id="addGroupBtn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Add another group
+        </button>
+      </div>
+
+      <div class="card">
+        <h3><span class="step-num">2</span>Preview</h3>
+        <p class="desc">These hexagons will appear on the student canvas.</p>
+        <div class="preview-area" id="previewArea">
+          <div class="preview-empty">Your terms will appear here as you type</div>
+        </div>
+        <div class="preview-stats" id="previewStats"></div>
+        <div class="preview-error" id="previewError"></div>
+      </div>
+
+      <div class="create-actions">
+        <button class="btn btn-primary" id="createBtn" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4.5 7L8 10l3.5-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Create &amp; Get Link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STUDENT VIEW ===== -->
+<div class="view" id="studentView">
+  <header class="app-header">
+    <div style="display:flex;align-items:center;">
+      <a class="brand" href="#">
+        <svg class="brand-hex" viewBox="0 0 36 36" fill="none"><path d="M18 2L33 10.5V27.5L18 36L3 27.5V10.5L18 2Z" fill="rgba(232,107,48,0.12)" stroke="#e86b30" stroke-width="2"/><path d="M18 10L26 14.5V23.5L18 28L10 23.5V14.5L18 10Z" fill="rgba(232,107,48,0.25)" stroke="#e86b30" stroke-width="1.2"/></svg>
+        <h1>Hex<span>Thinking</span></h1>
+      </a>
+      <a class="back-link" id="backToSetup" href="#">← New activity</a>
+    </div>
+    <div class="header-tools">
+      <button class="tool-btn active" id="trayToggle">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8.5" y="1" width="4.5" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+        <span class="label">Tray</span>
+      </button>
+      <button class="tool-btn" id="resetBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7a4.5 4.5 0 018.5-1.5M11.5 7a4.5 4.5 0 01-8.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10.5 2.5v3h-3M3.5 11.5v-3h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="label">Reset</span>
+      </button>
+      <button class="tool-btn" id="exportBtn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3M2 11.5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="label">Export</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="instructions-banner" id="instructionsBanner">
+    <div class="step"><span class="step-icon">1</span>Drag hexagons from the tray onto the canvas</div>
+    <div class="step"><span class="step-icon">2</span>Snap them together to show connections</div>
+    <div class="step"><span class="step-icon">3</span>Click the <strong>+</strong> between touching hexagons to label the connection</div>
+    <button class="dismiss" id="dismissBanner" title="Dismiss">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="student-body">
+    <div class="hex-tray" id="hexTray">
+      <div class="tray-header">
+        <h3>Hexagons</h3>
+        <span class="tray-count" id="trayCount">0</span>
+      </div>
+      <div class="tray-items" id="trayItems"></div>
+    </div>
+
+    <div class="canvas-area" id="canvasArea">
+      <div class="canvas-empty-hint" id="canvasHint">
+        <svg class="hint-icon" viewBox="0 0 56 56" fill="none"><path d="M28 6L50 18.5V43.5L28 56L6 43.5V18.5L28 6Z" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/></svg>
+        <p>Drag hexagons here from the tray</p>
+      </div>
+      <svg id="svgCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="conn-input-wrap" id="connInputWrap">
+        <input type="text" id="connInput" placeholder="How are they connected?" maxlength="50" />
+      </div>
+      <div class="snap-btn">
+        <button class="tool-btn active" id="snapToggle">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 4h3V1M10 1v3h3M13 10h-3v3M4 13v-3H1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Snap
+        </button>
+      </div>
+      <div class="canvas-controls">
+        <button id="zoomOutBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+        <button id="zoomInBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+        <button id="fitBtn" title="Fit all"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="2.5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SHARE MODAL ===== -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h3>Your activity is ready!</h3>
+    <p>Share this link with students. Each person gets their own canvas to arrange hexagons and explain connections.</p>
+    <div class="link-box">
+      <input type="text" id="shareLink" readonly />
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+    <button class="modal-close" id="closeModal">Done</button>
+  </div>
+</div>
+
+<!-- ===== LZ-STRING COMPRESSION ===== -->
+<script>
+// LZ-String (minimal version for compressToEncodedURIComponent / decompressFromEncodedURIComponent)
+var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},e={compressToEncodedURIComponent:function(o){return null==o?"":e._compress(o,6,function(o){return n.charAt(o)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),e._decompress(r.length,32,function(t){return o(n,r.charAt(t))}))},_compress:function(o,n,t){if(null==o)return"";var e,i,s,p={},u={},a="",c="",l="",f=2,d=3,g=2,h=[],v=0,w=0;for(s=0;s<o.length;s+=1)if(a=o.charAt(s),Object.prototype.hasOwnProperty.call(p,a)||(p[a]=d++,u[a]=!0),c=l+a,Object.prototype.hasOwnProperty.call(p,c))l=c;else{if(Object.prototype.hasOwnProperty.call(u,l)){if(l.charCodeAt(0)<256){for(e=0;e<g;e++)v<<=1,w==n-1?(w=0,h.push(t(v)),v=0):w++;for(i=l.charCodeAt(0),e=0;e<8;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}else{for(i=1,e=0;e<g;e++)v=v<<1|i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i=0;for(i=l.charCodeAt(0),e=0;e<16;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}0==--f&&(f=Math.pow(2,g),g++),delete u[l]}else for(i=p[l],e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;0==--f&&(f=Math.pow(2,g),g++),p[c]=d++,l=String(a)}if(""!==l){if(Object.prototype.hasOwnProperty.call(u,l)){if(l.charCodeAt(0)<256){for(e=0;e<g;e++)v<<=1,w==n-1?(w=0,h.push(t(v)),v=0):w++;for(i=l.charCodeAt(0),e=0;e<8;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}else{for(i=1,e=0;e<g;e++)v=v<<1|i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i=0;for(i=l.charCodeAt(0),e=0;e<16;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}0==--f&&(f=Math.pow(2,g),g++),delete u[l]}else for(i=p[l],e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;0==--f&&(f=Math.pow(2,g),g++)}for(i=2,e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;for(;;){if(v<<=1,w==n-1){h.push(t(v));break}w++}return h.join("")},_decompress:function(o,n,t){var e,i,s,p,u,a,c,l=[],f=4,d=4,g=3,h="",v=[],w={val:t(0),position:n,index:1};for(e=0;e<3;e+=1)l[e]=e;for(s=0,u=Math.pow(2,2),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;switch(s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(w.index>o)return"";for(s=0,u=Math.pow(2,g),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;switch(c=s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;l[d++]=r(s),c=d-1,f--;break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;l[d++]=r(s),c=d-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,g),g++),l[c])h=l[c];else{if(c!==d)return null;h=i+i.charAt(0)}v.push(h),l[d++]=i+h.charAt(0),i=h,0==--f&&(f=Math.pow(2,g),g++)}}};return e}();
+</script>
+
+<script>
+(function(){
+  const MAX_CHARS = 40;
+  const HEX_R = 48;
+  const PALETTE = ['#6b635a','#e86b30','#3b82f6','#8b5cf6','#16a34a','#eab308','#ec4899','#06b6d4','#ef4444','#84cc16'];
+
+  // Basic profanity blocklist
+  const BLOCKED = new Set(['fuck','shit','damn','ass','bitch','bastard','dick','cock','pussy','cunt','slut','whore','nigger','nigga','fag','faggot','retard','retarded'].flatMap(w => [w, w+'s', w+'ed', w+'ing', w+'er']));
+
+  function isClean(text) {
+    const words = text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/);
+    return !words.some(w => BLOCKED.has(w));
+  }
+
+  let gid = 0, groups = [];
+  let activity = null, placed = [], connections = [];
+  let snap = true, zoom = 1, panX = 0, panY = 0;
+  let dragging = null, panning = false, panSX = 0, panSY = 0;
+
+  const $ = id => document.getElementById(id);
+
+  // ====== COMPRESSION ======
+  function encodeActivity(data) {
+    const json = JSON.stringify(data);
+    return LZString.compressToEncodedURIComponent(json);
+  }
+  function decodeActivity(str) {
+    const json = LZString.decompressFromEncodedURIComponent(str);
+    return JSON.parse(json);
+  }
+
+  // ====== INIT ======
+  function init() {
+    const h = location.hash;
+    if (h.startsWith('#a=')) {
+      try { activity = decodeActivity(h.slice(3)); showStudent(); }
+      catch(e) {
+        // Try legacy format
+        try { activity = JSON.parse(decodeURIComponent(atob(h.slice(10)))); showStudent(); }
+        catch(e2) { showTeacher(); }
+      }
+    } else if (h.startsWith('#activity=')) {
+      try { activity = JSON.parse(decodeURIComponent(atob(h.slice(10)))); showStudent(); }
+      catch(e) { showTeacher(); }
+    } else { showTeacher(); }
+  }
+
+  function showTeacher() {
+    $('teacherView').classList.add('active');
+    $('studentView').classList.remove('active');
+    if (groups.length === 0) addGroup();
+  }
+  function showStudent() {
+    $('studentView').classList.add('active');
+    $('teacherView').classList.remove('active');
+    placed = []; connections = []; zoom = 1; panX = 0; panY = 0;
+    buildTray(); renderCanvas();
+  }
+
+  // ====== TEACHER: GROUPS ======
+  function addGroup() {
+    groups.push({ id: gid++, color: PALETTE[groups.length % PALETTE.length], name: '', text: '' });
+    renderGroups();
+  }
+  function removeGroup(id) {
+    if (groups.length <= 1) return;
+    groups = groups.filter(g => g.id !== id);
+    renderGroups(); updatePreview();
+  }
+  function renderGroups() {
+    const list = $('groupsList'); list.innerHTML = '';
+    groups.forEach(g => {
+      const block = document.createElement('div'); block.className = 'group-block';
+      const top = document.createElement('div'); top.className = 'group-top';
+
+      const colorBtn = document.createElement('button'); colorBtn.className = 'color-cycle-btn';
+      colorBtn.style.background = g.color; colorBtn.title = 'Click to change color';
+      colorBtn.onclick = () => { const i = PALETTE.indexOf(g.color); g.color = PALETTE[(i+1)%PALETTE.length]; colorBtn.style.background = g.color; updatePreview(); };
+
+      const nameIn = document.createElement('input'); nameIn.className = 'group-name-input';
+      nameIn.placeholder = 'Group name (optional)'; nameIn.value = g.name;
+      nameIn.oninput = () => { g.name = nameIn.value; updatePreview(); };
+
+      const rem = document.createElement('button'); rem.className = 'group-remove'; rem.title = 'Remove group';
+      rem.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      rem.onclick = () => removeGroup(g.id);
+      if (groups.length <= 1) rem.style.visibility = 'hidden';
+
+      top.appendChild(colorBtn); top.appendChild(nameIn); top.appendChild(rem);
+
+      const taWrap = document.createElement('div'); taWrap.className = 'group-terms-area';
+      const ta = document.createElement('textarea'); ta.className = 'group-terms-input';
+      ta.placeholder = 'Type or paste terms, one per line (max ' + MAX_CHARS + ' chars each)…';
+      ta.value = g.text;
+
+      const warning = document.createElement('div'); warning.className = 'char-warning'; warning.id = 'warn-' + g.id;
+      taWrap.appendChild(ta); taWrap.appendChild(warning);
+
+      ta.oninput = () => {
+        // Enforce character limit per line
+        const lines = ta.value.split('\n');
+        let hasLong = false;
+        lines.forEach(l => { if (l.trim().length > MAX_CHARS) hasLong = true; });
+        warning.textContent = hasLong ? 'Some terms exceed ' + MAX_CHARS + ' characters' : '';
+        warning.classList.toggle('visible', hasLong);
+        g.text = ta.value;
+        updatePreview();
+      };
+
+      block.appendChild(top); block.appendChild(taWrap); list.appendChild(block);
+    });
+  }
+
+  // ====== TEACHER: PREVIEW ======
+  function getAllTerms() {
+    const t = [];
+    let errors = [];
+    groups.forEach(g => {
+      const lines = g.text.split('\n').map(l => l.trim()).filter(Boolean);
+      lines.forEach(text => {
+        const trimmed = text.slice(0, MAX_CHARS);
+        if (!isClean(trimmed)) {
+          errors.push('"' + trimmed + '" contains inappropriate language');
+        } else {
+          t.push({ text: trimmed, color: g.color, group: g.name });
+        }
+      });
+    });
+    return { terms: t, errors };
+  }
+
+  function updatePreview() {
+    const { terms, errors } = getAllTerms();
+    const area = $('previewArea');
+    const btn = $('createBtn');
+    const stats = $('previewStats');
+    const errEl = $('previewError');
+
+    if (terms.length === 0 && errors.length === 0) {
+      area.innerHTML = '<div class="preview-empty">Your terms will appear here as you type</div>';
+      btn.disabled = true; stats.textContent = ''; errEl.classList.remove('visible');
+      return;
+    }
+
+    btn.disabled = terms.length === 0;
+    area.innerHTML = '';
+    terms.forEach(t => {
+      const c = document.createElement('span'); c.className = 'preview-chip';
+      c.style.background = t.color; c.textContent = t.text; area.appendChild(c);
+    });
+
+    const groupCount = new Set(terms.map(t => t.group).filter(Boolean)).size;
+    let statText = terms.length + ' hexagon' + (terms.length !== 1 ? 's' : '');
+    if (groupCount > 0) statText += ' across ' + groupCount + ' group' + (groupCount !== 1 ? 's' : '');
+    stats.textContent = statText;
+
+    if (errors.length > 0) {
+      errEl.textContent = errors.join('. ');
+      errEl.classList.add('visible');
+    } else {
+      errEl.classList.remove('visible');
+    }
+  }
+
+  // ====== TEACHER: CREATE ======
+  function createActivity() {
+    const { terms } = getAllTerms();
+    if (!terms.length) return;
+    const encoded = encodeActivity({ terms });
+    const url = location.origin + location.pathname + '#a=' + encoded;
+    $('shareLink').value = url;
+    $('shareModal').classList.add('open');
+  }
+
+  // ====== STUDENT: TRAY ======
+  function buildTray() {
+    const c = $('trayItems'); c.innerHTML = ''; let curGroup = null;
+    let allPlaced = true;
+    activity.terms.forEach((t, i) => {
+      if (t.group && t.group !== curGroup) {
+        curGroup = t.group;
+        const lbl = document.createElement('div'); lbl.className = 'tray-group-label'; lbl.textContent = t.group; c.appendChild(lbl);
+      }
+      const onCanvas = !!placed.find(p => p.id === i);
+      if (!onCanvas) allPlaced = false;
+      const item = document.createElement('div'); item.className = 'tray-item';
+      if (onCanvas) item.classList.add('on-canvas');
+      item.style.borderLeftColor = t.color; item.textContent = t.text; item.draggable = true; item.dataset.id = i;
+      item.addEventListener('dragstart', e => { if (onCanvas){e.preventDefault();return;} e.dataTransfer.setData('text/plain',String(i)); e.dataTransfer.effectAllowed='move'; });
+      // Touch drag from tray
+      item.addEventListener('touchstart', e => {
+        if (onCanvas) return;
+        e.preventDefault();
+        startTrayTouchDrag(e, i);
+      }, { passive: false });
+      c.appendChild(item);
+    });
+    if (allPlaced && activity.terms.length > 0) {
+      const done = document.createElement('div'); done.className = 'tray-done';
+      done.textContent = 'All hexagons placed! Right-click any hexagon on the canvas to return it here.';
+      c.appendChild(done);
+    }
+    const rem = activity.terms.length - placed.length;
+    $('trayCount').textContent = rem + ' left';
+    $('canvasHint').style.display = placed.length ? 'none' : '';
+  }
+
+  // ====== TOUCH DRAG FROM TRAY ======
+  function startTrayTouchDrag(e, id) {
+    if (placed.find(p => p.id === id)) return;
+    const touch = e.touches[0];
+    const rect = canvasArea.getBoundingClientRect();
+
+    const onMove = ev => {
+      ev.preventDefault();
+      const t = ev.touches[0];
+      if (t.clientX > rect.left) {
+        // Over canvas - add hex and start dragging
+        if (!placed.find(p => p.id === id)) {
+          const pos = s2c(t.clientX - rect.left, t.clientY - rect.top);
+          placed.push({ id, x: pos.x, y: pos.y });
+          dragging = { id, ox: 0, oy: 0 };
+          buildTray();
+          renderCanvas();
+        }
+        if (dragging && dragging.id === id) {
+          const mp = s2c(t.clientX - rect.left, t.clientY - rect.top);
+          const h = placed.find(p => p.id === id);
+          if (h) { h.x = mp.x; h.y = mp.y; renderCanvas(); }
+        }
+      }
+    };
+
+    const onEnd = () => {
+      if (dragging && dragging.id === id) {
+        const h = placed.find(p => p.id === id);
+        if (h) { const s = snapGrid(h.x, h.y); h.x = s.x; h.y = s.y; renderCanvas(); }
+        dragging = null;
+      }
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    };
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }
+
+  // ====== HEX MATH ======
+  function hexPts(cx,cy,r) { const p=[]; for(let i=0;i<6;i++){const a=(Math.PI/3)*i-Math.PI/6;p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));} return p.join(' '); }
+  const hexW=()=>HEX_R*Math.sqrt(3), hexH=()=>HEX_R*2;
+  function snapGrid(x,y) { if(!snap)return{x,y}; const w=hexW()+3,h=hexH()*0.75+3; const col=Math.round(x/w),row=Math.round(y/h); let sx=col*w; const sy=row*h; if(Math.abs(row)%2===1)sx+=w/2; return{x:sx,y:sy}; }
+  function adj(a,b) { const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy)<hexW()+12; }
+  function mid(a,b) { return{x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+
+  // ====== CANVAS ======
+  function svgE(tag,attrs) { const el=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const[k,v]of Object.entries(attrs||{}))el.setAttribute(k,v); return el; }
+
+  // Consistent font size: base size for all, only shrink for long text
+  function hexFontSize(text) {
+    if (text.length <= 10) return 13.5;
+    if (text.length <= 18) return 12;
+    if (text.length <= 28) return 10.5;
+    return 9;
+  }
+
+  function renderCanvas() {
+    const svg = $('svgCanvas'); svg.innerHTML = '';
+    const g = svgE('g',{transform:`translate(${panX},${panY}) scale(${zoom})`});
+
+    for(let i=0;i<placed.length;i++) for(let j=i+1;j<placed.length;j++) {
+      const a=placed[i],b=placed[j]; if(!adj(a,b))continue;
+      const m=mid(a,b);
+      const conn=connections.find(c=>(c.id1===a.id&&c.id2===b.id)||(c.id1===b.id&&c.id2===a.id));
+      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#d8d2c8','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
+      const zone=svgE('rect',{x:m.x-40,y:m.y-14,width:80,height:28,fill:'transparent',cursor:'pointer'});
+      zone.addEventListener('click',e=>{e.stopPropagation();openConn(a.id,b.id,m);});
+      g.appendChild(zone);
+      if(conn&&conn.label) {
+        const d=conn.label.length>16?conn.label.slice(0,15)+'…':conn.label;
+        const tw=d.length*6.2+14;
+        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#d8d2c8','stroke-width':1,'pointer-events':'none'}));
+        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6b635a','pointer-events':'none'});
+        txt.textContent=d; g.appendChild(txt);
+      } else {
+        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#d8d2c8','pointer-events':'none'});
+        plus.textContent='+'; g.appendChild(plus);
+      }
+    }
+
+    placed.forEach(h => {
+      const t=activity.terms[h.id];
+      g.appendChild(svgE('polygon',{points:hexPts(h.x+2,h.y+3,HEX_R),fill:'rgba(44,41,36,0.05)','pointer-events':'none'}));
+      const poly=svgE('polygon',{points:hexPts(h.x,h.y,HEX_R),fill:'#ffffff',stroke:t.color,'stroke-width':2.5,cursor:'grab','data-id':h.id});
+      poly.addEventListener('mousedown',e=>startDrag(e,h));
+      poly.addEventListener('touchstart',e=>startDrag(e,h),{passive:false});
+      g.appendChild(poly);
+      g.appendChild(svgE('polygon',{points:hexPts(h.x,h.y,HEX_R-4),fill:t.color,opacity:'0.07','pointer-events':'none'}));
+
+      const fs = hexFontSize(t.text);
+      const text=svgE('text',{x:h.x,y:h.y,'text-anchor':'middle','dominant-baseline':'central','font-family':"'DM Sans',sans-serif",'font-size':fs,'font-weight':'600',fill:'#2c2924','pointer-events':'none'});
+      const words=t.text.split(' ');
+      if(words.length>1&&t.text.length>12){
+        const half=Math.ceil(words.length/2);
+        const l1=svgE('tspan',{x:h.x,dy:'-0.5em'});l1.textContent=words.slice(0,half).join(' ');
+        const l2=svgE('tspan',{x:h.x,dy:'1.15em'});l2.textContent=words.slice(half).join(' ');
+        text.appendChild(l1);text.appendChild(l2);
+      } else { text.textContent=t.text; }
+      g.appendChild(text);
+    });
+
+    svg.appendChild(g);
+    $('zoomLabel').textContent=Math.round(zoom*100)+'%';
+  }
+
+  // ====== DRAG & DROP ======
+  function s2c(sx,sy){return{x:(sx-panX)/zoom,y:(sy-panY)/zoom};}
+  const canvasArea=$('canvasArea');
+  canvasArea.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';});
+  canvasArea.addEventListener('drop',e=>{
+    e.preventDefault(); const id=parseInt(e.dataTransfer.getData('text/plain'));
+    if(isNaN(id)||placed.find(p=>p.id===id))return;
+    const rect=canvasArea.getBoundingClientRect();
+    let pos=s2c(e.clientX-rect.left,e.clientY-rect.top); pos=snapGrid(pos.x,pos.y);
+    placed.push({id,x:pos.x,y:pos.y}); buildTray(); renderCanvas();
+  });
+
+  function startDrag(e,hex){
+    e.preventDefault();e.stopPropagation();
+    const cx=e.touches?e.touches[0].clientX:e.clientX,cy=e.touches?e.touches[0].clientY:e.clientY;
+    const rect=canvasArea.getBoundingClientRect(),cp=s2c(cx-rect.left,cy-rect.top);
+    dragging={id:hex.id,ox:cp.x-hex.x,oy:cp.y-hex.y};
+    const move=ev=>{ev.preventDefault();const mx=ev.touches?ev.touches[0].clientX:ev.clientX,my=ev.touches?ev.touches[0].clientY:ev.clientY;const mp=s2c(mx-rect.left,my-rect.top);const h=placed.find(p=>p.id===dragging.id);if(h){h.x=mp.x-dragging.ox;h.y=mp.y-dragging.oy;renderCanvas();}};
+    const up=()=>{const h=placed.find(p=>p.id===dragging.id);if(h){const s=snapGrid(h.x,h.y);h.x=s.x;h.y=s.y;renderCanvas();}dragging=null;document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);document.removeEventListener('touchmove',move);document.removeEventListener('touchend',up);};
+    document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',up);
+  }
+
+  // PAN & ZOOM
+  const svgCanvas=$('svgCanvas');
+  svgCanvas.addEventListener('mousedown',e=>{if(dragging)return;if(e.target===svgCanvas||e.target.tagName==='svg'){panning=true;panSX=e.clientX-panX;panSY=e.clientY-panY;svgCanvas.classList.add('grabbing');}});
+  document.addEventListener('mousemove',e=>{if(panning){panX=e.clientX-panSX;panY=e.clientY-panSY;renderCanvas();}});
+  document.addEventListener('mouseup',()=>{if(panning){panning=false;svgCanvas.classList.remove('grabbing');}});
+  canvasArea.addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY>0?-0.08:0.08;const nz=Math.max(0.3,Math.min(3,zoom+d));const rect=canvasArea.getBoundingClientRect();const mx=e.clientX-rect.left,my=e.clientY-rect.top;panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;renderCanvas();},{passive:false});
+
+  // Touch pan (two-finger)
+  let lastTouchDist = 0, lastTouchMid = null;
+  canvasArea.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDist = Math.sqrt(dx*dx + dy*dy);
+      lastTouchMid = { x: (e.touches[0].clientX + e.touches[1].clientX)/2, y: (e.touches[0].clientY + e.touches[1].clientY)/2 };
+    }
+  }, { passive: false });
+  canvasArea.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && lastTouchMid) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const midX = (e.touches[0].clientX + e.touches[1].clientX)/2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY)/2;
+      // Pinch zoom
+      if (lastTouchDist > 0) {
+        const scale = dist / lastTouchDist;
+        const nz = Math.max(0.3, Math.min(3, zoom * scale));
+        const rect = canvasArea.getBoundingClientRect();
+        const mx = midX - rect.left, my = midY - rect.top;
+        panX = mx - (mx - panX) * (nz / zoom);
+        panY = my - (my - panY) * (nz / zoom);
+        zoom = nz;
+      }
+      // Pan
+      panX += midX - lastTouchMid.x;
+      panY += midY - lastTouchMid.y;
+      lastTouchDist = dist;
+      lastTouchMid = { x: midX, y: midY };
+      renderCanvas();
+    }
+  }, { passive: false });
+  canvasArea.addEventListener('touchend', () => { lastTouchDist = 0; lastTouchMid = null; });
+
+  // CONNECTION INPUT
+  function openConn(id1,id2,m){
+    const ex=connections.find(c=>(c.id1===id1&&c.id2===id2)||(c.id1===id2&&c.id2===id1));
+    const wrap=$('connInputWrap'),input=$('connInput');
+    const sx=m.x*zoom+panX,sy=m.y*zoom+panY;
+    wrap.style.display='block';wrap.style.left=(sx-75)+'px';wrap.style.top=(sy-14)+'px';
+    input.value=ex?ex.label:'';input.focus();
+    const finish=()=>{const val=input.value.trim();const idx=connections.findIndex(c=>(c.id1===id1&&c.id2===id2)||(c.id1===id2&&c.id2===id1));if(val){if(idx>=0)connections[idx].label=val;else connections.push({id1,id2,label:val});}else if(idx>=0)connections.splice(idx,1);wrap.style.display='none';renderCanvas();input.removeEventListener('blur',finish);input.removeEventListener('keydown',onKey);};
+    const onKey=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}if(e.key==='Escape'){input.value='';input.blur();}};
+    input.addEventListener('blur',finish);input.addEventListener('keydown',onKey);
+  }
+
+  // RIGHT-CLICK REMOVE
+  svgCanvas.addEventListener('contextmenu',e=>{e.preventDefault();const t=e.target;if(t.hasAttribute('data-id')){const id=parseInt(t.getAttribute('data-id'));placed=placed.filter(p=>p.id!==id);connections=connections.filter(c=>c.id1!==id&&c.id2!==id);buildTray();renderCanvas();}});
+
+  // EXPORT
+  function exportImage(){
+    if(!placed.length)return;
+    const pad=HEX_R+30;const xs=placed.map(h=>h.x),ys=placed.map(h=>h.y);
+    const minX=Math.min(...xs)-pad,maxX=Math.max(...xs)+pad,minY=Math.min(...ys)-pad,maxY=Math.max(...ys)+pad;
+    const w=maxX-minX,h=maxY-minY;
+    const sp={x:panX,y:panY},sz=zoom;panX=-minX;panY=-minY;zoom=1;renderCanvas();
+    const clone=$('svgCanvas').cloneNode(true);clone.setAttribute('width',w);clone.setAttribute('height',h);clone.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');bg.setAttribute('width',w);bg.setAttribute('height',h);bg.setAttribute('fill','#faf8f5');clone.insertBefore(bg,clone.firstChild);
+    const svgStr=new XMLSerializer().serializeToString(clone);const blob=new Blob([svgStr],{type:'image/svg+xml'});const url=URL.createObjectURL(blob);
+    const img=new Image();img.onload=()=>{const sc=2;const c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;const ctx=c.getContext('2d');ctx.scale(sc,sc);ctx.fillStyle='#faf8f5';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);c.toBlob(pb=>{const a=document.createElement('a');a.href=URL.createObjectURL(pb);a.download='hexthinking.png';a.click();URL.revokeObjectURL(url);});};
+    img.src=url;panX=sp.x;panY=sp.y;zoom=sz;renderCanvas();
+  }
+
+  // ====== EVENTS ======
+  $('addGroupBtn').addEventListener('click',addGroup);
+  $('createBtn').addEventListener('click',createActivity);
+  $('copyBtn').addEventListener('click',function(){navigator.clipboard.writeText($('shareLink').value).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy';},2000);});});
+  $('closeModal').addEventListener('click',()=>$('shareModal').classList.remove('open'));
+  $('shareModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
+  $('trayToggle').addEventListener('click',function(){$('hexTray').classList.toggle('collapsed');this.classList.toggle('active');});
+  $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];connections=[];zoom=1;panX=0;panY=0;buildTray();renderCanvas();}});
+  $('exportBtn').addEventListener('click',exportImage);
+  $('snapToggle').addEventListener('click',function(){snap=!snap;this.classList.toggle('active',snap);});
+  $('zoomInBtn').addEventListener('click',()=>{zoom=Math.min(3,zoom+0.15);renderCanvas();});
+  $('zoomOutBtn').addEventListener('click',()=>{zoom=Math.max(0.3,zoom-0.15);renderCanvas();});
+  $('fitBtn').addEventListener('click',()=>{if(!placed.length){zoom=1;panX=0;panY=0;renderCanvas();return;}const xs=placed.map(h=>h.x),ys=placed.map(h=>h.y);const p=HEX_R+20;const minX=Math.min(...xs)-p,maxX=Math.max(...xs)+p,minY=Math.min(...ys)-p,maxY=Math.max(...ys)+p;const rect=canvasArea.getBoundingClientRect();zoom=Math.min(rect.width/(maxX-minX),rect.height/(maxY-minY),2);panX=(rect.width-(maxX+minX)*zoom)/2;panY=(rect.height-(maxY+minY)*zoom)/2;renderCanvas();});
+  $('dismissBanner').addEventListener('click',()=>{$('instructionsBanner').style.display='none';});
+  $('backToSetup').addEventListener('click', e => { e.preventDefault(); location.hash = ''; location.reload(); });
+
+  init();
+})();
+</script>
+</body>
+</html>

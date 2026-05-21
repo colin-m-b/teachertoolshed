@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seating Chart Maker — Teacher Toolshed</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F7F5F0;--surface:#FFFFFF;--surface-2:#F0EDE6;--border:#E0DDD4;
+    --border-focus:#B5843A;--text:#28251E;--text-mid:#6B6457;--text-light:#A8A098;
+    --accent:#B5843A;--accent-hover:#9A6E2F;--accent-soft:#FBF4E8;
+    --green:#4A7C59;--green-soft:#EBF4EE;--green-border:#B8D9C2;
+    --red:#C44A3F;
+    --radius:10px;--radius-sm:6px;
+    --shadow:0 1px 3px rgba(40,37,30,.08),0 1px 2px rgba(40,37,30,.05);
+    --font-serif:"Lora",Georgia,serif;--font-sans:"DM Sans","Helvetica Neue",sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:var(--font-sans);background:var(--bg);color:var(--text);display:flex;flex-direction:column;font-size:15px;line-height:1.5}
+
+  /* HEADER */
+  .header{background:var(--surface);border-bottom:1.5px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+  .brand-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--green-soft);border:1.5px solid var(--green-border);border-radius:6px}
+  .brand-name{font-family:var(--font-serif);font-size:17px;font-weight:700}
+  .brand-name span{color:var(--green)}
+  .header-tool{font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--text-mid)}
+  .header-sep{color:var(--border);font-size:18px;margin:0 4px}
+  .header-right{display:flex;align-items:center;gap:8px}
+
+  /* LAYOUT */
+  .app{flex:1;display:flex;overflow:hidden}
+  .sidebar{width:272px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+  /* SIDEBAR SECTIONS */
+  .s-section{padding:16px 18px;border-bottom:1px solid var(--border)}
+  .s-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px}
+  .s-title{font-family:var(--font-serif);font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px}
+
+  textarea{width:100%;font-family:var(--font-sans);font-size:13px;color:var(--text);background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;resize:vertical;min-height:110px;transition:border-color .15s,box-shadow .15s}
+  textarea:focus{outline:none;border-color:var(--border-focus);background:#fff;box-shadow:0 0 0 3px rgba(181,132,58,.1)}
+  textarea::placeholder{color:var(--text-light)}
+
+  select,input[type=text],input[type=number]{width:100%;font-family:var(--font-sans);font-size:13px;color:var(--text);background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;transition:border-color .15s,box-shadow .15s}
+  select:focus,input[type=text]:focus,input[type=number]:focus{outline:none;border-color:var(--border-focus);background:#fff;box-shadow:0 0 0 3px rgba(181,132,58,.1)}
+
+  .field{margin-bottom:10px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:5px}
+  .hint{font-size:11px;color:var(--text-light);margin-top:4px}
+
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  /* BUTTONS */
+  .btn{font-family:var(--font-sans);font-size:13px;font-weight:600;border:none;border-radius:var(--radius-sm);padding:8px 14px;cursor:pointer;transition:background .15s,transform .1s;display:inline-flex;align-items:center;gap:5px}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-hover)}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-green:hover{background:#3A6349}
+  .btn-outline{background:none;border:1.5px solid var(--border);color:var(--text-mid)}
+  .btn-outline:hover{background:var(--surface-2);color:var(--text)}
+  .btn-ghost{background:none;border:none;color:var(--text-mid);font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;padding:6px 10px}
+  .btn-ghost:hover{color:var(--text)}
+  .btn-full{width:100%;justify-content:center}
+  .btn-sm{padding:5px 10px;font-size:12px}
+
+  /* PRO BADGE */
+  .pro-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#FBF4E8;color:var(--accent);border:1px solid #E4CFA0;border-radius:4px;padding:2px 6px;margin-left:6px}
+
+  /* PRO LOCK */
+  .pro-lock{background:var(--accent-soft);border:1.5px solid #E4CFA0;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--accent-hover);text-align:center}
+  .pro-lock strong{display:block;font-size:13px;margin-bottom:3px}
+
+  /* STUDENT COUNT BADGE */
+  .count-badge{display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--green-border);margin-left:6px}
+
+  /* TEMPLATE TABS */
+  .template-tabs{display:flex;gap:4px;margin-bottom:12px}
+  .tab{flex:1;font-family:var(--font-sans);font-size:12px;font-weight:600;padding:6px 4px;border:1.5px solid var(--border);background:var(--surface-2);color:var(--text-mid);border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:all .15s}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .tab:hover:not(.active){background:var(--surface);color:var(--text)}
+
+  /* CANVAS AREA */
+  .canvas-toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .toolbar-left{display:flex;align-items:center;gap:8px}
+  .toolbar-info{font-size:12px;color:var(--text-mid)}
+
+  .canvas-wrap{flex:1;overflow:auto;position:relative;background:var(--bg)}
+  #classroom{position:relative;min-width:800px;min-height:500px}
+
+  /* FRONT OF ROOM */
+  .front-bar{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:2px solid var(--border);border-radius:6px;padding:5px 28px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);white-space:nowrap;pointer-events:none;user-select:none}
+
+  /* DESK */
+  .desk{position:absolute;background:var(--surface);border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;transition:border-color .15s,box-shadow .15s;font-size:11.5px;font-weight:600;color:var(--text-mid);text-align:center;padding:4px 6px;line-height:1.3;word-break:break-word}
+  .desk:hover{border-color:var(--accent);z-index:5}
+  .desk.drag-over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 3px rgba(74,124,89,.15)}
+  .desk.dragging-source{opacity:.45}
+  .desk.empty{background:var(--surface-2);color:var(--text-light);font-style:italic;font-weight:400;font-size:11px;cursor:default;border-style:dashed}
+  .desk.empty:hover{border-color:var(--border)}
+
+  /* EMPTY STATE */
+  .empty-canvas{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none}
+  .empty-icon{font-size:42px;opacity:.15}
+  .empty-text{font-size:15px;color:var(--text-light);font-weight:500}
+  .empty-sub{font-size:13px;color:var(--text-light)}
+
+  /* MODAL */
+  .modal-bd{display:none;position:fixed;inset:0;background:rgba(40,37,30,.35);z-index:500;align-items:center;justify-content:center}
+  .modal-bd.open{display:flex}
+  .modal{background:var(--surface);border-radius:12px;padding:24px;width:min(340px,92vw);box-shadow:0 8px 32px rgba(40,37,30,.2);animation:popIn .18s ease}
+  @keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .modal-title{font-family:var(--font-serif);font-size:17px;font-weight:700;margin-bottom:12px}
+  .modal input{width:100%;font-family:var(--font-sans);font-size:14px;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:12px}
+  .modal input:focus{outline:none;border-color:var(--border-focus)}
+  .modal-btns{display:flex;gap:8px;justify-content:flex-end}
+
+  /* UPGRADE MODAL */
+  .upgrade-modal{text-align:center}
+  .upgrade-icon{font-size:36px;margin-bottom:10px}
+  .upgrade-title{font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:6px}
+  .upgrade-sub{font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6}
+  .upgrade-price{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px}
+  .upgrade-price span{font-size:14px;font-weight:400;color:var(--text-mid)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(40,37,30,.85);color:#fff;font-size:13px;font-weight:500;padding:9px 20px;border-radius:24px;z-index:300;pointer-events:none;transition:opacity .3s}
+  .toast.hidden{opacity:0}
+</style>
+</head>
+<body>
+
+<div class="modal-bd" id="rename-modal">
+  <div class="modal">
+    <div class="modal-title">Edit Student Name</div>
+    <input type="text" id="rename-input" placeholder="Student name" maxlength="40"/>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeRenameModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRename()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bd" id="upgrade-modal">
+  <div class="modal upgrade-modal">
+    <div class="upgrade-icon">⭐</div>
+    <div class="upgrade-title">Upgrade to Pro</div>
+    <p class="upgrade-sub">Save class lists, save charts, and unlock custom desk arrangements with Teacher Toolshed Pro.</p>
+    <div class="upgrade-price">$5<span>/month</span></div>
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">or $48/year — save 20%</p>
+    <button class="btn btn-primary btn-full" style="justify-content:center;margin-bottom:8px" onclick="closeUpgradeModal()">Upgrade to Pro →</button>
+    <button class="btn-ghost btn-full" onclick="closeUpgradeModal()">Maybe later</button>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:12px">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <span class="header-tool">Seating Chart Maker</span>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-outline btn-sm" onclick="showUpgrade()">⭐ Go Pro</button>
+    <button class="btn btn-green btn-sm" onclick="printChart()">Print / PDF</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Students -->
+    <div class="s-section">
+      <div class="s-label">Students <span class="count-badge" id="count-badge">0</span></div>
+      <div class="field">
+        <label>Paste class list (one name per line)</label>
+        <textarea id="student-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…" oninput="updateCount()"></textarea>
+        <p class="hint">Or type names separated by commas.</p>
+      </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="s-section">
+      <div class="s-label">Arrangement</div>
+      <div class="template-tabs">
+        <div class="tab active" onclick="setTemplate('rows')" id="tab-rows">Rows</div>
+        <div class="tab" onclick="setTemplate('islands')" id="tab-islands">Islands</div>
+        <div class="tab" onclick="setTemplate('circle')" id="tab-circle">Circle</div>
+      </div>
+
+      <div id="rows-opts">
+        <div class="field">
+          <label>Number of rows</label>
+          <select id="row-count">
+            <option>2</option><option>3</option><option selected>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="islands-opts" style="display:none">
+        <div class="field">
+          <label>Students per island</label>
+          <select id="island-size">
+            <option>2</option><option>3</option><option selected>4</option>
+            <option>5</option><option>6</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="circle-opts" style="display:none">
+        <p class="hint" style="margin-bottom:8px">All students arranged in a single circle. Great for seminars.</p>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <div class="s-section">
+      <button class="btn btn-primary btn-full" onclick="generate()">🎲 Randomize Seats</button>
+      <p class="hint" style="margin-top:8px;text-align:center">Re-click to re-randomize</p>
+    </div>
+
+    <!-- Pro: Save -->
+    <div class="s-section">
+      <div class="s-label">Save <span class="pro-badge">Pro</span></div>
+      <div class="pro-lock">
+        <strong>Save class lists & charts</strong>
+        Re-use your class list next time and save multiple chart layouts.
+        <br><button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="showUpgrade()">Upgrade to Pro →</button>
+      </div>
+    </div>
+
+    <!-- Pro: Custom layout -->
+    <div class="s-section">
+      <div class="s-label">Custom layout <span class="pro-badge">Pro</span></div>
+      <div class="pro-lock">
+        <strong>Drag desks anywhere</strong>
+        Rearrange individual desks to match your actual classroom.
+        <br><button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="showUpgrade()">Upgrade to Pro →</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <main class="main">
+    <div class="canvas-toolbar">
+      <div class="toolbar-left">
+        <span class="toolbar-info" id="toolbar-info">Add students and click Randomize Seats</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="swapMode()" id="swap-btn">Swap Names</button>
+        <button class="btn btn-outline btn-sm" onclick="clearChart()">Clear</button>
+      </div>
+    </div>
+    <div class="canvas-wrap" id="canvas-wrap">
+      <div id="classroom">
+        <div class="front-bar">▲ Front of Room</div>
+        <div class="empty-canvas" id="empty-state">
+          <div class="empty-icon">🪑</div>
+          <div class="empty-text">No seating chart yet</div>
+          <div class="empty-sub">Add students and choose a layout to begin</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const isPro = false;
+let template = 'rows';
+let desks = [];
+let swapping = false;
+let swapFirst = null;
+let renamingId = null;
+
+// ── STUDENT PARSING ──
+function getStudents() {
+  const raw = document.getElementById('student-input').value;
+  const byLine = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (byLine.length === 1 && byLine[0].includes(',')) {
+    return byLine[0].split(',').map(s=>s.trim()).filter(Boolean);
+  }
+  return byLine;
+}
+
+function updateCount() {
+  const n = getStudents().length;
+  document.getElementById('count-badge').textContent = n;
+}
+
+// ── TEMPLATE SELECTION ──
+function setTemplate(t) {
+  template = t;
+  ['rows','islands','circle'].forEach(x => {
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+    document.getElementById(x+'-opts').style.display = x===t ? 'block' : 'none';
+  });
+}
+
+// ── GENERATE LAYOUT ──
+function generate() {
+  const students = getStudents();
+  if (!students.length) { showToast('Add some student names first'); return; }
+
+  const shuffled = [...students].sort(() => Math.random() - .5);
+  const wrap = document.getElementById('canvas-wrap');
+  const W = Math.max(wrap.clientWidth, 800);
+  const H = Math.max(wrap.clientHeight, 500);
+
+  desks = [];
+
+  if (template === 'rows') {
+    const numRows = parseInt(document.getElementById('row-count').value);
+    desks = layoutRows(shuffled, numRows, W, H);
+  } else if (template === 'islands') {
+    const perIsland = parseInt(document.getElementById('island-size').value);
+    desks = layoutIslands(shuffled, perIsland, W, H);
+  } else {
+    desks = layoutCircle(shuffled, W, H);
+  }
+
+  renderDesks();
+  document.getElementById('toolbar-info').textContent =
+    `${students.length} students · ${template} layout · drag names to swap`;
+}
+
+// ── LAYOUTS ──
+const DW = 108, DH = 58;
+
+function layoutRows(students, numRows, W, H) {
+  const n = students.length;
+  const perRow = Math.ceil(n / numRows);
+  const gapX = 14, gapY = 20;
+  const topOffset = 72;
+  const result = [];
+
+  for (let r = 0; r < numRows; r++) {
+    const rowStudents = students.slice(r * perRow, (r + 1) * perRow);
+    const rowW = rowStudents.length * DW + (rowStudents.length - 1) * gapX;
+    const startX = (W - rowW) / 2;
+    const usableH = H - topOffset - 40;
+    const startY = topOffset + (usableH / (numRows + 1)) * (r + 1) - DH / 2;
+
+    rowStudents.forEach((name, c) => {
+      result.push({ id: 'd' + result.length, name, x: startX + c * (DW + gapX), y: startY });
+    });
+  }
+  return result;
+}
+
+function layoutIslands(students, perIsland, W, H) {
+  const numIslands = Math.ceil(students.length / perIsland);
+  const cols = Math.min(numIslands, Math.ceil(Math.sqrt(numIslands * 1.5)));
+  const rows = Math.ceil(numIslands / cols);
+  const islandW = DW * 2 + 10;
+  const islandH = Math.ceil(perIsland / 2) * DH + (Math.ceil(perIsland / 2) - 1) * 8;
+  const padX = 32, padY = 72;
+  const gapX = 28, gapY = 28;
+  const totalW = cols * islandW + (cols - 1) * gapX;
+  const totalH = rows * islandH + (rows - 1) * gapY;
+  const startX = Math.max(padX, (W - totalW) / 2);
+  const startY = Math.max(padY, (H - totalH) / 2);
+  const result = [];
+
+  for (let i = 0; i < numIslands; i++) {
+    const group = students.slice(i * perIsland, (i + 1) * perIsland);
+    const col = i % cols, row = Math.floor(i / cols);
+    const ox = startX + col * (islandW + gapX);
+    const oy = startY + row * (islandH + gapY);
+    group.forEach((name, j) => {
+      const c = j % 2, r = Math.floor(j / 2);
+      result.push({ id: 'd' + result.length, name, x: ox + c * (DW + 10), y: oy + r * (DH + 8) });
+    });
+  }
+  return result;
+}
+
+function layoutCircle(students, W, H) {
+  const n = students.length;
+  const cx = W / 2, cy = (H + 60) / 2;
+  const rx = Math.min(W * 0.38, 280);
+  const ry = Math.min((H - 80) * 0.42, 190);
+  return students.map((name, i) => {
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    return { id: 'd' + i, name, x: cx + rx * Math.cos(angle) - DW / 2, y: cy + ry * Math.sin(angle) - DH / 2 };
+  });
+}
+
+// ── RENDER ──
+function renderDesks() {
+  const classroom = document.getElementById('classroom');
+  classroom.querySelectorAll('.desk').forEach(e => e.remove());
+  document.getElementById('empty-state').style.display = desks.length ? 'none' : '';
+
+  // Size classroom to fit all desks
+  if (desks.length) {
+    const maxX = Math.max(...desks.map(d => d.x + DW)) + 32;
+    const maxY = Math.max(...desks.map(d => d.y + DH)) + 32;
+    const wrap = document.getElementById('canvas-wrap');
+    classroom.style.width = Math.max(maxX, wrap.clientWidth) + 'px';
+    classroom.style.height = Math.max(maxY, wrap.clientHeight) + 'px';
+  }
+
+  desks.forEach(desk => {
+    const el = document.createElement('div');
+    el.className = 'desk' + (desk.name ? '' : ' empty');
+    el.id = desk.id;
+    el.style.cssText = `left:${desk.x}px;top:${desk.y}px;width:${DW}px;height:${DH}px`;
+    el.textContent = desk.name || 'Empty';
+
+    // Double-click to rename
+    el.addEventListener('dblclick', () => openRenameModal(desk.id));
+
+    // Drag for swap
+    el.draggable = true;
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', desk.id);
+      setTimeout(() => el.classList.add('dragging-source'), 0);
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging-source'));
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      const fromId = e.dataTransfer.getData('text/plain');
+      swapNames(fromId, desk.id);
+    });
+
+    document.getElementById('classroom').appendChild(el);
+  });
+}
+
+// ── SWAP ──
+function swapNames(aId, bId) {
+  if (aId === bId) return;
+  const a = desks.find(d => d.id === aId);
+  const b = desks.find(d => d.id === bId);
+  if (!a || !b) return;
+  [a.name, b.name] = [b.name, a.name];
+  renderDesks();
+  showToast('Names swapped');
+}
+
+function swapMode() {
+  showToast('Drag a desk name onto another desk to swap them');
+}
+
+// ── RENAME ──
+function openRenameModal(id) {
+  renamingId = id;
+  const desk = desks.find(d => d.id === id);
+  document.getElementById('rename-input').value = desk?.name || '';
+  document.getElementById('rename-modal').classList.add('open');
+  setTimeout(() => document.getElementById('rename-input').focus(), 60);
+}
+function closeRenameModal() {
+  document.getElementById('rename-modal').classList.remove('open');
+  renamingId = null;
+}
+function saveRename() {
+  const v = document.getElementById('rename-input').value.trim();
+  const desk = desks.find(d => d.id === renamingId);
+  if (desk) desk.name = v;
+  closeRenameModal();
+  renderDesks();
+}
+document.getElementById('rename-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveRename();
+  if (e.key === 'Escape') closeRenameModal();
+});
+document.getElementById('rename-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('rename-modal')) closeRenameModal();
+});
+
+// ── CLEAR ──
+function clearChart() {
+  if (!desks.length) return;
+  if (!confirm('Clear the current chart?')) return;
+  desks = [];
+  renderDesks();
+  document.getElementById('toolbar-info').textContent = 'Add students and click Randomize Seats';
+}
+
+// ── UPGRADE ──
+function showUpgrade() {
+  document.getElementById('upgrade-modal').classList.add('open');
+}
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('open');
+}
+document.getElementById('upgrade-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('upgrade-modal')) closeUpgradeModal();
+});
+
+// ── PRINT ──
+function printChart() {
+  if (!desks.length) { showToast('Generate a chart first'); return; }
+  window.print();
+}
+
+// ── TOAST ──
+function showToast(msg, dur = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+}
+
+// ── PRINT STYLES ──
+const printStyle = document.createElement('style');
+printStyle.media = 'print';
+printStyle.textContent = `
+  .sidebar,.canvas-toolbar,.header { display:none!important }
+  .app { display:block }
+  .canvas-wrap { overflow:visible }
+  #classroom { position:static; min-height:auto }
+  .desk { border:1.5px solid #aaa; background:#fff; color:#222; font-size:11px; print-color-adjust:exact }
+  .front-bar { position:static; margin:0 auto 16px; display:table }
+`;
+document.head.appendChild(printStyle);
+</script>
+</body>
+</html>
