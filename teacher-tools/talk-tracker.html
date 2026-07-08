@@ -338,7 +338,7 @@
     </div>
 
     <div class="setup-actions">
-      <button class="btn-ghost">Clear</button>
+      <button class="btn-ghost" onclick="clearSetup()">Clear</button>
       <button class="btn btn-primary" onclick="startSession()" style="padding:11px 28px">Start Session →</button>
     </div>
   </div>
@@ -703,6 +703,8 @@ function updateTimerDisplay() {
 function endSession() {
   if (!confirm('End this session and go to the summary?')) return;
   clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('timer-btn').textContent = '▶ Start';
   session.notes = document.getElementById('session-notes').value;
   buildSummary();
   document.getElementById('header-end-btn').style.display = 'none';
@@ -774,8 +776,21 @@ function newSession() {
   document.getElementById('tp-list').innerHTML = '';
   document.getElementById('session-notes').value = '';
   timerRunning = false; clearInterval(timerInterval);
+  document.getElementById('timer-btn').textContent = '▶ Start';
   updateTimerDisplay();
   switchScreen('setup');
+}
+
+function clearSetup() {
+  const hasContent = document.getElementById('session-name').value ||
+    document.getElementById('students-input').value || session.talkingPoints.length;
+  if (!hasContent) return;
+  if (!confirm('Clear the session setup?')) return;
+  document.getElementById('session-name').value = '';
+  document.getElementById('students-input').value = '';
+  session.talkingPoints = [];
+  tpCounter = 0;
+  renderTalkingPoints();
 }
 
 // ── UPGRADE ──
