@@ -205,13 +205,24 @@
       </div>
 
       <div id="rows-opts">
-        <div class="field">
-          <label>Number of rows</label>
-          <select id="row-count">
-            <option>2</option><option>3</option><option selected>4</option>
-            <option>5</option><option>6</option><option>7</option><option>8</option>
-          </select>
+        <div class="row-2">
+          <div class="field">
+            <label>Rows</label>
+            <select id="row-count">
+              <option>2</option><option>3</option><option selected>4</option>
+              <option>5</option><option>6</option><option>7</option><option>8</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Columns</label>
+            <select id="col-count">
+              <option value="auto" selected>Auto</option>
+              <option>2</option><option>3</option><option>4</option><option>5</option>
+              <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+            </select>
+          </div>
         </div>
+        <p class="hint">Auto fits columns to your class size. With fixed columns, spare seats stay empty.</p>
       </div>
 
       <div id="islands-opts" style="display:none">
@@ -327,7 +338,8 @@ function generate() {
 
   if (template === 'rows') {
     const numRows = parseInt(document.getElementById('row-count').value);
-    desks = layoutRows(shuffled, numRows, W, H);
+    const colSetting = document.getElementById('col-count').value;
+    desks = layoutRows(shuffled, numRows, colSetting, W, H);
   } else if (template === 'islands') {
     const perIsland = parseInt(document.getElementById('island-size').value);
     desks = layoutIslands(shuffled, perIsland, W, H);
@@ -343,24 +355,55 @@ function generate() {
 // ── LAYOUTS ──
 const DW = 108, DH = 58;
 
-function layoutRows(students, numRows, W, H) {
+function layoutRows(students, numRows, colSetting, W, H) {
   const n = students.length;
-  const perRow = Math.ceil(n / numRows);
   const gapX = 14, gapY = 20;
   const topOffset = 72;
-  const result = [];
 
-  for (let r = 0; r < numRows; r++) {
-    const rowStudents = students.slice(r * perRow, (r + 1) * perRow);
-    const rowW = rowStudents.length * DW + (rowStudents.length - 1) * gapX;
-    const startX = (W - rowW) / 2;
-    const usableH = H - topOffset - 40;
-    const startY = topOffset + (usableH / (numRows + 1)) * (r + 1) - DH / 2;
-
-    rowStudents.forEach((name, c) => {
-      result.push({ id: 'd' + result.length, name, x: startX + c * (DW + gapX), y: startY });
-    });
+  // Seats per row, honoring the requested grid exactly
+  let rowSizes;
+  if (colSetting === 'auto') {
+    // Spread students evenly so every requested row is used
+    const base = Math.floor(n / numRows), extra = n % numRows;
+    rowSizes = Array.from({ length: numRows }, (_, r) => base + (r < extra ? 1 : 0)).filter(s => s > 0);
+  } else {
+    const cols = parseInt(colSetting);
+    rowSizes = Array.from({ length: numRows }, () => cols);
+    // Overflow students get extra rows at the back rather than being dropped
+    let capacity = numRows * cols;
+    while (capacity < n) {
+      const size = Math.min(cols, n - capacity);
+      rowSizes.push(size);
+      capacity += size;
+    }
+    if (rowSizes.length > numRows) {
+      showToast(`${numRows} rows × ${cols} columns only seats ${numRows * cols} — added ${rowSizes.length - numRows} extra row${rowSizes.length - numRows > 1 ? 's' : ''}`, 3500);
+    }
   }
+
+  // Center against the widest row; canvas scrolls if the room is too narrow
+  const maxRowW = Math.max(...rowSizes) * DW + (Math.max(...rowSizes) - 1) * gapX;
+  const effW = Math.max(W, maxRowW + 64);
+
+  // Even vertical spread, but never closer than a desk height + gap (scroll instead of overlapping)
+  const usableH = H - topOffset - 40;
+  const rowStep = Math.max(DH + gapY, usableH / (rowSizes.length + 1));
+  const result = [];
+  let idx = 0;
+
+  rowSizes.forEach((size, r) => {
+    const rowW = size * DW + (size - 1) * gapX;
+    const startX = (effW - rowW) / 2;
+    const startY = rowStep > DH + gapY
+      ? topOffset + rowStep * (r + 1) - DH / 2
+      : topOffset + gapY + r * rowStep;
+
+    for (let c = 0; c < size; c++) {
+      const name = idx < n ? students[idx] : '';
+      idx++;
+      result.push({ id: 'd' + result.length, name, x: startX + c * (DW + gapX), y: startY });
+    }
+  });
   return result;
 }
 
