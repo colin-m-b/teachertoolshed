@@ -458,12 +458,39 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     $('studentView').classList.add('active');
     $('teacherView').classList.remove('active');
     placed = []; connections = []; zoom = 1; panX = 0; panY = 0;
+    restoreState();
     buildTray(); renderCanvas();
+  }
+
+  // ====== AUTOSAVE (survives accidental refresh) ======
+  function strHash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36);}
+  const saveKey = () => 'hexthinking:' + strHash(location.hash);
+  let saveTimer = null;
+  function scheduleSave() {
+    if (!activity) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(saveKey(), JSON.stringify({ placed, connections })); } catch(e) {}
+    }, 300);
+  }
+  function restoreState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(saveKey()));
+      if (saved && Array.isArray(saved.placed)) {
+        placed = saved.placed.filter(p => activity.terms[p.id]);
+        connections = (saved.connections || []).filter(c => activity.terms[c.id1] && activity.terms[c.id2]);
+      }
+    } catch(e) {}
+  }
+  function clearSavedState() {
+    try { localStorage.removeItem(saveKey()); } catch(e) {}
   }
 
   // ====== TEACHER: GROUPS ======
   function addGroup() {
-    groups.push({ id: gid++, color: PALETTE[groups.length % PALETTE.length], name: '', text: '' });
+    const used = new Set(groups.map(g => g.color));
+    const color = PALETTE.find(c => !used.has(c)) || PALETTE[groups.length % PALETTE.length];
+    groups.push({ id: gid++, color, name: '', text: '' });
     renderGroups();
   }
   function removeGroup(id) {
@@ -714,6 +741,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
 
     svg.appendChild(g);
     $('zoomLabel').textContent=Math.round(zoom*100)+'%';
+    scheduleSave();
   }
 
   // ====== DRAG & DROP ======
@@ -817,18 +845,25 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   // ====== EVENTS ======
   $('addGroupBtn').addEventListener('click',addGroup);
   $('createBtn').addEventListener('click',createActivity);
-  $('copyBtn').addEventListener('click',function(){navigator.clipboard.writeText($('shareLink').value).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy';},2000);});});
+  $('copyBtn').addEventListener('click',function(){
+    const btn=this,done=()=>{btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy';},2000);};
+    const fallback=()=>{const inp=$('shareLink');inp.focus();inp.select();try{document.execCommand('copy');done();}catch(e){}};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText($('shareLink').value).then(done,fallback);}
+    else fallback();
+  });
   $('closeModal').addEventListener('click',()=>$('shareModal').classList.remove('open'));
   $('shareModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
   $('trayToggle').addEventListener('click',function(){$('hexTray').classList.toggle('collapsed');this.classList.toggle('active');});
-  $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];connections=[];zoom=1;panX=0;panY=0;buildTray();renderCanvas();}});
+  $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];connections=[];zoom=1;panX=0;panY=0;clearSavedState();buildTray();renderCanvas();}});
   $('exportBtn').addEventListener('click',exportImage);
   $('snapToggle').addEventListener('click',function(){snap=!snap;this.classList.toggle('active',snap);});
-  $('zoomInBtn').addEventListener('click',()=>{zoom=Math.min(3,zoom+0.15);renderCanvas();});
-  $('zoomOutBtn').addEventListener('click',()=>{zoom=Math.max(0.3,zoom-0.15);renderCanvas();});
+  function zoomAtCenter(nz){nz=Math.max(0.3,Math.min(3,nz));const r=canvasArea.getBoundingClientRect();const cx=r.width/2,cy=r.height/2;panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;renderCanvas();}
+  $('zoomInBtn').addEventListener('click',()=>zoomAtCenter(zoom+0.15));
+  $('zoomOutBtn').addEventListener('click',()=>zoomAtCenter(zoom-0.15));
   $('fitBtn').addEventListener('click',()=>{if(!placed.length){zoom=1;panX=0;panY=0;renderCanvas();return;}const xs=placed.map(h=>h.x),ys=placed.map(h=>h.y);const p=HEX_R+20;const minX=Math.min(...xs)-p,maxX=Math.max(...xs)+p,minY=Math.min(...ys)-p,maxY=Math.max(...ys)+p;const rect=canvasArea.getBoundingClientRect();zoom=Math.min(rect.width/(maxX-minX),rect.height/(maxY-minY),2);panX=(rect.width-(maxX+minX)*zoom)/2;panY=(rect.height-(maxY+minY)*zoom)/2;renderCanvas();});
   $('dismissBanner').addEventListener('click',()=>{$('instructionsBanner').style.display='none';});
   $('backToSetup').addEventListener('click', e => { e.preventDefault(); location.hash = ''; location.reload(); });
+  window.addEventListener('hashchange', () => location.reload());
 
   init();
 })();
