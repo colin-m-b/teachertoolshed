@@ -264,14 +264,24 @@
       <p class="hint" style="margin-top:8px;text-align:center">Re-click to re-randomize. Desk numbers stay put — names shuffle onto them.</p>
     </div>
 
-    <!-- Pro: Save -->
+    <!-- Class lists -->
     <div class="s-section">
-      <div class="s-label">Save <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock">
-        <strong>Save class lists & charts</strong>
-        Re-use your class list next time and save multiple chart layouts.
-        <br><button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="showUpgrade()">Upgrade to Pro →</button>
+      <div class="s-label">Class Lists</div>
+      <div class="field">
+        <select id="roster-select" onchange="loadRoster()">
+          <option value="">— Saved classes —</option>
+        </select>
       </div>
+      <div class="row-2">
+        <button class="btn btn-outline btn-sm" onclick="saveRoster()">Save current</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteRoster()">Delete</button>
+      </div>
+      <div class="row-2" style="margin-top:6px">
+        <button class="btn btn-outline btn-sm" onclick="exportRosters()">Export</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importRosters(event)"/>
+      <p class="hint">Saved in this browser only. Export to carry them to another device.</p>
     </div>
 
     <!-- Pro: Custom layout -->
@@ -331,6 +341,143 @@ function getStudents() {
 function updateCount() {
   const n = getStudents().length;
   document.getElementById('count-badge').textContent = n;
+}
+
+// ── CLASS LISTS ──
+// Saved in this browser. The record shape matches the planned `rosters` table
+// (name + students) so these can be lifted straight into an account later.
+const ROSTER_KEY = 'toolshed:rosters';
+
+function loadRosters() {
+  try {
+    const list = JSON.parse(localStorage.getItem(ROSTER_KEY));
+    return Array.isArray(list) ? list : [];
+  } catch (e) { return []; }
+}
+
+function persistRosters(list) {
+  try {
+    localStorage.setItem(ROSTER_KEY, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    showToast('Could not save — browser storage is full or blocked', 4000);
+    return false;
+  }
+}
+
+function newId() {
+  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function renderRosterList(selectedId = '') {
+  const sel = document.getElementById('roster-select');
+  sel.innerHTML = '<option value="">— Saved classes —</option>';
+  loadRosters().forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = `${r.name} (${r.students.length})`;
+    sel.appendChild(o);
+  });
+  sel.value = selectedId;
+}
+
+function loadRoster() {
+  const id = document.getElementById('roster-select').value;
+  if (!id) return;
+  const r = loadRosters().find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('student-input').value = r.students.join('\n');
+  updateCount();
+  showToast(`Loaded ${r.name} — ${r.students.length} students`);
+}
+
+function saveRoster() {
+  const students = getStudents();
+  if (!students.length) { showToast('Add some student names first'); return; }
+
+  const rosters = loadRosters();
+  const selected = rosters.find(r => r.id === document.getElementById('roster-select').value);
+  const name = (prompt('Name this class list:', selected ? selected.name : '') || '').trim();
+  if (!name) return;
+
+  const match = rosters.find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (match && !confirm(`Replace the saved list "${match.name}"?`)) return;
+
+  let record = match;
+  if (record) {
+    record.students = students;
+    record.updated_at = new Date().toISOString();
+  } else {
+    record = { id: newId(), name, students, updated_at: new Date().toISOString() };
+    rosters.push(record);
+  }
+  rosters.sort((a, b) => a.name.localeCompare(b.name));
+  if (!persistRosters(rosters)) return;
+  renderRosterList(record.id);
+  showToast(`Saved ${name} — ${students.length} students`);
+}
+
+function deleteRoster() {
+  const id = document.getElementById('roster-select').value;
+  if (!id) { showToast('Choose a saved class list first'); return; }
+  const rosters = loadRosters();
+  const r = rosters.find(x => x.id === id);
+  if (!r || !confirm(`Delete the saved list "${r.name}"? This can't be undone.`)) return;
+  if (!persistRosters(rosters.filter(x => x.id !== id))) return;
+  renderRosterList();
+  showToast(`Deleted ${r.name}`);
+}
+
+function exportRosters() {
+  const rosters = loadRosters();
+  if (!rosters.length) { showToast('No saved class lists to export'); return; }
+  const url = URL.createObjectURL(new Blob([JSON.stringify(rosters, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'class-lists.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Exported ${rosters.length} class list${rosters.length > 1 ? 's' : ''}`);
+}
+
+function importRosters(e) {
+  const file = e.target.files[0];
+  e.target.value = ''; // let the same file be re-picked later
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    let incoming;
+    try { incoming = JSON.parse(reader.result); }
+    catch (err) { showToast('That file is not a valid class list export', 3500); return; }
+
+    const clean = (Array.isArray(incoming) ? incoming : []).filter(
+      r => r && typeof r.name === 'string' && r.name.trim() && Array.isArray(r.students)
+    );
+    if (!clean.length) { showToast('No class lists found in that file', 3500); return; }
+
+    // Merge rather than replace, so importing never drops lists already on this device
+    const rosters = loadRosters();
+    let added = 0, updated = 0;
+    clean.forEach(inc => {
+      const name = inc.name.trim();
+      const students = inc.students.map(s => String(s).trim()).filter(Boolean);
+      const match = rosters.find(r => r.name.toLowerCase() === name.toLowerCase());
+      if (match) {
+        match.students = students;
+        match.updated_at = inc.updated_at || new Date().toISOString();
+        updated++;
+      } else {
+        rosters.push({ id: newId(), name, students, updated_at: inc.updated_at || new Date().toISOString() });
+        added++;
+      }
+    });
+    rosters.sort((a, b) => a.name.localeCompare(b.name));
+    if (!persistRosters(rosters)) return;
+    renderRosterList();
+    showToast(`Imported — ${added} added, ${updated} updated`, 3000);
+  };
+  reader.readAsText(file);
 }
 
 // ── TEMPLATE SELECTION ──
@@ -754,6 +901,8 @@ function showToast(msg, dur = 2200) {
   clearTimeout(showToast._timer);
   showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
 }
+
+renderRosterList();
 
 </script>
 </body>
