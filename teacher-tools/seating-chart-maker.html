@@ -610,14 +610,40 @@ function layoutIslands(students, perIsland, W, H) {
 
 function layoutCircle(students, W, H) {
   const n = students.length;
-  // Grow the circle with class size so desks never overlap; the canvas scrolls
-  const rx = Math.max(Math.min(W * 0.38, 280), n * (DW + 18) / (2 * Math.PI));
-  const ry = Math.max(Math.min((H - 80) * 0.42, 190), n * (DH + 16) / (2 * Math.PI));
+  const spacing = DW + 16;          // centre-to-centre room each desk needs on the ring
+  const START = -Math.PI / 2;       // desk 1 sits at the front of the room
+  const STEPS = 2048;
+
+  // Ramanujan's approximation — good to ~1e-5 for the shapes we produce here
+  const perimeter = (a, b) => Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
+
+  // Start from a ring that suits the viewport, then grow it until the whole
+  // class fits around the edge. The canvas scrolls if the room is too small.
+  let rx = Math.min(W * 0.38, 280);
+  let ry = Math.min((H - 80) * 0.42, 190);
+  const grow = Math.max(1, n * spacing / perimeter(rx, ry));
+  rx *= grow;
+  ry *= grow;
+
+  // Stepping the angle in equal increments bunches desks at the left and right
+  // extremes of an ellipse, because equal angles cover different arc lengths
+  // there. Measure the perimeter instead and place a desk every 1/n of it.
+  const at = k => START + 2 * Math.PI * k / STEPS;
+  const cum = [0];
+  for (let i = 1; i <= STEPS; i++) {
+    const a = at(i - 1), b = at(i);
+    cum.push(cum[i - 1] + Math.hypot(rx * (Math.cos(b) - Math.cos(a)), ry * (Math.sin(b) - Math.sin(a))));
+  }
+
   const cx = Math.max(W / 2, rx + DW / 2 + 32);
   const cy = Math.max((H + 60) / 2, ry + DH / 2 + 80);
+  let step = 0;
+
   return students.map((name, i) => {
-    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-    return { id: 'd' + i, num: i + 1, name, x: cx + rx * Math.cos(angle) - DW / 2, y: cy + ry * Math.sin(angle) - DH / 2 };
+    const target = cum[STEPS] * i / n;
+    while (step < STEPS && cum[step + 1] < target) step++;
+    const t = at(step);
+    return { id: 'd' + i, num: i + 1, name, x: cx + rx * Math.cos(t) - DW / 2, y: cy + ry * Math.sin(t) - DH / 2 };
   });
 }
 
