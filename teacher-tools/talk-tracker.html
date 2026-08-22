@@ -31,17 +31,6 @@
   .btn-add-tp{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:none;border:1.5px dashed var(--border);color:var(--text-mid);font-family:var(--font-sans);font-size:13px;font-weight:600;padding:9px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s}
   .btn-add-tp:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 
-  /* RUBRIC */
-  .rubric-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
-  .rubric-row{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
-  .rubric-criterion{flex:1}
-  .rubric-criterion input{margin-bottom:6px}
-  .rubric-score-row{display:flex;align-items:center;gap:8px}
-  .rubric-score-row label{font-size:12px;color:var(--text-mid);margin-bottom:0;white-space:nowrap}
-  .rubric-score-row input[type=number]{width:56px;text-align:center;padding:5px 8px;font-size:13px}
-  .pro-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border:1px solid #E4CFA0;border-radius:4px;padding:2px 6px;margin-left:6px}
-  .pro-lock-inline{opacity:.5;pointer-events:none}
-
   .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
 
   /* ─── LIVE SCREEN ─── */
@@ -119,39 +108,15 @@
   .bar-val{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
   .bar-fill.zero{background:var(--border)}
 
-  /* RUBRIC SUMMARY */
-  .rubric-table{width:100%;border-collapse:collapse;font-size:13px}
-  .rubric-table th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);padding:6px 10px;border-bottom:1.5px solid var(--border)}
-  .rubric-table td{padding:8px 10px;border-bottom:1px solid var(--surface-2);vertical-align:top}
-  .rubric-table tr:last-child td{border-bottom:none}
-  .score-input-cell input{width:56px;text-align:center;font-size:13px;padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-sans)}
-  .score-input-cell input:focus{outline:none;border-color:var(--border-focus)}
-
   /* NOTES REVIEW */
   .notes-review{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
   .notes-review h3{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:10px}
   .notes-review textarea{font-size:13px}
-
-  .pro-lock-card{background:var(--accent-soft);border:1.5px solid #E4CFA0;border-radius:var(--radius);padding:16px 18px;text-align:center;margin-bottom:16px}
-  .pro-lock-card strong{display:block;font-family:var(--font-serif);font-size:15px;margin-bottom:4px}
-  .pro-lock-card p{font-size:13px;color:var(--text-mid);margin-bottom:10px}
 </style>
 </head>
 <body>
 
 <div class="toast hidden" id="toast"></div>
-
-<div class="modal-bd" id="upgrade-modal">
-  <div class="modal" style="text-align:center">
-    <div style="font-size:36px;margin-bottom:10px">⭐</div>
-    <div style="font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:6px">Upgrade to Pro</div>
-    <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6">Unlock CSV export, printable reports, rubric scoring, saved class lists, speaker timer, and session history.</p>
-    <div style="font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px">$5<span style="font-size:14px;font-weight:400;color:var(--text-mid)">/month</span></div>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">or $48/year — save 20%</p>
-    <button class="btn btn-primary btn-full" onclick="closeUpgrade()">Upgrade to Pro →</button>
-    <button class="btn-ghost btn-full" style="margin-top:6px" onclick="closeUpgrade()">Maybe later</button>
-  </div>
-</div>
 
 <header class="header">
   <div class="header-left">
@@ -171,7 +136,6 @@
   </div>
   <div class="header-right">
     <button class="btn btn-outline btn-sm" id="header-end-btn" style="display:none" onclick="endSession()">End Session</button>
-    <button class="btn btn-outline btn-sm" onclick="showUpgrade()">⭐ Go Pro</button>
   </div>
 </header>
 
@@ -180,7 +144,7 @@
   <div class="setup-body">
     <p class="page-eyebrow">Talk Tracker</p>
     <h1 class="page-title">Set Up Your Session</h1>
-    <p class="page-sub">Add your students, name the session, and optionally set up talking points and a rubric before you begin.</p>
+    <p class="page-sub">Add your students, name the session, and optionally set up talking points before you begin.</p>
 
     <!-- Session Details -->
     <div class="card">
@@ -235,48 +199,6 @@
       <p class="hint" style="margin-top:8px">Track which topics get covered during the session.</p>
     </div>
 
-    <!-- Speaker Timer -->
-    <div class="card">
-      <div class="card-title">⏱ Speaker Timer <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock-inline">
-        <div class="field">
-          <label>Timer per speaker</label>
-          <select disabled>
-            <option>2 minutes</option><option>3 minutes</option><option>5 minutes</option>
-          </select>
-        </div>
-      </div>
-      <p class="hint" style="margin-top:8px">Available with Pro. Time individual speakers automatically.</p>
-    </div>
-
-    <!-- Rubric -->
-    <div class="card">
-      <div class="card-title">📊 Rubric <span class="pro-badge">Pro</span></div>
-      <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px">Define scoring criteria to evaluate participation quality. Scores are assigned in the Summary screen after the session.</p>
-      <div class="rubric-list" id="rubric-preview">
-        <!-- Sample criteria shown greyed out for free users -->
-        <div class="rubric-row" style="opacity:.45">
-          <div class="rubric-criterion">
-            <input type="text" value="Quality of contributions" disabled/>
-            <div class="rubric-score-row">
-              <label>Min:</label><input type="number" value="0" disabled style="width:56px;text-align:center"/>
-              <label>Max:</label><input type="number" value="4" disabled style="width:56px;text-align:center"/>
-            </div>
-          </div>
-        </div>
-        <div class="rubric-row" style="opacity:.45">
-          <div class="rubric-criterion">
-            <input type="text" value="Builds on others' ideas" disabled/>
-            <div class="rubric-score-row">
-              <label>Min:</label><input type="number" value="0" disabled style="width:56px;text-align:center"/>
-              <label>Max:</label><input type="number" value="4" disabled style="width:56px;text-align:center"/>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="showUpgrade()">Unlock Rubric Builder →</button>
-    </div>
-
     <div class="setup-actions">
       <button class="btn-ghost" onclick="clearSetup()">Clear</button>
       <button class="btn btn-primary" onclick="startSession()" style="padding:11px 28px">Start Session →</button>
@@ -304,7 +226,7 @@
 
     <!-- Right Sidebar -->
     <aside class="live-sidebar">
-      <!-- Timer (Pro placeholder) -->
+      <!-- Session Timer -->
       <div class="ls-section">
         <div class="ls-label">Session Timer</div>
         <div class="timer-display" id="session-timer">00:00</div>
@@ -339,7 +261,6 @@
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button class="btn btn-outline btn-sm" onclick="printSummary()">🖨 Print</button>
-        <button class="btn btn-outline btn-sm" onclick="showUpgrade()">📥 Export CSV <span class="pro-badge">Pro</span></button>
         <button class="btn btn-outline btn-sm" onclick="newSession()">+ New Session</button>
       </div>
     </div>
@@ -359,16 +280,6 @@
       <div id="sum-tp"></div>
     </div>
 
-    <!-- Rubric -->
-    <div class="card">
-      <div class="card-title">📋 Rubric Scoring <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock-card">
-        <strong>Detailed rubric scoring</strong>
-        <p>Score each student on your rubric criteria here, then export to CSV or print a report.</p>
-        <button class="btn btn-outline btn-sm" onclick="showUpgrade()">Upgrade to Pro →</button>
-      </div>
-    </div>
-
     <!-- Notes Review -->
     <div class="notes-review">
       <h3>Session Notes</h3>
@@ -380,8 +291,6 @@
 <div class="tag-popup" id="tag-popup"></div>
 
 <script>
-const isPro = false;
-
 // ── STATE ──
 let session = {
   name: '', type: 'socratic', target: 3,
@@ -733,13 +642,6 @@ function clearSetup() {
   renderTalkingPoints();
 }
 
-// ── UPGRADE ──
-function showUpgrade() { document.getElementById('upgrade-modal').classList.add('open'); }
-function closeUpgrade() { document.getElementById('upgrade-modal').classList.remove('open'); }
-document.getElementById('upgrade-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('upgrade-modal')) closeUpgrade();
-});
-
 // ── UTILS ──
 function switchScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -756,7 +658,7 @@ function showToast(msg, dur=2200) {
 // Print styles
 const ps = document.createElement('style');
 ps.media = 'print';
-ps.textContent = `.header,.pro-lock-card,button{display:none!important}.summary-body{padding:0}`;
+ps.textContent = `.header,button{display:none!important}.summary-body{padding:0}`;
 document.head.appendChild(ps);
 </script>
 </body>

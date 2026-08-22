@@ -26,13 +26,6 @@
   .hint{font-size:11px}
   .row-2{gap:8px}
 
-  /* PRO BADGE */
-  .pro-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#FBF4E8;color:var(--accent);border:1px solid #E4CFA0;border-radius:4px;padding:2px 6px;margin-left:6px}
-
-  /* PRO LOCK */
-  .pro-lock{background:var(--accent-soft);border:1.5px solid #E4CFA0;border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--accent-hover);text-align:center}
-  .pro-lock strong{display:block;font-size:13px;margin-bottom:3px}
-
   /* STUDENT COUNT BADGE */
   .count-badge{display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--green-border);margin-left:6px}
 
@@ -73,14 +66,6 @@
 
   .modal input{background:var(--bg)}
 
-  /* UPGRADE MODAL */
-  .upgrade-modal{text-align:center}
-  .upgrade-icon{font-size:36px;margin-bottom:10px}
-  .upgrade-title{font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:6px}
-  .upgrade-sub{font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6}
-  .upgrade-price{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px}
-  .upgrade-price span{font-size:14px;font-weight:400;color:var(--text-mid)}
-
   /* PRINT SHEET (built on demand; only visible in print media) */
   #print-sheet{display:none}
   .p-front{background:var(--accent-soft);border:2.5px solid var(--accent);border-radius:8px;padding:10px 56px;font-size:18px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-hover);white-space:nowrap}
@@ -107,18 +92,6 @@
   </div>
 </div>
 
-<div class="modal-bd" id="upgrade-modal">
-  <div class="modal upgrade-modal">
-    <div class="upgrade-icon">⭐</div>
-    <div class="upgrade-title">Upgrade to Pro</div>
-    <p class="upgrade-sub">Save class lists, save charts, and unlock custom desk arrangements with Teacher Toolshed Pro.</p>
-    <div class="upgrade-price">$5<span>/month</span></div>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">or $48/year — save 20%</p>
-    <button class="btn btn-primary btn-full" style="justify-content:center;margin-bottom:8px" onclick="closeUpgradeModal()">Upgrade to Pro →</button>
-    <button class="btn-ghost btn-full" onclick="closeUpgradeModal()">Maybe later</button>
-  </div>
-</div>
-
 <div class="toast hidden" id="toast"></div>
 <div id="print-sheet" aria-hidden="true"></div>
 
@@ -139,7 +112,6 @@
     <span class="header-tool">Seating Chart Maker</span>
   </div>
   <div class="header-right">
-    <button class="btn btn-outline btn-sm" onclick="showUpgrade()">⭐ Go Pro</button>
     <button class="btn btn-outline btn-sm" onclick="printChart()">Print</button>
     <button class="btn btn-green btn-sm" onclick="downloadPDF()">Download PDF</button>
   </div>
@@ -230,16 +202,6 @@
       <p class="hint">Saved in this browser only. Export to carry them to another device.</p>
     </div>
 
-    <!-- Pro: Custom layout -->
-    <div class="s-section">
-      <div class="s-label">Custom layout <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock">
-        <strong>Drag desks anywhere</strong>
-        Rearrange individual desks to match your actual classroom.
-        <br><button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%" onclick="showUpgrade()">Upgrade to Pro →</button>
-      </div>
-    </div>
-
   </aside>
 
   <!-- MAIN CANVAS -->
@@ -267,7 +229,6 @@
 </div>
 
 <script>
-const isPro = false;
 let template = 'rows';
 let desks = [];
 let swapping = false;
@@ -704,17 +665,6 @@ function clearChart() {
   renderDesks();
   document.getElementById('toolbar-info').textContent = 'Add students and click Randomize Seats';
 }
-
-// ── UPGRADE ──
-function showUpgrade() {
-  document.getElementById('upgrade-modal').classList.add('open');
-}
-function closeUpgradeModal() {
-  document.getElementById('upgrade-modal').classList.remove('open');
-}
-document.getElementById('upgrade-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('upgrade-modal')) closeUpgradeModal();
-});
 
 // ── PRINT / PDF ──
 const MM_TO_PX = 96 / 25.4;
