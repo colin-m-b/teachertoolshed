@@ -240,14 +240,6 @@ body {
 .zoom-label { display: flex; align-items: center; justify-content: center; min-width: 40px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); }
 .snap-btn { position: absolute; bottom: 16px; left: 16px; z-index: 30; }
 
-.conn-input-wrap { position: absolute; z-index: 100; display: none; }
-.conn-input-wrap input {
-  padding: 5px 10px; font-family: var(--font-sans); font-size: 0.76rem;
-  border: 2px solid var(--accent); border-radius: 6px; background: var(--surface);
-  color: var(--text); width: 150px; box-shadow: var(--shadow-md);
-}
-.conn-input-wrap input:focus { outline: none; }
-
 /* Modal */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(44,41,36,0.4); backdrop-filter: blur(4px);
@@ -304,7 +296,7 @@ body {
   <div class="teacher-body">
     <div class="teacher-content">
       <h2>Create an Activity</h2>
-      <p class="subtitle">Build your hexagon set below. Students will get a link to arrange and connect them on their own canvas.</p>
+      <p class="subtitle">Build your hexagon set below. Students will get a link to arrange them on their own canvas.</p>
 
       <div class="card">
         <h3><span class="step-num">1</span>Add Your Terms</h3>
@@ -373,8 +365,7 @@ body {
 
   <div class="instructions-banner" id="instructionsBanner">
     <div class="step"><span class="step-icon">1</span>Drag hexagons from the tray onto the canvas</div>
-    <div class="step"><span class="step-icon">2</span>Snap them together to show connections</div>
-    <div class="step"><span class="step-icon">3</span>Click the <strong>+</strong> between touching hexagons to label the connection</div>
+    <div class="step"><span class="step-icon">2</span>Snap them together to group related ideas</div>
     <button class="dismiss" id="dismissBanner" title="Dismiss">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </button>
@@ -395,9 +386,6 @@ body {
         <p>Drag hexagons here from the tray</p>
       </div>
       <svg id="svgCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div class="conn-input-wrap" id="connInputWrap">
-        <input type="text" id="connInput" placeholder="How are they connected?" maxlength="50" />
-      </div>
       <div class="snap-btn">
         <button class="tool-btn active" id="snapToggle">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 4h3V1M10 1v3h3M13 10h-3v3M4 13v-3H1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -418,7 +406,7 @@ body {
 <div class="modal-overlay" id="shareModal">
   <div class="modal">
     <h3>Your activity is ready!</h3>
-    <p>Share this link with students. Each person gets their own canvas to arrange hexagons and explain connections.</p>
+    <p>Share this link with students. Each person gets their own canvas to arrange the hexagons.</p>
     <div class="link-box">
       <input type="text" id="shareLink" readonly />
       <button class="copy-btn" id="copyBtn">Copy</button>
@@ -448,7 +436,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   }
 
   let gid = 0, groups = [];
-  let activity = null, placed = [], connections = [];
+  let activity = null, placed = [];
   let snap = true, zoom = 1, panX = 0, panY = 0;
   let dragging = null, panning = false, panSX = 0, panSY = 0;
 
@@ -488,7 +476,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   function showStudent() {
     $('studentView').classList.add('active');
     $('teacherView').classList.remove('active');
-    placed = []; connections = []; zoom = 1; panX = 0; panY = 0;
+    placed = []; zoom = 1; panX = 0; panY = 0;
     restoreState();
     buildTray(); renderCanvas();
   }
@@ -501,7 +489,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     if (!activity) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      try { localStorage.setItem(saveKey(), JSON.stringify({ placed, connections })); } catch(e) {}
+      try { localStorage.setItem(saveKey(), JSON.stringify({ placed })); } catch(e) {}
     }, 300);
   }
   function restoreState() {
@@ -509,7 +497,6 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
       const saved = JSON.parse(localStorage.getItem(saveKey()));
       if (saved && Array.isArray(saved.placed)) {
         placed = saved.placed.filter(p => activity.terms[p.id]);
-        connections = (saved.connections || []).filter(c => activity.terms[c.id1] && activity.terms[c.id2]);
       }
     } catch(e) {}
   }
@@ -711,8 +698,6 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   function hexPts(cx,cy,r) { const p=[]; for(let i=0;i<6;i++){const a=(Math.PI/3)*i-Math.PI/6;p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));} return p.join(' '); }
   const hexW=()=>HEX_R*Math.sqrt(3), hexH=()=>HEX_R*2;
   function snapGrid(x,y) { if(!snap)return{x,y}; const w=hexW()+3,h=hexH()*0.75+3; const col=Math.round(x/w),row=Math.round(y/h); let sx=col*w; const sy=row*h; if(Math.abs(row)%2===1)sx+=w/2; return{x:sx,y:sy}; }
-  function adj(a,b) { const dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy)<hexW()+12; }
-  function mid(a,b) { return{x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
 
   // ====== CANVAS ======
   function svgE(tag,attrs) { const el=document.createElementNS('http://www.w3.org/2000/svg',tag); for(const[k,v]of Object.entries(attrs||{}))el.setAttribute(k,v); return el; }
@@ -749,28 +734,6 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
       } else { text.textContent=t.text; }
       g.appendChild(text);
     });
-
-    // Connector lines/labels are drawn after the hexagons so they render
-    // on top, visible in the gap where two adjacent hexagons touch.
-    for(let i=0;i<placed.length;i++) for(let j=i+1;j<placed.length;j++) {
-      const a=placed[i],b=placed[j]; if(!adj(a,b))continue;
-      const m=mid(a,b);
-      const conn=connections.find(c=>(c.id1===a.id&&c.id2===b.id)||(c.id1===b.id&&c.id2===a.id));
-      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#A8A098','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
-      const zone=svgE('rect',{x:m.x-40,y:m.y-14,width:80,height:28,fill:'transparent',cursor:'pointer'});
-      zone.addEventListener('click',e=>{e.stopPropagation();openConn(a.id,b.id,m);});
-      g.appendChild(zone);
-      if(conn&&conn.label) {
-        const d=conn.label.length>16?conn.label.slice(0,15)+'…':conn.label;
-        const tw=d.length*6.2+14;
-        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#E0DDD4','stroke-width':1,'pointer-events':'none'}));
-        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6B6457','pointer-events':'none'});
-        txt.textContent=d; g.appendChild(txt);
-      } else {
-        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#A8A098','pointer-events':'none'});
-        plus.textContent='+'; g.appendChild(plus);
-      }
-    }
 
     svg.appendChild(g);
     $('zoomLabel').textContent=Math.round(zoom*100)+'%';
@@ -846,20 +809,8 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   }, { passive: false });
   canvasArea.addEventListener('touchend', () => { lastTouchDist = 0; lastTouchMid = null; });
 
-  // CONNECTION INPUT
-  function openConn(id1,id2,m){
-    const ex=connections.find(c=>(c.id1===id1&&c.id2===id2)||(c.id1===id2&&c.id2===id1));
-    const wrap=$('connInputWrap'),input=$('connInput');
-    const sx=m.x*zoom+panX,sy=m.y*zoom+panY;
-    wrap.style.display='block';wrap.style.left=(sx-75)+'px';wrap.style.top=(sy-14)+'px';
-    input.value=ex?ex.label:'';input.focus();
-    const finish=()=>{const val=input.value.trim();const idx=connections.findIndex(c=>(c.id1===id1&&c.id2===id2)||(c.id1===id2&&c.id2===id1));if(val){if(idx>=0)connections[idx].label=val;else connections.push({id1,id2,label:val});}else if(idx>=0)connections.splice(idx,1);wrap.style.display='none';renderCanvas();input.removeEventListener('blur',finish);input.removeEventListener('keydown',onKey);};
-    const onKey=e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}if(e.key==='Escape'){input.value='';input.blur();}};
-    input.addEventListener('blur',finish);input.addEventListener('keydown',onKey);
-  }
-
   // RIGHT-CLICK REMOVE
-  svgCanvas.addEventListener('contextmenu',e=>{e.preventDefault();const t=e.target;if(t.hasAttribute('data-id')){const id=parseInt(t.getAttribute('data-id'));placed=placed.filter(p=>p.id!==id);connections=connections.filter(c=>c.id1!==id&&c.id2!==id);buildTray();renderCanvas();}});
+  svgCanvas.addEventListener('contextmenu',e=>{e.preventDefault();const t=e.target;if(t.hasAttribute('data-id')){const id=parseInt(t.getAttribute('data-id'));placed=placed.filter(p=>p.id!==id);buildTray();renderCanvas();}});
 
   // EXPORT
   function exportImage(){
@@ -887,7 +838,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
   $('closeModal').addEventListener('click',()=>$('shareModal').classList.remove('open'));
   $('shareModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
   $('trayToggle').addEventListener('click',function(){$('hexTray').classList.toggle('collapsed');this.classList.toggle('active');});
-  $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];connections=[];zoom=1;panX=0;panY=0;clearSavedState();buildTray();renderCanvas();}});
+  $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];zoom=1;panX=0;panY=0;clearSavedState();buildTray();renderCanvas();}});
   $('exportBtn').addEventListener('click',exportImage);
   $('snapToggle').addEventListener('click',function(){snap=!snap;this.classList.toggle('active',snap);});
   function zoomAtCenter(nz){nz=Math.max(0.3,Math.min(3,nz));const r=canvasArea.getBoundingClientRect();const cx=r.width/2,cy=r.height/2;panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;renderCanvas();}
