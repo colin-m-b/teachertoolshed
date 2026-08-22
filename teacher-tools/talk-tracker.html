@@ -88,6 +88,15 @@
   .tag-btn{display:block;width:100%;background:none;border:none;text-align:left;font-family:var(--font-sans);font-size:13px;color:var(--text);padding:7px 10px;cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
   .tag-btn:hover{background:var(--surface-2)}
 
+  /* NOTE BUTTON + POPUP */
+  .note-btn{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;color:var(--text-light);cursor:pointer;transition:all .15s}
+  .note-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .note-btn.has-note{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .note-popup{display:none;position:fixed;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px;box-shadow:0 4px 16px rgba(40,37,30,.14);z-index:110;width:220px}
+  .note-popup.open{display:block}
+  .note-popup-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);margin-bottom:6px}
+  .note-popup textarea{width:100%;min-height:70px;font-size:13px;margin-bottom:8px}
+
   /* ─── SUMMARY SCREEN ─── */
   .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px;max-width:760px;margin:0 auto;width:100%}
   .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
@@ -112,6 +121,12 @@
   .notes-review{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
   .notes-review h3{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:10px}
   .notes-review textarea{font-size:13px}
+
+  /* SPEAKER NOTES */
+  .speaker-notes-row{margin-bottom:12px}
+  .speaker-notes-row:last-child{margin-bottom:0}
+  .speaker-notes-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+  .speaker-notes-row textarea{width:100%;min-height:56px;font-size:13px}
 </style>
 </head>
 <body>
@@ -280,6 +295,12 @@
       <div id="sum-tp"></div>
     </div>
 
+    <!-- Speaker Notes -->
+    <div class="card" id="sum-speaker-notes-card" style="display:none">
+      <div class="card-title">🗒 Speaker Notes</div>
+      <div id="sum-speaker-notes"></div>
+    </div>
+
     <!-- Notes Review -->
     <div class="notes-review">
       <h3>Session Notes</h3>
@@ -289,6 +310,7 @@
 </div>
 
 <div class="tag-popup" id="tag-popup"></div>
+<div class="note-popup" id="note-popup"></div>
 
 <script>
 // ── STATE ──
@@ -343,7 +365,7 @@ function startSession() {
   session.name = name;
   session.type = document.getElementById('session-type').value;
   session.target = parseInt(document.getElementById('target-count').value);
-  session.students = names.map((n, i) => ({id:'s'+i, name:n, count:0, tags:[]}));
+  session.students = names.map((n, i) => ({id:'s'+i, name:n, count:0, tags:[], notes:''}));
   session.startTime = Date.now();
   session.elapsed = 0;
   session.notes = '';
@@ -391,9 +413,16 @@ function renderStudentGrid() {
       tags.appendChild(tg);
     });
 
+    const noteBtn = document.createElement('button');
+    noteBtn.className = 'note-btn' + (s.notes ? ' has-note' : '');
+    noteBtn.textContent = '✎';
+    noteBtn.title = 'Add note';
+    noteBtn.addEventListener('click', e => openNotePopup(s.id, e));
+
     card.appendChild(countDiv);
     card.appendChild(nameDiv);
     card.appendChild(tags);
+    card.appendChild(noteBtn);
 
     card.addEventListener('click', (e) => {
       if (session.talkingPoints.length > 0) {
@@ -451,6 +480,8 @@ function updateStudentCard(s) {
     tg.className = 's-tag'; tg.textContent = t;
     tagsDiv.appendChild(tg);
   });
+  const noteBtn = card.querySelector('.note-btn');
+  if (noteBtn) noteBtn.classList.toggle('has-note', !!s.notes);
 }
 
 function updateLiveStats() {
@@ -496,6 +527,35 @@ function closeTagPopup() {
   tagPopupFor = null;
 }
 document.addEventListener('click', closeTagPopup);
+
+// ── NOTE POPUP ──
+let notePopupFor = null;
+document.getElementById('note-popup').addEventListener('click', e => e.stopPropagation());
+function openNotePopup(studentId, e) {
+  e.stopPropagation();
+  notePopupFor = studentId;
+  const s = session.students.find(x => x.id === studentId);
+  if (!s) return;
+  const popup = document.getElementById('note-popup');
+  popup.innerHTML = `<div class="note-popup-title">Note — ${esc(s.name)}</div>
+    <textarea id="note-popup-input" placeholder="Observation about this student…"></textarea>
+    <button class="btn btn-primary btn-sm btn-full" id="note-popup-done">Done</button>`;
+  const ta = popup.querySelector('#note-popup-input');
+  ta.value = s.notes || '';
+  ta.addEventListener('input', () => { s.notes = ta.value; updateStudentCard(s); });
+  popup.querySelector('#note-popup-done').addEventListener('click', closeNotePopup);
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  popup.style.left = Math.min(rect.left, window.innerWidth - 236) + 'px';
+  popup.style.top = Math.min(rect.bottom + 4, window.innerHeight - 140) + 'px';
+  popup.classList.add('open');
+  ta.focus();
+}
+function closeNotePopup() {
+  document.getElementById('note-popup').classList.remove('open');
+  notePopupFor = null;
+}
+document.addEventListener('click', closeNotePopup);
 
 // ── LIVE: TALKING POINTS ──
 function renderLiveTalkingPoints() {
@@ -611,6 +671,26 @@ function buildSummary() {
     tpCard.style.display = 'none';
   }
 
+  // Speaker notes
+  const notesCard = document.getElementById('sum-speaker-notes-card');
+  if (s.students.length) {
+    notesCard.style.display = '';
+    document.getElementById('sum-speaker-notes').innerHTML = s.students.map(st =>
+      `<div class="speaker-notes-row">
+        <div class="speaker-notes-name">${esc(st.name)}</div>
+        <textarea data-student-id="${st.id}" placeholder="Notes for ${esc(st.name)}…">${esc(st.notes || '')}</textarea>
+      </div>`
+    ).join('');
+    document.querySelectorAll('#sum-speaker-notes textarea').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const st = s.students.find(x => x.id === ta.dataset.studentId);
+        if (st) st.notes = ta.value;
+      });
+    });
+  } else {
+    notesCard.style.display = 'none';
+  }
+
   document.getElementById('sum-notes').value = session.notes;
 }
 
@@ -658,7 +738,7 @@ function showToast(msg, dur=2200) {
 // Print styles
 const ps = document.createElement('style');
 ps.media = 'print';
-ps.textContent = `.header,button{display:none!important}.summary-body{padding:0}`;
+ps.textContent = `.header,button{display:none!important}.summary-body{padding:0}.speaker-notes-row:has(textarea:placeholder-shown){display:none}`;
 document.head.appendChild(ps);
 </script>
 </body>
