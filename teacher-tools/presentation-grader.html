@@ -23,17 +23,25 @@
   .card{margin-bottom:16px}
   .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
 
-  /* group-def rows in setup */
-  .group-def-row{display:flex;align-items:center;gap:8px}
-  .group-def-row input{flex:1}
+  /* group-def rows in setup — click to make the "active" tap-assign target */
+  .group-def-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .12s,border-color .12s}
+  .group-def-row:hover{border-color:#E4CFA0}
+  .group-def-row.active{background:var(--accent-soft);border-color:var(--accent)}
+  .group-def-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+  .group-def-row.active .group-def-dot{background:var(--accent)}
+  .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text);border-radius:4px}
+  .group-def-row input:focus{outline:none;background:var(--surface)}
+  .group-def-count{font-size:11px;color:var(--text-light);flex-shrink:0;white-space:nowrap}
   .group-def-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
   .group-def-remove:hover{color:var(--red)}
 
-  /* per-student assignment rows */
-  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--surface-2)}
+  /* per-student assignment rows — click to assign to the active group */
+  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 6px;border-bottom:1px solid var(--surface-2);cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
+  .assign-row:hover{background:var(--surface-2)}
   .assign-row:last-child{border-bottom:none}
   .assign-name{font-size:13px;font-weight:600;color:var(--text)}
-  .assign-row select{width:170px}
+  .assign-badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface);white-space:nowrap;flex-shrink:0}
+  .assign-badge.assigned{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover)}
   .unassigned-warning{font-size:12.5px;color:var(--red);margin-top:8px;font-weight:600}
   .unassigned-ok{font-size:12.5px;color:var(--green);margin-top:8px;font-weight:600}
 
@@ -201,6 +209,7 @@
           <label>Groups</label>
           <div id="group-defs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <button class="btn-add-tp" id="add-group-btn">+ Add group</button>
+          <p class="hint" style="margin-top:8px">Click a group to make it the active target, then click students below to assign them to it.</p>
         </div>
         <div class="row-2">
           <div class="field">
@@ -220,6 +229,7 @@
         </div>
         <div class="field">
           <label>Assign students to groups</label>
+          <p class="hint" style="margin-bottom:8px">Click a student to assign them to the active group. Click an assigned student again to remove them.</p>
           <div id="assign-list"></div>
           <p id="unassigned-status"></p>
         </div>
@@ -353,6 +363,7 @@ let session = null;
 let mode = 'individual';           // setup-time only
 let groupDefs = [];                 // [{id, name}] — setup-time group shells
 let assignment = {};                // {studentName: groupDefId|null} — setup-time
+let activeGroupId = null;           // setup-time: which group tapping a student assigns them to
 let groupDefCounter = 0;
 
 let selectedRubric = null;          // {id?, name, criteria} currently shown in the editor
@@ -438,32 +449,57 @@ function setMode(m) {
 }
 
 function addGroupDef(name) {
-  groupDefs.push({ id: nextId('g'), name: name || `Group ${groupDefs.length + 1}` });
+  const g = { id: nextId('g'), name: name || `Group ${groupDefs.length + 1}` };
+  groupDefs.push(g);
+  activeGroupId = g.id; // a freshly added group becomes the tap-assign target
   renderGroupDefs();
   renderAssignList();
 }
 function removeGroupDef(id) {
   groupDefs = groupDefs.filter(g => g.id !== id);
   Object.keys(assignment).forEach(name => { if (assignment[name] === id) assignment[name] = null; });
+  if (activeGroupId === id) activeGroupId = groupDefs.length ? groupDefs[groupDefs.length - 1].id : null;
+  renderGroupDefs();
+  renderAssignList();
+}
+function setActiveGroup(id) {
+  activeGroupId = id;
   renderGroupDefs();
   renderAssignList();
 }
 function renderGroupDefs() {
   const wrap = $('group-defs-list');
   wrap.innerHTML = '';
+  const names = currentStudentNames();
   groupDefs.forEach(g => {
+    const count = names.filter(n => assignment[n] === g.id).length;
+
     const row = document.createElement('div');
-    row.className = 'group-def-row';
+    row.className = 'group-def-row' + (g.id === activeGroupId ? ' active' : '');
+    row.title = 'Click to make this the active group';
+    row.addEventListener('click', () => setActiveGroup(g.id));
+
+    const dot = document.createElement('span');
+    dot.className = 'group-def-dot';
+
     const input = document.createElement('input');
     input.type = 'text';
     input.value = g.name;
     input.addEventListener('input', () => { g.name = input.value; renderAssignList(); });
+
+    const countEl = document.createElement('span');
+    countEl.className = 'group-def-count';
+    countEl.textContent = count ? `${count} assigned` : '';
+
     const rm = document.createElement('button');
     rm.className = 'group-def-remove';
     rm.textContent = '×';
     rm.title = 'Remove group';
-    rm.addEventListener('click', () => removeGroupDef(g.id));
+    rm.addEventListener('click', (e) => { e.stopPropagation(); removeGroupDef(g.id); });
+
+    row.appendChild(dot);
     row.appendChild(input);
+    row.appendChild(countEl);
     row.appendChild(rm);
     wrap.appendChild(row);
   });
@@ -484,6 +520,7 @@ function refreshAssignList() {
   const namesSet = new Set(names.map(n => n.toLowerCase()));
   Object.keys(assignment).forEach(n => { if (!namesSet.has(n.toLowerCase())) delete assignment[n]; });
   names.forEach(n => { if (!(n in assignment)) assignment[n] = null; });
+  renderGroupDefs();
   renderAssignList();
 }
 
@@ -496,26 +533,28 @@ function renderAssignList() {
   names.forEach(name => {
     const row = document.createElement('div');
     row.className = 'assign-row';
+    row.title = activeGroupId ? 'Click to assign to the active group' : 'Click a group above first';
+
     const label = document.createElement('span');
     label.className = 'assign-name';
     label.textContent = name;
-    const sel = document.createElement('select');
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = '— Unassigned —';
-    sel.appendChild(noneOpt);
-    groupDefs.forEach(g => {
-      const o = document.createElement('option');
-      o.value = g.id; o.textContent = g.name;
-      sel.appendChild(o);
-    });
-    sel.value = assignment[name] || '';
-    if (!sel.value) unassigned++;
-    sel.addEventListener('change', () => {
-      assignment[name] = sel.value || null;
+
+    const groupId = assignment[name];
+    const group = groupDefs.find(g => g.id === groupId);
+    if (!group) unassigned++;
+    const badge = document.createElement('span');
+    badge.className = 'assign-badge' + (group ? ' assigned' : '');
+    badge.textContent = group ? group.name : '— Unassigned —';
+
+    row.addEventListener('click', () => {
+      if (!activeGroupId) { showToast('Click a group above first, then tap students to assign them'); return; }
+      assignment[name] = assignment[name] === activeGroupId ? null : activeGroupId;
+      renderGroupDefs();
       renderAssignList();
     });
+
     row.appendChild(label);
-    row.appendChild(sel);
+    row.appendChild(badge);
     wrap.appendChild(row);
   });
 
@@ -1184,6 +1223,7 @@ function newSession() {
   savedSessionId = null;
   groupDefs = [];
   assignment = {};
+  activeGroupId = null;
   $('session-name').value = '';
   $('class-name').value = '';
   $('students-input').value = '';
@@ -1209,7 +1249,7 @@ function wireSetupEvents() {
   $('clear-setup-btn').addEventListener('click', () => {
     if (!confirm('Clear the session setup?')) return;
     $('session-name').value = ''; $('class-name').value = ''; $('students-input').value = '';
-    groupDefs = []; assignment = {};
+    groupDefs = []; assignment = {}; activeGroupId = null;
     renderGroupDefs(); refreshAssignList();
   });
 }
