@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Lists — Teacher Toolshed</title>
+<meta name="description" content="Manage the class lists shared across every Teacher Toolshed tool. Saved in your browser only.">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<style>
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column}
+
+  .app{flex:1;display:flex;overflow:hidden}
+
+  /* LIST PANE */
+  .list-pane{width:280px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .list-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .list-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light)}
+  .list-items{flex:1;overflow-y:auto;padding:8px}
+  .list-item{width:100%;text-align:left;background:none;border:1.5px solid transparent;border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s,border-color .12s;margin-bottom:2px}
+  .list-item:hover{background:var(--surface-2)}
+  .list-item.active{background:var(--accent-soft);border-color:#E4CFA0}
+  .list-item-name{font-size:13px;font-weight:600;color:var(--text);word-break:break-word}
+  .list-item-meta{font-size:11px;color:var(--text-light);margin-top:2px}
+  .list-empty{padding:22px 16px;text-align:center;color:var(--text-light);font-size:13px;line-height:1.6}
+
+  /* BACKUP */
+  .backup{padding:14px 16px;border-top:1px solid var(--border)}
+  .backup .row-2{gap:8px;margin-bottom:8px}
+
+  /* EDITOR */
+  .editor-wrap{flex:1;overflow-y:auto;padding:32px 28px 60px}
+  .editor{max-width:620px;margin:0 auto}
+  .page-title{font-family:var(--font-serif);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:24px;line-height:1.6}
+  #students-input{min-height:280px;line-height:1.7}
+  .editor-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+  .count-badge{display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--green-border);margin-left:6px}
+
+  .blank-state{max-width:620px;margin:0 auto;text-align:center;padding-top:60px}
+  .blank-state .icon{font-size:44px;opacity:.2;margin-bottom:12px}
+  .blank-state h2{font-family:var(--font-serif);font-size:19px;font-weight:700;margin-bottom:8px}
+  .blank-state p{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:18px}
+
+  /* STORAGE NOTICE */
+  .storage-note{background:var(--accent-soft);border-bottom:1px solid #E4CFA0;padding:8px 20px;font-size:12.5px;color:var(--accent-hover);text-align:center;flex-shrink:0}
+  .storage-note.warn{background:var(--red-soft);border-bottom-color:#E8BDB7;color:var(--red)}
+
+  @media (max-width:768px){
+    .app{flex-direction:column}
+    .list-pane{width:100%;max-height:38%;border-right:none;border-bottom:1.5px solid var(--border)}
+    .editor-wrap{padding:20px 16px 40px}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast hidden" id="toast"></div>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <span class="header-tool">Class Lists</span>
+  </div>
+</header>
+
+<div class="storage-note" id="storage-note">
+  Class lists are saved only in this browser. Export a backup to keep a copy or move them to another device.
+</div>
+
+<div class="app">
+  <aside class="list-pane">
+    <div class="list-head">
+      <span class="list-label">Class Lists</span>
+      <button class="btn btn-primary btn-sm" onclick="newRoster()">+ New</button>
+    </div>
+    <div class="list-items" id="list-items"></div>
+    <div class="backup">
+      <div class="list-label" style="margin-bottom:8px">Backup</div>
+      <div class="row-2">
+        <button class="btn btn-outline btn-sm" onclick="exportBackup()">Export</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(event)"/>
+      <p class="hint">Exports every class list and everything saved in the other tools.</p>
+    </div>
+  </aside>
+
+  <main class="editor-wrap">
+    <div class="blank-state" id="blank-state">
+      <div class="icon">📋</div>
+      <h2>No class list selected</h2>
+      <p>Class lists are shared across every tool — build one here and it shows up<br>in the Seating Chart Maker and Talk Tracker.</p>
+      <button class="btn btn-primary" onclick="newRoster()">+ New class list</button>
+    </div>
+
+    <div class="editor" id="editor" style="display:none">
+      <h1 class="page-title" id="editor-title">New class list</h1>
+      <p class="page-sub">Give it a name, then paste or type one student name per line.</p>
+
+      <div class="card">
+        <div class="field">
+          <label>Class name <span class="required-mark">*</span></label>
+          <input type="text" id="roster-name" placeholder="e.g. Period 3 English 10" maxlength="80"/>
+        </div>
+        <div class="field">
+          <label>Students <span class="count-badge" id="count-badge">0</span></label>
+          <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…"></textarea>
+          <p class="hint">One name per line. Comma-separated names on a single line work too.</p>
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button class="btn-ghost" id="delete-btn" onclick="deleteCurrent()" style="visibility:hidden">Delete this list</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCurrent()">Save class list</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/toolshed-store.js"></script>
+<script>
+let currentId = null;   // null = unsaved new list
+let summaries = [];
+
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    const note = document.getElementById('storage-note');
+    note.className = 'storage-note warn';
+    note.textContent = 'This browser is blocking saved data (private mode?). Anything you enter here will be lost when you close the tab.';
+  }
+  document.getElementById('students-input').addEventListener('input', updateCount);
+  await refreshList();
+})();
+
+async function refreshList(selectId) {
+  summaries = await ToolshedStore.listRosters();
+  const wrap = document.getElementById('list-items');
+  wrap.innerHTML = '';
+
+  if (!summaries.length) {
+    wrap.innerHTML = '<div class="list-empty">No class lists yet.<br>Create one to get started.</div>';
+    return;
+  }
+  summaries.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'list-item' + (r.id === selectId ? ' active' : '');
+    btn.innerHTML = `<div class="list-item-name"></div><div class="list-item-meta">${r.studentCount} student${r.studentCount === 1 ? '' : 's'}</div>`;
+    btn.querySelector('.list-item-name').textContent = r.name;
+    btn.onclick = () => openRoster(r.id);
+    wrap.appendChild(btn);
+  });
+}
+
+function markActive(id) {
+  document.querySelectorAll('.list-item').forEach((el, i) => {
+    el.classList.toggle('active', summaries[i] && summaries[i].id === id);
+  });
+}
+
+// ── EDITOR ──
+function showEditor(show) {
+  document.getElementById('editor').style.display = show ? '' : 'none';
+  document.getElementById('blank-state').style.display = show ? 'none' : '';
+}
+
+function newRoster() {
+  if (!confirmDiscard()) return;
+  currentId = null;
+  document.getElementById('editor-title').textContent = 'New class list';
+  document.getElementById('roster-name').value = '';
+  document.getElementById('students-input').value = '';
+  document.getElementById('delete-btn').style.visibility = 'hidden';
+  updateCount();
+  showEditor(true);
+  markActive(null);
+  document.getElementById('roster-name').focus();
+}
+
+async function openRoster(id) {
+  if (!confirmDiscard()) return;
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await refreshList(); return; }
+  currentId = r.id;
+  document.getElementById('editor-title').textContent = r.name;
+  document.getElementById('roster-name').value = r.name;
+  document.getElementById('students-input').value = r.students.map(s => s.name).join('\n');
+  document.getElementById('delete-btn').style.visibility = '';
+  updateCount();
+  showEditor(true);
+  markActive(id);
+  snapshot();
+}
+
+function parseNames(raw) {
+  const byLine = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (byLine.length === 1 && byLine[0].includes(','))
+    return byLine[0].split(',').map(s => s.trim()).filter(Boolean);
+  return byLine;
+}
+
+function updateCount() {
+  const n = parseNames(document.getElementById('students-input').value).length;
+  document.getElementById('count-badge').textContent = n;
+}
+
+async function saveCurrent() {
+  const name = document.getElementById('roster-name').value.trim();
+  if (!name) { showToast('Give the class list a name first'); document.getElementById('roster-name').focus(); return; }
+  const students = parseNames(document.getElementById('students-input').value);
+  if (!students.length) { showToast('Add at least one student'); return; }
+
+  // Keep existing student ids stable across edits, so other tools can rely on them
+  let existing = currentId ? await ToolshedStore.getRoster(currentId) : null;
+  const prevByName = {};
+  if (existing) existing.students.forEach(s => { prevByName[s.name.toLowerCase()] = s.id; });
+
+  const saved = await ToolshedStore.saveRoster({
+    id: currentId || undefined,
+    createdAt: existing ? existing.createdAt : undefined,
+    name,
+    students: students.map(n => ({ id: prevByName[n.toLowerCase()], name: n }))
+  });
+
+  currentId = saved.id;
+  document.getElementById('editor-title').textContent = saved.name;
+  document.getElementById('delete-btn').style.visibility = '';
+  await refreshList(saved.id);
+  snapshot();
+  showToast(`Saved ${saved.name} — ${saved.students.length} students`);
+}
+
+async function deleteCurrent() {
+  if (!currentId) return;
+  const name = document.getElementById('roster-name').value.trim() || 'this class list';
+  if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteRoster(currentId);
+  currentId = null;
+  clearDirty();
+  showEditor(false);
+  await refreshList();
+  showToast(`Deleted ${name}`);
+}
+
+function cancelEdit() {
+  if (!confirmDiscard()) return;
+  currentId = null;
+  clearDirty();
+  showEditor(false);
+  markActive(null);
+}
+
+// ── UNSAVED-CHANGES GUARD ──
+let saved = { name: '', students: '' };
+function snapshot() {
+  saved = {
+    name: document.getElementById('roster-name').value,
+    students: document.getElementById('students-input').value
+  };
+}
+function clearDirty() { snapshot(); }
+function isDirty() {
+  if (document.getElementById('editor').style.display === 'none') return false;
+  return document.getElementById('roster-name').value !== saved.name ||
+         document.getElementById('students-input').value !== saved.students;
+}
+function confirmDiscard() {
+  return !isDirty() || confirm('You have unsaved changes. Discard them?');
+}
+window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+// ── BACKUP ──
+async function exportBackup() {
+  const json = await ToolshedStore.exportAll();
+  const stamp = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `teacher-toolshed-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Backup downloaded');
+}
+
+function importBackup(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const merge = confirm(
+      'Merge this backup with what you already have?\n\n' +
+      'OK — merge (keeps existing work; newer versions win)\n' +
+      'Cancel — replace everything on this device'
+    );
+    try {
+      const counts = await ToolshedStore.importAll(reader.result, { merge });
+      currentId = null;
+      clearDirty();
+      showEditor(false);
+      await refreshList();
+      showToast(`Imported ${counts.rosters} class list${counts.rosters === 1 ? '' : 's'} and ${counts.docs} saved item${counts.docs === 1 ? '' : 's'}`, 3500);
+    } catch (err) {
+      showToast(err.message || 'Could not read that backup file', 3500);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── UTILS ──
+function showToast(msg, dur = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+}
+</script>
+</body>
+</html>

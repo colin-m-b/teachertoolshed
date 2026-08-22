@@ -318,6 +318,18 @@ body {
         <div class="preview-error" id="previewError"></div>
       </div>
 
+      <div class="card">
+        <h3><span class="step-num">3</span>Saved Activities</h3>
+        <p class="desc">Keep an activity to reuse or edit later. Saved in this browser only.</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="activitySelect" style="flex:1;min-width:180px;padding:8px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:8px">
+            <option value="">— Saved activities —</option>
+          </select>
+          <button class="tool-btn" id="saveActivityBtn">Save</button>
+          <button class="tool-btn" id="deleteActivityBtn">Delete</button>
+        </div>
+      </div>
+
       <div class="create-actions">
         <button class="btn btn-primary" id="createBtn" disabled>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4.5 7L8 10l3.5-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -414,6 +426,8 @@ body {
     <button class="modal-close" id="closeModal">Done</button>
   </div>
 </div>
+
+<script src="../js/toolshed-store.js"></script>
 
 <!-- ===== LZ-STRING COMPRESSION ===== -->
 <script>
@@ -826,9 +840,76 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     img.src=url;panX=sp.x;panY=sp.y;zoom=sz;renderCanvas();
   }
 
+  // ====== SAVED ACTIVITIES ======
+  // Teacher-side only. The student canvas is still driven entirely by the
+  // share link, so nothing here changes how students open an activity.
+  async function renderActivityList(selectedId) {
+    const sel = $('activitySelect');
+    sel.innerHTML = '<option value="">— Saved activities —</option>';
+    (await ToolshedStore.listDocs('hex')).forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.id; o.textContent = d.name;
+      sel.appendChild(o);
+    });
+    sel.value = selectedId || '';
+  }
+
+  async function saveActivity() {
+    const { terms } = getAllTerms();
+    if (!terms.length) { alert('Add some terms first.'); return; }
+
+    const selectedId = $('activitySelect').value;
+    const selected = selectedId ? await ToolshedStore.getDoc(selectedId) : null;
+    const name = (prompt('Name this activity:', selected ? selected.name : '') || '').trim();
+    if (!name) return;
+
+    const existing = (await ToolshedStore.listDocs('hex'))
+      .find(d => d.name.toLowerCase() === name.toLowerCase());
+    if (existing && !confirm(`Replace the saved activity "${existing.name}"?`)) return;
+
+    const saved = await ToolshedStore.saveDoc({
+      id: existing ? existing.id : undefined,
+      tool: 'hex',
+      name,
+      data: { groups: groups.map(g => ({ color: g.color, name: g.name, text: g.text })) }
+    });
+    await renderActivityList(saved.id);
+  }
+
+  async function loadActivity() {
+    const id = $('activitySelect').value;
+    if (!id) return;
+    const doc = await ToolshedStore.getDoc(id);
+    if (!doc || !doc.data || !Array.isArray(doc.data.groups)) {
+      alert('That activity could not be found.');
+      await renderActivityList();
+      return;
+    }
+    gid = 0;
+    groups = doc.data.groups.map(g => ({
+      id: gid++, color: g.color || PALETTE[0], name: g.name || '', text: g.text || ''
+    }));
+    if (!groups.length) addGroup();
+    renderGroups();
+    updatePreview();
+  }
+
+  async function deleteActivity() {
+    const id = $('activitySelect').value;
+    if (!id) { alert('Choose a saved activity first.'); return; }
+    const doc = await ToolshedStore.getDoc(id);
+    if (!doc || !confirm(`Delete the saved activity "${doc.name}"? This can't be undone.`)) return;
+    await ToolshedStore.deleteDoc(id);
+    await renderActivityList();
+  }
+
   // ====== EVENTS ======
   $('addGroupBtn').addEventListener('click',addGroup);
   $('createBtn').addEventListener('click',createActivity);
+  $('activitySelect').addEventListener('change',loadActivity);
+  $('saveActivityBtn').addEventListener('click',saveActivity);
+  $('deleteActivityBtn').addEventListener('click',deleteActivity);
+  ToolshedStore.ready().then(()=>renderActivityList());
   $('copyBtn').addEventListener('click',function(){
     const btn=this,done=()=>{btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy';},2000);};
     const fallback=()=>{const inp=$('shareLink');inp.focus();inp.select();try{document.execCommand('copy');done();}catch(e){}};

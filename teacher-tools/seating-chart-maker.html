@@ -190,16 +190,23 @@
           <option value="">— Saved classes —</option>
         </select>
       </div>
+      <button class="btn btn-outline btn-sm btn-full" onclick="saveRoster()">Save current list</button>
+      <p class="hint">Shared with every tool. <a href="rosters.html" class="link">Manage class lists →</a></p>
+    </div>
+
+    <!-- Saved charts -->
+    <div class="s-section">
+      <div class="s-label">Saved Charts</div>
+      <div class="field">
+        <select id="chart-select" onchange="loadChart()">
+          <option value="">— Saved charts —</option>
+        </select>
+      </div>
       <div class="row-2">
-        <button class="btn btn-outline btn-sm" onclick="saveRoster()">Save current</button>
-        <button class="btn btn-outline btn-sm" onclick="deleteRoster()">Delete</button>
+        <button class="btn btn-outline btn-sm" onclick="saveChart()">Save chart</button>
+        <button class="btn btn-outline btn-sm" onclick="deleteChart()">Delete</button>
       </div>
-      <div class="row-2" style="margin-top:6px">
-        <button class="btn btn-outline btn-sm" onclick="exportRosters()">Export</button>
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
-      </div>
-      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importRosters(event)"/>
-      <p class="hint">Saved in this browser only. Export to carry them to another device.</p>
+      <p class="hint">Your work in progress is kept automatically until you clear it.</p>
     </div>
 
   </aside>
@@ -228,6 +235,7 @@
   </main>
 </div>
 
+<script src="../js/toolshed-store.js"></script>
 <script>
 let template = 'rows';
 let desks = [];
@@ -258,140 +266,156 @@ function updateCount() {
 }
 
 // ── CLASS LISTS ──
-// Saved in this browser. The record shape matches the planned `rosters` table
-// (name + students) so these can be lifted straight into an account later.
-const ROSTER_KEY = 'toolshed:rosters';
-
-function loadRosters() {
-  try {
-    const list = JSON.parse(localStorage.getItem(ROSTER_KEY));
-    return Array.isArray(list) ? list : [];
-  } catch (e) { return []; }
-}
-
-function persistRosters(list) {
-  try {
-    localStorage.setItem(ROSTER_KEY, JSON.stringify(list));
-    return true;
-  } catch (e) {
-    showToast('Could not save — browser storage is full or blocked', 4000);
-    return false;
-  }
-}
-
-function newId() {
-  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-}
-
-function renderRosterList(selectedId = '') {
+// Shared across every tool via ToolshedStore. Full editing and backup live in
+// the Class Lists manager (rosters.html); this tool just picks and saves.
+async function renderRosterList(selectedId = '') {
   const sel = document.getElementById('roster-select');
   sel.innerHTML = '<option value="">— Saved classes —</option>';
-  loadRosters().forEach(r => {
+  (await ToolshedStore.listRosters()).forEach(r => {
     const o = document.createElement('option');
     o.value = r.id;
-    o.textContent = `${r.name} (${r.students.length})`;
+    o.textContent = `${r.name} (${r.studentCount})`;
     sel.appendChild(o);
   });
   sel.value = selectedId;
 }
 
-function loadRoster() {
+async function loadRoster() {
   const id = document.getElementById('roster-select').value;
   if (!id) return;
-  const r = loadRosters().find(x => x.id === id);
-  if (!r) return;
-  document.getElementById('student-input').value = r.students.join('\n');
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await renderRosterList(); return; }
+  document.getElementById('student-input').value = r.students.map(s => s.name).join('\n');
   updateCount();
+  scheduleAutosave();
   showToast(`Loaded ${r.name} — ${r.students.length} students`);
 }
 
-function saveRoster() {
+async function saveRoster() {
   const students = getStudents();
   if (!students.length) { showToast('Add some student names first'); return; }
 
-  const rosters = loadRosters();
-  const selected = rosters.find(r => r.id === document.getElementById('roster-select').value);
+  const selectedId = document.getElementById('roster-select').value;
+  const selected = selectedId ? await ToolshedStore.getRoster(selectedId) : null;
   const name = (prompt('Name this class list:', selected ? selected.name : '') || '').trim();
   if (!name) return;
 
-  const match = rosters.find(r => r.name.toLowerCase() === name.toLowerCase());
-  if (match && !confirm(`Replace the saved list "${match.name}"?`)) return;
+  const existing = (await ToolshedStore.listRosters())
+    .find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (existing && !confirm(`Replace the saved list "${existing.name}"?`)) return;
 
-  let record = match;
-  if (record) {
-    record.students = students;
-    record.updated_at = new Date().toISOString();
-  } else {
-    record = { id: newId(), name, students, updated_at: new Date().toISOString() };
-    rosters.push(record);
-  }
-  rosters.sort((a, b) => a.name.localeCompare(b.name));
-  if (!persistRosters(rosters)) return;
-  renderRosterList(record.id);
-  showToast(`Saved ${name} — ${students.length} students`);
+  const saved = await ToolshedStore.saveRoster({
+    id: existing ? existing.id : undefined,
+    name,
+    students
+  });
+  await renderRosterList(saved.id);
+  showToast(`Saved ${name} — ${saved.students.length} students`);
 }
 
-function deleteRoster() {
-  const id = document.getElementById('roster-select').value;
-  if (!id) { showToast('Choose a saved class list first'); return; }
-  const rosters = loadRosters();
-  const r = rosters.find(x => x.id === id);
-  if (!r || !confirm(`Delete the saved list "${r.name}"? This can't be undone.`)) return;
-  if (!persistRosters(rosters.filter(x => x.id !== id))) return;
-  renderRosterList();
-  showToast(`Deleted ${r.name}`);
-}
+// ── SAVED CHARTS ──
+const AUTOSAVE_ID = 'autosave-seating';
 
-function exportRosters() {
-  const rosters = loadRosters();
-  if (!rosters.length) { showToast('No saved class lists to export'); return; }
-  const url = URL.createObjectURL(new Blob([JSON.stringify(rosters, null, 2)], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'class-lists.json';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(`Exported ${rosters.length} class list${rosters.length > 1 ? 's' : ''}`);
-}
-
-function importRosters(e) {
-  const file = e.target.files[0];
-  e.target.value = ''; // let the same file be re-picked later
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    let incoming;
-    try { incoming = JSON.parse(reader.result); }
-    catch (err) { showToast('That file is not a valid class list export', 3500); return; }
-
-    const clean = (Array.isArray(incoming) ? incoming : []).filter(
-      r => r && typeof r.name === 'string' && r.name.trim() && Array.isArray(r.students)
-    );
-    if (!clean.length) { showToast('No class lists found in that file', 3500); return; }
-
-    // Merge rather than replace, so importing never drops lists already on this device
-    const rosters = loadRosters();
-    let added = 0, updated = 0;
-    clean.forEach(inc => {
-      const name = inc.name.trim();
-      const students = inc.students.map(s => String(s).trim()).filter(Boolean);
-      const match = rosters.find(r => r.name.toLowerCase() === name.toLowerCase());
-      if (match) {
-        match.students = students;
-        match.updated_at = inc.updated_at || new Date().toISOString();
-        updated++;
-      } else {
-        rosters.push({ id: newId(), name, students, updated_at: inc.updated_at || new Date().toISOString() });
-        added++;
-      }
-    });
-    rosters.sort((a, b) => a.name.localeCompare(b.name));
-    if (!persistRosters(rosters)) return;
-    renderRosterList();
-    showToast(`Imported — ${added} added, ${updated} updated`, 3000);
+function chartState() {
+  return {
+    template,
+    desks,
+    studentsRaw: document.getElementById('student-input').value,
+    rowCount: document.getElementById('row-count').value,
+    colCount: document.getElementById('col-count').value,
+    islandSize: document.getElementById('island-size').value
   };
-  reader.readAsText(file);
+}
+
+function applyChartState(d) {
+  if (!d) return;
+  document.getElementById('student-input').value = d.studentsRaw || '';
+  if (d.rowCount) document.getElementById('row-count').value = d.rowCount;
+  if (d.colCount) document.getElementById('col-count').value = d.colCount;
+  if (d.islandSize) document.getElementById('island-size').value = d.islandSize;
+  setTemplate(d.template || 'rows');
+  desks = Array.isArray(d.desks) ? d.desks : [];
+  updateCount();
+  renderDesks();
+  if (desks.length) {
+    document.getElementById('toolbar-info').textContent =
+      `${desks.filter(x => x.name).length} students · ${template} layout · drag names to swap`;
+  }
+}
+
+async function renderChartList(selectedId = '') {
+  const sel = document.getElementById('chart-select');
+  sel.innerHTML = '<option value="">— Saved charts —</option>';
+  (await ToolshedStore.listDocs('seating')).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id;
+    o.textContent = d.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectedId;
+}
+
+async function loadChart() {
+  const id = document.getElementById('chart-select').value;
+  if (!id) return;
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc) { showToast('That chart could not be found'); await renderChartList(); return; }
+  applyChartState(doc.data);
+  scheduleAutosave();
+  showToast(`Loaded ${doc.name}`);
+}
+
+async function saveChart() {
+  if (!desks.length) { showToast('Make a seating chart first'); return; }
+  const selectedId = document.getElementById('chart-select').value;
+  const selected = selectedId ? await ToolshedStore.getDoc(selectedId) : null;
+  const name = (prompt('Name this chart:', selected ? selected.name : '') || '').trim();
+  if (!name) return;
+
+  const existing = (await ToolshedStore.listDocs('seating'))
+    .find(d => d.name.toLowerCase() === name.toLowerCase());
+  if (existing && !confirm(`Replace the saved chart "${existing.name}"?`)) return;
+
+  const saved = await ToolshedStore.saveDoc({
+    id: existing ? existing.id : undefined,
+    tool: 'seating',
+    name,
+    data: chartState()
+  });
+  await renderChartList(saved.id);
+  showToast(`Saved ${name}`);
+}
+
+async function deleteChart() {
+  const id = document.getElementById('chart-select').value;
+  if (!id) { showToast('Choose a saved chart first'); return; }
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !confirm(`Delete the saved chart "${doc.name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteDoc(id);
+  await renderChartList();
+  showToast(`Deleted ${doc.name}`);
+}
+
+// Keep work-in-progress across an accidental reload. Stored under its own tool
+// key so it never appears in the saved-charts list.
+let autosaveTimer = null;
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    ToolshedStore.saveDoc({
+      id: AUTOSAVE_ID, tool: '_autosave', name: 'seating', data: chartState()
+    }).catch(() => {});
+  }, 400);
+}
+
+async function restoreAutosave() {
+  const doc = await ToolshedStore.getDoc(AUTOSAVE_ID);
+  if (!doc || !doc.data) return false;
+  const d = doc.data;
+  if (!(d.desks && d.desks.length) && !(d.studentsRaw || '').trim()) return false;
+  applyChartState(d);
+  if (d.desks && d.desks.length) showToast('Restored your last chart', 2600);
+  return true;
 }
 
 // ── TEMPLATE SELECTION ──
@@ -613,6 +637,10 @@ function renderDesks() {
 
     document.getElementById('classroom').appendChild(el);
   });
+
+  // Every chart mutation (generate, relayout, swap, rename, clear) ends here,
+  // so this is the single hook point for keeping work-in-progress.
+  scheduleAutosave();
 }
 
 // ── SWAP ──
@@ -849,7 +877,17 @@ function showToast(msg, dur = 2200) {
   showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
 }
 
-renderRosterList();
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
+  }
+  await renderRosterList();
+  await renderChartList();
+  await restoreAutosave();
+  document.getElementById('student-input').addEventListener('input', scheduleAutosave);
+})();
 
 </script>
 

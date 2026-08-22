@@ -122,6 +122,13 @@
   .notes-review h3{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:10px}
   .notes-review textarea{font-size:13px}
 
+  /* PAST SESSIONS */
+  .past-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--surface-2)}
+  .past-row:last-child{border-bottom:none}
+  .past-name{font-size:13px;font-weight:600;color:var(--text)}
+  .past-meta{font-size:11.5px;color:var(--text-light);margin-top:2px}
+  .past-actions{display:flex;gap:6px;flex-shrink:0}
+
   /* SPEAKER NOTES */
   .speaker-notes-row{margin-bottom:12px}
   .speaker-notes-row:last-child{margin-bottom:0}
@@ -203,10 +210,23 @@
     <div class="card">
       <div class="card-title">👥 Students</div>
       <div class="field">
+        <label>Use a saved class list</label>
+        <select id="roster-select" onchange="loadRoster()">
+          <option value="">— Saved classes —</option>
+        </select>
+        <p class="hint">Shared with every tool. <a href="rosters.html" class="link">Manage class lists →</a></p>
+      </div>
+      <div class="field">
         <label>Class list (one name per line) <span class="required-mark">*</span></label>
         <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…" required></textarea>
         <p class="hint">Or paste comma-separated names.</p>
       </div>
+    </div>
+
+    <!-- Past sessions -->
+    <div class="card" id="past-card" style="display:none">
+      <div class="card-title">🗂 Past Sessions</div>
+      <div id="past-list"></div>
     </div>
 
     <!-- Talking Points -->
@@ -316,6 +336,7 @@
 <div class="tag-popup" id="tag-popup"></div>
 <div class="note-popup" id="note-popup"></div>
 
+<script src="../js/toolshed-store.js"></script>
 <script>
 // ── STATE ──
 let session = {
@@ -493,6 +514,7 @@ function updateLiveStats() {
   const atTarget = session.students.filter(s=>s.count>=session.target).length;
   document.getElementById('live-stats').textContent =
     `${total} contribution${total!==1?'s':''} · ${atTarget}/${session.students.length} at target`;
+  scheduleLiveSave(); // every tally change funnels through here
 }
 
 // ── TAG POPUP ──
@@ -546,7 +568,7 @@ function openNotePopup(studentId, e) {
     <button class="btn btn-primary btn-sm btn-full" id="note-popup-done">Done</button>`;
   const ta = popup.querySelector('#note-popup-input');
   ta.value = s.notes || '';
-  ta.addEventListener('input', () => { s.notes = ta.value; updateStudentCard(s); });
+  ta.addEventListener('input', () => { s.notes = ta.value; updateStudentCard(s); scheduleLiveSave(); });
   popup.querySelector('#note-popup-done').addEventListener('click', closeNotePopup);
 
   const rect = e.currentTarget.getBoundingClientRect();
@@ -621,6 +643,9 @@ function endSession() {
   session.notes = document.getElementById('session-notes').value;
   buildSummary();
   switchScreen('summary');
+  // The session graduates from work-in-progress to a saved session
+  clearLiveSave();
+  persistSession().then(renderPastSessions).catch(() => {});
 }
 
 // ── SUMMARY ──
@@ -689,6 +714,7 @@ function buildSummary() {
       ta.addEventListener('input', () => {
         const st = s.students.find(x => x.id === ta.dataset.studentId);
         if (st) st.notes = ta.value;
+        schedulePersist();
       });
     });
   } else {
@@ -737,6 +763,9 @@ function newSession() {
   timerRunning = false; clearInterval(timerInterval);
   document.getElementById('timer-btn').textContent = '▶ Start';
   updateTimerDisplay();
+  savedSessionId = null;   // the next session becomes its own saved record
+  clearLiveSave();
+  renderPastSessions();
   switchScreen('setup');
 }
 
@@ -753,6 +782,146 @@ function clearSetup() {
   tpCounter = 0;
   renderTalkingPoints();
 }
+
+// ── CLASS LISTS ──
+async function renderRosterList() {
+  const sel = document.getElementById('roster-select');
+  sel.innerHTML = '<option value="">— Saved classes —</option>';
+  (await ToolshedStore.listRosters()).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = `${r.name} (${r.studentCount})`;
+    sel.appendChild(o);
+  });
+}
+
+async function loadRoster() {
+  const id = document.getElementById('roster-select').value;
+  if (!id) return;
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await renderRosterList(); return; }
+  document.getElementById('students-input').value = r.students.map(s => s.name).join('\n');
+  // A saved list usually names the class too — fill it in if it's still blank
+  const classField = document.getElementById('class-name');
+  if (!classField.value.trim()) classField.value = r.name;
+  showToast(`Loaded ${r.name} — ${r.students.length} students`);
+}
+
+// ── PAST SESSIONS ──
+async function renderPastSessions() {
+  const docs = await ToolshedStore.listDocs('tracker');
+  const card = document.getElementById('past-card');
+  const list = document.getElementById('past-list');
+  card.style.display = docs.length ? '' : 'none';
+  list.innerHTML = '';
+
+  docs.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'past-row';
+    const when = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
+    row.innerHTML = `<div><div class="past-name"></div><div class="past-meta">${when}</div></div>
+      <div class="past-actions">
+        <button class="btn btn-outline btn-sm">Open</button>
+        <button class="btn-ghost" style="font-size:12px">Delete</button>
+      </div>`;
+    row.querySelector('.past-name').textContent = d.name;
+    const btns = row.querySelectorAll('button');
+    btns[0].onclick = () => openPastSession(d.id);
+    btns[1].onclick = () => deletePastSession(d.id, d.name);
+    list.appendChild(row);
+  });
+}
+
+async function openPastSession(id) {
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !doc.data) { showToast('That session could not be found'); await renderPastSessions(); return; }
+  session = doc.data;
+  savedSessionId = id;
+  buildSummary();
+  switchScreen('summary');
+}
+
+async function deletePastSession(id, name) {
+  if (!confirm(`Delete the saved session "${name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteDoc(id);
+  if (savedSessionId === id) savedSessionId = null;
+  await renderPastSessions();
+  showToast(`Deleted ${name}`);
+}
+
+// Persist the finished session, and keep updating the same record as notes
+// and scores are edited on the summary screen.
+let savedSessionId = null;
+async function persistSession() {
+  const label = session.className ? `${session.name} — ${session.className}` : session.name;
+  const saved = await ToolshedStore.saveDoc({
+    id: savedSessionId || undefined,
+    tool: 'tracker',
+    name: label,
+    data: session
+  });
+  savedSessionId = saved.id;
+  return saved;
+}
+
+let persistTimer = null;
+function schedulePersist() {
+  if (!savedSessionId) return;      // only after the session has been ended once
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => { persistSession().catch(() => {}); }, 400);
+}
+
+// ── LIVE AUTOSAVE ──
+// Keeps a mid-discussion reload from losing the tally. Cleared once the
+// session is ended (it becomes a saved session at that point) or reset.
+const LIVE_AUTOSAVE_ID = 'autosave-tracker';
+let liveTimer = null;
+function scheduleLiveSave() {
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => {
+    session.notes = document.getElementById('session-notes').value;
+    ToolshedStore.saveDoc({
+      id: LIVE_AUTOSAVE_ID, tool: '_autosave', name: 'tracker', data: session
+    }).catch(() => {});
+  }, 400);
+}
+function clearLiveSave() {
+  clearTimeout(liveTimer);
+  ToolshedStore.deleteDoc(LIVE_AUTOSAVE_ID).catch(() => {});
+}
+
+async function restoreLiveSession() {
+  const doc = await ToolshedStore.getDoc(LIVE_AUTOSAVE_ID);
+  if (!doc || !doc.data || !Array.isArray(doc.data.students) || !doc.data.students.length) return false;
+  session = doc.data;
+  document.getElementById('live-session-name').textContent = session.name;
+  document.getElementById('session-notes').value = session.notes || '';
+  renderLiveTalkingPoints();
+  renderStudentGrid();
+  updateLiveStats();
+  updateTimerDisplay();
+  switchScreen('live');
+  showToast('Picked up where you left off', 3000);
+  return true;
+}
+
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
+  }
+  await renderRosterList();
+  await renderPastSessions();
+  await restoreLiveSession();
+  document.getElementById('session-notes').addEventListener('input', scheduleLiveSave);
+  // The summary's notes box previously never wrote back to state, so
+  // post-session reflections were dropped from the saved session.
+  document.getElementById('sum-notes').addEventListener('input', e => {
+    session.notes = e.target.value;
+    schedulePersist();
+  });
+})();
 
 // ── UTILS ──
 function switchScreen(id) {
