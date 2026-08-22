@@ -216,11 +216,92 @@ Walk each flow end-to-end in a fresh browser profile: landing → each tool; sea
 
 ---
 
+## Phase 6 — Presentation Grader (new tool) + shared rubrics
+
+**Depends on Phase 3.** This phase leans entirely on the shared store (saved rubrics, saved groups, shared rosters). Do not start it before Phase 3 is done.
+
+### Why a separate tool
+
+Talk Tracker's whole interaction model is *frequency counting*: a grid of every student, tapped repeatedly, producing tallies. Presentations are a different job — a sequence of performances, judged once each against a rubric. Different setup, different live screen, different output. Note that the `presentation` option in Talk Tracker's session-type dropdown is **purely cosmetic today** — `session.type` is only ever read as a display label, so nothing breaks by removing it.
+
+Talk Tracker keeps: Socratic seminar, debate, discussion. Presentation Grader takes presentations.
+
+### 6a. Shared rubric module — `js/toolshed-rubric.js`
+
+Rubrics are shared infrastructure, **not** Presentation-Grader-only. Talk Tracker should be able to rubric-score a seminar too. Build the builder + storage once here; wiring it into Talk Tracker is optional follow-on work.
+
+```js
+// A rubric: {id, name, criteria: [...], createdAt, updatedAt}
+// A criterion: {
+//   id,
+//   name,                  // required
+//   descriptions: [],      // array of strings; only descriptions[0] is surfaced in v1.
+//                          // Stored as an array so per-band descriptors can be added
+//                          // later WITHOUT a data migration.
+//   min: number|null,      // null/blank = comment-only criterion (see below)
+//   max: number|null
+// }
+window.ToolshedRubric = {
+  render(container, rubric, {onChange}) {},  // the builder UI
+  blankRubric() {}, blankCriterion() {},
+};
+```
+
+Rules:
+- **Criterion name is required; description and score range are both optional.**
+- **A blank score range means a comment-only criterion** — it renders as a feedback box with no number input. This is a feature, not missing data: it lets one rubric mix scored criteria ("Criterion C — Producing text, 0–8") with narrative ones ("Overall impression").
+- Min **and** max, whole numbers only (MYP is 0–8; many rubrics are 1–4).
+- Rubrics persist via `ToolshedStore.saveDoc({tool:'rubric', ...})` and are pickable by name in any tool. Build "MYP Oral Presentation" once, reuse it all year.
+
+**No auto-totalling as the headline number.** In MYP, criteria are reported separately and converted through grade boundaries — a summed "23/32" is meaningless and mildly misleading. Per-criterion scores are the prominent display; a total appears only as a small informational line. The CSV gets **one column per criterion**, plus a total column at the end for teachers who do want it.
+
+### 6b. `teacher-tools/presentation-grader.html`
+
+Standard shared header (`Teacher Toolshed / Presentation Grader`), `css/toolshed.css`, same three-screen shape as Talk Tracker (setup → live → summary).
+
+**Core data model: everything is a group; an individual presenter is a group of one.** This is the decision that keeps the tool simple — one code path, not two. Individual mode just auto-creates one group per student, and a group of one collapses its group-feedback box and individual-feedback box into a single box (they're the same thing).
+
+**Setup screen**
+- Session name (required, red asterisk), Class name (optional) — match Talk Tracker's conventions exactly.
+- Students: from a saved roster (Phase 3) or pasted list.
+- **Grouping:** a mode toggle — *Individual* (auto: one group per student) or *Groups*. In Groups mode: create named groups and assign students to them (drag or click-to-assign), plus an "auto-split into N groups" helper. Unassigned students are shown clearly so nobody gets missed.
+- **Rubric:** pick a saved rubric, or build a new one inline via `ToolshedRubric`, or start from none.
+- Time limit per presentation (optional).
+
+**Live screen**
+- Left: the running order — every group, with a done/current/upcoming state. Click any group to jump to it.
+- Center: the current group — name, members listed, and the rubric with a score input per criterion.
+- **Scoring: group score with per-individual override.** Score the group once; every member inherits it. Any member's score can then be overridden. The inherited vs. overridden distinction **must be visible at a glance** — e.g. muted `8 (group)` vs. solid `6 · edited` with a one-click revert to inherited. Without this you can't tell who you actually adjusted three groups later.
+- Feedback: one group feedback box, plus a per-member feedback box for each student (collapsed by default in large groups). For a group of one, show a single merged box.
+- Timer for the current presentation, counting against the limit if set (amber/red when over). Separate from a whole-session clock.
+- Advance to next presenter.
+
+**Summary / report screen**
+- Per group: rubric scores, group feedback, members.
+- Per student: their inherited-or-overridden scores + their individual feedback.
+- **Print** — same approach as Talk Tracker: strip chrome, hide empty feedback boxes, produce something you could hand to a student or attach to a gradebook entry.
+- **Export CSV** — one row per student:
+  `Session Name, Class Name, Class Date, Group, Student, <one column per criterion>, Total, Group Feedback, Individual Feedback`
+
+### 6c. Landing page
+
+Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to say seminars/debates/discussions so the split is obvious to a visitor.
+
+**Accept (Phase 6):** build a rubric with one scored criterion and one comment-only criterion and save it; start a session in Groups mode with an unassigned student visible; assign them; score a group; override one member; confirm the override is visually distinct and revertible; end the session; confirm print output is clean and the CSV has one column per criterion with the override reflected in that student's row. Reload mid-session recovers state. Zero network requests carrying student data.
+
+### Deliberately deferred
+
+- **Per-band descriptors** (MYP 1–2 / 3–4 / 5–6 / 7–8) and click-a-band-to-score. The data model above already accommodates them (`descriptions` is an array). Worth doing once the basics are in — clicking a band is genuinely faster than typing a number when grading eight groups back to back.
+- Wiring the rubric module into Talk Tracker for seminar scoring.
+- Rubric import/export as JSON files, and rubric sharing between teachers.
+
+---
+
 ## Explicitly out of scope (do not build)
 
 - Accounts, auth, Supabase, Stripe, Netlify Functions, emails, analytics.
 - Next.js or any build tooling.
-- New tools or new features beyond persistence described above.
+- New tools or new features beyond persistence described above, **except** the Presentation Grader specified in Phase 6.
 - Server-side anything.
 
 ## Future (for reference only): cloud sync sketch
