@@ -146,22 +146,22 @@
       <div id="rows-opts">
         <div class="row-2">
           <div class="field">
-            <label>Rows</label>
-            <select id="row-count" onchange="relayout()">
-              <option>2</option><option>3</option><option selected>4</option>
-              <option>5</option><option>6</option><option>7</option><option>8</option>
+            <label>Columns</label>
+            <select id="col-count" onchange="relayout()">
+              <option>2</option><option>3</option><option>4</option><option>5</option>
+              <option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
             </select>
           </div>
           <div class="field">
-            <label>Columns</label>
-            <select id="col-count" onchange="relayout()">
+            <label>Rows</label>
+            <select id="row-count" onchange="relayout()">
               <option value="auto" selected>Auto</option>
-              <option>2</option><option>3</option><option>4</option><option>5</option>
-              <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+              <option>2</option><option>3</option><option>4</option>
+              <option>5</option><option>6</option><option>7</option><option>8</option>
             </select>
           </div>
         </div>
-        <p class="hint">Auto fits columns to your class size. With fixed columns, spare seats stay empty.</p>
+        <p class="hint">Auto fits rows to your class size. With a fixed row count, spare seats stay empty.</p>
       </div>
 
       <div id="islands-opts" style="display:none">
@@ -450,9 +450,9 @@ function buildLayout(names) {
   const H = Math.max(wrap.clientHeight, 500);
 
   if (template === 'rows') {
-    const numRows = parseInt(document.getElementById('row-count').value);
-    const colSetting = document.getElementById('col-count').value;
-    return layoutRows(names, numRows, colSetting, W, H);
+    const colCount = parseInt(document.getElementById('col-count').value);
+    const rowSetting = document.getElementById('row-count').value;
+    return layoutRows(names, colCount, rowSetting, W, H);
   }
   if (template === 'islands') {
     const perIsland = parseInt(document.getElementById('island-size').value);
@@ -472,29 +472,30 @@ function relayout() {
 // ── LAYOUTS ──
 const DW = 108, DH = 64;
 
-function layoutRows(students, numRows, colSetting, W, H) {
+function layoutRows(students, colCount, rowSetting, W, H) {
   const n = students.length;
   const gapX = 14, gapY = 20;
   const topOffset = 72;
 
   // Seats per row, honoring the requested grid exactly
   let rowSizes;
-  if (colSetting === 'auto') {
-    // Spread students evenly so every requested row is used
+  if (rowSetting === 'auto') {
+    // Fewest rows that fit everyone in the fixed column count, spread evenly
+    const numRows = Math.max(1, Math.ceil(n / colCount));
     const base = Math.floor(n / numRows), extra = n % numRows;
     rowSizes = Array.from({ length: numRows }, (_, r) => base + (r < extra ? 1 : 0)).filter(s => s > 0);
   } else {
-    const cols = parseInt(colSetting);
-    rowSizes = Array.from({ length: numRows }, () => cols);
+    const numRows = parseInt(rowSetting);
+    rowSizes = Array.from({ length: numRows }, () => colCount);
     // Overflow students get extra rows at the back rather than being dropped
-    let capacity = numRows * cols;
+    let capacity = numRows * colCount;
     while (capacity < n) {
-      const size = Math.min(cols, n - capacity);
+      const size = Math.min(colCount, n - capacity);
       rowSizes.push(size);
       capacity += size;
     }
     if (rowSizes.length > numRows) {
-      showToast(`${numRows} rows × ${cols} columns only seats ${numRows * cols} — added ${rowSizes.length - numRows} extra row${rowSizes.length - numRows > 1 ? 's' : ''}`, 3500);
+      showToast(`${numRows} rows × ${colCount} columns only seats ${numRows * colCount} — added ${rowSizes.length - numRows} extra row${rowSizes.length - numRows > 1 ? 's' : ''}`, 3500);
     }
   }
 
