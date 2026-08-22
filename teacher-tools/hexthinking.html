@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hexagonal Thinking — Teacher Toolshed</title>
+<meta name="description" content="Visual concept mapping with hexagons. Students connect ideas and justify relationships spatially — share a link, no account needed.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -264,12 +266,18 @@ body {
 .modal-close { display: block; margin: 16px auto 0; padding: 8px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text-mid); font-family: var(--font-sans); font-size: 0.82rem; cursor: pointer; }
 .modal-close:hover { border-color: var(--text-mid); }
 
+.small-screen-notice { display: none; background: var(--accent-soft); border-bottom: 1px solid #E4CFA0; padding: 8px 20px; font-size: 12.5px; color: var(--accent-hover); text-align: center; flex-shrink: 0; }
+.tool-footer { flex-shrink: 0; text-align: center; padding: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); background: var(--surface); }
+.tool-footer a { color: var(--text-mid); font-weight: 600; text-decoration: none; }
+.tool-footer a:hover { color: var(--accent); }
+
 @media (max-width: 768px) {
   .teacher-body { padding: 20px 16px 40px; }
-  .header { padding: 0 16px; }
+  .header { padding: 8px 16px; height: auto; min-height: 54px; flex-wrap: wrap; row-gap: 6px; }
   .hex-tray { width: 190px; }
   .instructions-banner { flex-wrap: wrap; gap: 10px; font-size: 0.75rem; padding: 8px 14px; }
   .header-tools .tool-btn span.label { display: none; }
+  .small-screen-notice { display: block; }
 }
 </style>
 </head>
@@ -339,6 +347,7 @@ body {
       </div>
     </div>
   </div>
+  <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
 </div>
 
 <!-- ===== STUDENT VIEW ===== -->
@@ -375,6 +384,8 @@ body {
       </button>
     </div>
   </header>
+
+  <div class="small-screen-notice">Hexagonal Thinking works best on a larger screen — dragging and connecting hexagons needs more room than a phone gives you.</div>
 
   <div class="instructions-banner" id="instructionsBanner">
     <div class="step"><span class="step-icon">1</span>Drag hexagons from the tray onto the canvas</div>

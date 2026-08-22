@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seating Chart Maker — Teacher Toolshed</title>
+<meta name="description" content="Drag-and-drop classroom seating charts. Export to PDF or share a live link with a substitute teacher.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/toolshed.css">
 <style>
@@ -66,9 +68,14 @@
   @media print{
     html,body{overflow:visible;height:auto;background:#fff}
     body{display:block}
-    .header,.app,.toast,.modal-bd{display:none!important}
+    .header,.app,.toast,.modal-bd,.tool-footer,.small-screen-notice{display:none!important}
     #print-sheet{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:24px;overflow:hidden;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     #print-sheet .desk{border-color:#8A857A;cursor:default}
+  }
+
+  @media (max-width: 768px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; max-height: 40vh; border-right: none; border-bottom: 1.5px solid var(--border); }
   }
 </style>
 <style id="page-style" media="print">@page{size:A4 landscape;margin:0}</style>
@@ -110,6 +117,8 @@
     <button class="btn btn-green btn-sm" onclick="downloadPDF()">Download PDF</button>
   </div>
 </header>
+
+<div class="small-screen-notice">Seating Chart Maker works best on a larger screen — dragging desks needs more room than a phone gives you.</div>
 
 <div class="app">
   <!-- SIDEBAR -->
@@ -228,6 +237,8 @@
     </div>
   </main>
 </div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
 
 <script src="../js/toolshed-store.js"></script>
 <script>

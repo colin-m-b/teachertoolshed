@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Talk Tracker — Teacher Toolshed</title>
+<meta name="description" content="Track participation in seminars, debates, and discussions — tap to tally, tag by talking point.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/toolshed.css">
 <style>
@@ -128,6 +130,11 @@
   .speaker-notes-row:last-child{margin-bottom:0}
   .speaker-notes-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
   .speaker-notes-row textarea{width:100%;min-height:56px;font-size:13px}
+
+  @media (max-width: 768px) {
+    .live-layout { flex-direction: column; }
+    .live-sidebar { width: 100%; max-height: 32vh; border-left: none; border-top: 1.5px solid var(--border); }
+  }
 </style>
 </head>
 <body>
@@ -326,6 +333,8 @@
     </div>
   </div>
 </div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
 
 <div class="tag-popup" id="tag-popup"></div>
 <div class="note-popup" id="note-popup"></div>
