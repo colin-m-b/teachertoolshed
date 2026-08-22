@@ -203,6 +203,7 @@ textarea { resize: vertical; min-height: 90px; }
 .rubric-criterion-remove:hover { color: var(--red); }
 .rubric-criterion-row textarea { min-height: 54px; font-size: 13px; margin-bottom: 8px; }
 .rubric-range-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rubric-range-title { font-size: 12px; font-weight: 600; color: var(--text); }
 .rubric-range-row .rubric-range-field { display: flex; align-items: center; gap: 6px; }
 .rubric-range-row .rubric-range-field label { margin: 0; font-size: 12px; color: var(--text-mid); font-weight: 500; }
 .rubric-range-row .rubric-range-field input { width: 60px; }

@@ -16,7 +16,8 @@
   .screen.active{display:flex}
 
   /* ─── SETUP ─── */
-  .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px;max-width:760px;margin:0 auto;width:100%}
+  .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px}
+  .setup-body-inner{max-width:760px;margin:0 auto;width:100%}
   .page-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
   .page-title{font-family:var(--font-serif);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
   .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
@@ -80,7 +81,7 @@
   .criterion-live-row:last-child{margin-bottom:0}
   .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
   .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
-  .criterion-live-score{width:90px}
+  input.criterion-live-score{width:90px}
   .criterion-live-note{min-height:56px;font-size:13px}
 
   .member-card{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
@@ -100,7 +101,8 @@
   .present-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
 
   /* ─── SUMMARY ─── */
-  .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px;max-width:760px;margin:0 auto;width:100%}
+  .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px}
+  .summary-body-inner{max-width:760px;margin:0 auto;width:100%}
   .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
   .summary-title{font-family:var(--font-serif);font-size:24px;font-weight:700;margin-bottom:4px}
   .summary-meta{font-size:13px;color:var(--text-mid)}
@@ -158,7 +160,7 @@
 
 <!-- ═══════════════════════════════ SETUP SCREEN ═══════════════════════════════ -->
 <div class="screen active" id="screen-setup">
-  <div class="setup-body">
+  <div class="setup-body"><div class="setup-body-inner">
     <p class="page-eyebrow">Presentation Grader</p>
     <h1 class="page-title">Set Up Your Session</h1>
     <p class="page-sub">Add your students, group them if this is group work, and optionally attach a rubric.</p>
@@ -261,15 +263,9 @@
     <div class="card">
       <div class="card-title">⏱ Time Limit <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
       <div class="field">
-        <label>Per presentation</label>
-        <select id="time-limit-select">
-          <option value="">No limit</option>
-          <option value="60">1 minute</option>
-          <option value="120">2 minutes</option>
-          <option value="180" selected>3 minutes</option>
-          <option value="300">5 minutes</option>
-          <option value="600">10 minutes</option>
-        </select>
+        <label>How many minutes?</label>
+        <input type="number" id="time-limit-input" min="1" max="20" step="1" placeholder="No limit" value="3" style="max-width:140px"/>
+        <p class="hint">Leave blank for no limit. 1–20 minutes per presentation.</p>
       </div>
     </div>
 
@@ -277,7 +273,7 @@
       <button class="btn-ghost" id="clear-setup-btn">Clear</button>
       <button class="btn btn-primary" id="start-session-btn" style="padding:11px 28px">Start Session →</button>
     </div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ═══════════════════════════════ LIVE SCREEN ═══════════════════════════════ -->
@@ -332,7 +328,7 @@
 
 <!-- ═══════════════════════════════ SUMMARY SCREEN ═══════════════════════════════ -->
 <div class="screen" id="screen-summary">
-  <div class="summary-body">
+  <div class="summary-body"><div class="summary-body-inner">
     <div class="summary-header">
       <div>
         <div class="summary-title" id="sum-title">Session Summary</div>
@@ -348,7 +344,7 @@
     <div class="stat-row" id="sum-stats"></div>
 
     <div id="sum-groups"></div>
-  </div>
+  </div></div>
 </div>
 
 <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
@@ -392,6 +388,13 @@ function parseNames(raw) {
 function fmtTime(sec) {
   const m = Math.floor(sec / 60), s = sec % 60;
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function timeLimitSecFromInput() {
+  const raw = $('time-limit-input').value;
+  if (raw === '') return null;
+  const mins = Math.round(parseFloat(raw));
+  if (!Number.isFinite(mins)) return null;
+  return Math.max(1, Math.min(20, mins)) * 60;
 }
 let localId = 0;
 function nextId(prefix) { return prefix + (++localId); }
@@ -476,6 +479,7 @@ function renderGroupDefs() {
 
     const row = document.createElement('div');
     row.className = 'group-def-row' + (g.id === activeGroupId ? ' active' : '');
+    row.dataset.groupId = g.id;
     row.title = 'Click to make this the active group';
     row.addEventListener('click', () => setActiveGroup(g.id));
 
@@ -485,6 +489,16 @@ function renderGroupDefs() {
     const input = document.createElement('input');
     input.type = 'text';
     input.value = g.name;
+    // Renaming happens in-place — activating a group via mousedown (not the row's
+    // click handler, which re-renders and would kill focus mid-click) keeps this
+    // input alive so typing actually sticks.
+    input.addEventListener('mousedown', () => {
+      if (g.id !== activeGroupId) {
+        activeGroupId = g.id;
+        document.querySelectorAll('.group-def-row').forEach(r => r.classList.toggle('active', r.dataset.groupId === activeGroupId));
+      }
+    });
+    input.addEventListener('click', e => e.stopPropagation());
     input.addEventListener('input', () => { g.name = input.value; renderAssignList(); });
 
     const countEl = document.createElement('span');
@@ -684,7 +698,7 @@ async function startSession() {
     mode, rubric: rubricSnapshot,
     students, groups: finalGroups,
     groupData, studentData,
-    timeLimitSec: $('time-limit-select').value ? parseInt($('time-limit-select').value, 10) : null,
+    timeLimitSec: timeLimitSecFromInput(),
     currentIndex: 0,
     date: new Date().toISOString()
   };

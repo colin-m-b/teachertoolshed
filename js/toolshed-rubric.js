@@ -142,6 +142,11 @@
     var rangeRow = document.createElement('div');
     rangeRow.className = 'rubric-range-row';
 
+    var rangeTitle = document.createElement('span');
+    rangeTitle.className = 'rubric-range-title';
+    rangeTitle.textContent = 'Scoring range:';
+    rangeRow.appendChild(rangeTitle);
+
     var minField = document.createElement('div');
     minField.className = 'rubric-range-field';
     var minLabel = document.createElement('label');

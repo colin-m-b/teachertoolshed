@@ -131,6 +131,17 @@
   .speaker-notes-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
   .speaker-notes-row textarea{width:100%;min-height:56px;font-size:13px}
 
+  /* RUBRIC SCORES (summary) */
+  .rubric-score-row{margin-bottom:16px;padding-bottom:16px;border-bottom:1.5px dashed var(--border)}
+  .rubric-score-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+  .rubric-score-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .criterion-live-row{margin-bottom:14px}
+  .criterion-live-row:last-child{margin-bottom:0}
+  .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+  input.criterion-live-score{width:90px}
+  .criterion-live-note{min-height:56px;font-size:13px}
+
   @media (max-width: 768px) {
     .live-layout { flex-direction: column; }
     .live-sidebar { width: 100%; max-height: 32vh; border-left: none; border-top: 1.5px solid var(--border); }
@@ -238,6 +249,27 @@
       <p class="hint" style="margin-top:8px">Track which topics get covered during the session.</p>
     </div>
 
+    <!-- Rubric -->
+    <div class="card">
+      <div class="card-title">📊 Rubric <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="field">
+        <label>Use a saved rubric</label>
+        <select id="rubric-select" onchange="onRubricSelectChange()">
+          <option value="">— No rubric (participation only) —</option>
+          <option value="__new__">+ New rubric…</option>
+        </select>
+      </div>
+      <div id="rubric-editor-wrap" style="display:none">
+        <div class="field">
+          <label>Rubric name <span class="required-mark">*</span></label>
+          <input type="text" id="rubric-name-input" placeholder="e.g. Socratic Seminar Participation" maxlength="80"/>
+        </div>
+        <div id="rubric-criteria-container"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="saveRubricFromEditor()">Save rubric</button>
+        <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool. Scored after the session, alongside the tally — not live during discussion.</p>
+      </div>
+    </div>
+
     <div class="setup-actions">
       <button class="btn-ghost" onclick="clearSetup()">Clear</button>
       <button class="btn btn-primary" onclick="startSession()" style="padding:11px 28px">Start Session →</button>
@@ -320,6 +352,12 @@
       <div id="sum-tp"></div>
     </div>
 
+    <!-- Rubric Scores -->
+    <div class="card" id="sum-rubric-card" style="display:none">
+      <div class="card-title">📊 Rubric Scores</div>
+      <div id="sum-rubric-scores"></div>
+    </div>
+
     <!-- Speaker Notes -->
     <div class="card" id="sum-speaker-notes-card" style="display:none">
       <div class="card-title">🗒 Speaker Notes</div>
@@ -340,18 +378,21 @@
 <div class="note-popup" id="note-popup"></div>
 
 <script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-rubric.js"></script>
 <script>
 // ── STATE ──
 let session = {
   name: '', className: '', type: 'socratic', target: 3,
-  students: [],   // {id, name, count, tags:[], notes:''}
+  students: [],   // {id, name, count, tags:[], notes:'', scores:{}}
   talkingPoints:[], // {id, text, covered}
+  rubric: null,   // {name, criteria:[...]} snapshot, or null
   notes: '',
   startTime: null, elapsed: 0
 };
 let timerInterval = null;
 let timerRunning = false;
 let tagPopupFor = null;
+let selectedRubric = null;   // setup-time: rubric currently shown in the editor
 
 // ── SETUP: TALKING POINTS ──
 let tpCounter = 0;
@@ -382,19 +423,128 @@ function renderTalkingPoints() {
   });
 }
 
+// ── SETUP: RUBRIC ──
+async function renderRubricSelect(selectId) {
+  const sel = document.getElementById('rubric-select');
+  sel.innerHTML = '<option value="">— No rubric (participation only) —</option><option value="__new__">+ New rubric…</option>';
+  (await ToolshedStore.listDocs('rubric')).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = d.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectId || '';
+}
+
+async function onRubricSelectChange() {
+  const val = document.getElementById('rubric-select').value;
+  if (val === '') {
+    selectedRubric = null;
+    document.getElementById('rubric-editor-wrap').style.display = 'none';
+    return;
+  }
+  if (val === '__new__') {
+    selectedRubric = { id: null, name: '', criteria: [ToolshedRubric.blankCriterion()] };
+  } else {
+    const doc = await ToolshedStore.getDoc(val);
+    if (!doc) { showToast('That rubric could not be found'); await renderRubricSelect(); return; }
+    selectedRubric = { id: doc.id, name: doc.name, criteria: doc.data.criteria };
+  }
+  document.getElementById('rubric-editor-wrap').style.display = '';
+  document.getElementById('rubric-name-input').value = selectedRubric.name;
+  ToolshedRubric.render(document.getElementById('rubric-criteria-container'), selectedRubric, { onChange: () => {} });
+}
+
+async function saveRubricFromEditor() {
+  const name = document.getElementById('rubric-name-input').value.trim();
+  if (!name) { showToast('Give the rubric a name first'); document.getElementById('rubric-name-input').focus(); return; }
+  selectedRubric.name = name;
+  const saved = await ToolshedStore.saveDoc({
+    id: selectedRubric.id || undefined,
+    tool: 'rubric',
+    name,
+    data: { criteria: selectedRubric.criteria }
+  });
+  selectedRubric.id = saved.id;
+  await renderRubricSelect(saved.id);
+  showToast(`Saved rubric "${name}"`);
+}
+
+// ── SUMMARY: RUBRIC SCORES ──
+function renderRubricScoreRow(student) {
+  const row = document.createElement('div');
+  row.className = 'rubric-score-row';
+  const name = document.createElement('div');
+  name.className = 'rubric-score-name';
+  name.textContent = student.name;
+  row.appendChild(name);
+  session.rubric.criteria.forEach(c => row.appendChild(renderStudentCriterionRow(student, c)));
+  return row;
+}
+
+function renderStudentCriterionRow(student, criterion) {
+  const row = document.createElement('div');
+  row.className = 'criterion-live-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'criterion-live-name';
+  nameEl.textContent = criterion.name || '(untitled criterion)';
+  row.appendChild(nameEl);
+  if (criterion.descriptions && criterion.descriptions[0]) {
+    const desc = document.createElement('div');
+    desc.className = 'criterion-live-desc';
+    desc.textContent = criterion.descriptions[0];
+    row.appendChild(desc);
+  }
+  if (ToolshedRubric.isScored(criterion)) {
+    const input = document.createElement('input');
+    input.type = 'number'; input.step = '1';
+    input.min = criterion.min; input.max = criterion.max;
+    input.className = 'criterion-live-score';
+    input.placeholder = `${criterion.min}–${criterion.max}`;
+    input.value = student.scores[criterion.id] == null ? '' : student.scores[criterion.id];
+    input.addEventListener('input', () => {
+      const v = input.value === '' ? null : Math.max(criterion.min, Math.min(criterion.max, parseInt(input.value, 10) || 0));
+      student.scores[criterion.id] = v;
+      schedulePersist();
+    });
+    row.appendChild(input);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.className = 'criterion-live-note';
+    ta.placeholder = 'Notes…';
+    ta.value = student.scores[criterion.id] || '';
+    ta.addEventListener('input', () => { student.scores[criterion.id] = ta.value; schedulePersist(); });
+    row.appendChild(ta);
+  }
+  return row;
+}
+
 // ── START SESSION ──
-function startSession() {
+async function startSession() {
   const name = document.getElementById('session-name').value.trim();
   if (!name) { showToast('Please enter a session name'); return; }
   const raw = document.getElementById('students-input').value;
   const names = parseNames(raw);
   if (names.length < 1) { showToast('Add at least one student'); return; }
 
+  // If a new rubric was being drafted with a name but never explicitly saved, save it now
+  // rather than silently discarding the teacher's work.
+  if (document.getElementById('rubric-select').value === '__new__' && selectedRubric && document.getElementById('rubric-name-input').value.trim()) {
+    await saveRubricFromEditor();
+  }
+  const rubricSnapshot = selectedRubric
+    ? { name: selectedRubric.name, criteria: selectedRubric.criteria.map(c => ({ ...c, descriptions: (c.descriptions || []).slice() })) }
+    : null;
+
   session.name = name;
   session.className = document.getElementById('class-name').value.trim();
   session.type = document.getElementById('session-type').value;
   session.target = parseInt(document.getElementById('target-count').value);
-  session.students = names.map((n, i) => ({id:'s'+i, name:n, count:0, tags:[], notes:''}));
+  session.rubric = rubricSnapshot;
+  session.students = names.map((n, i) => {
+    const scores = {};
+    if (rubricSnapshot) rubricSnapshot.criteria.forEach(c => { scores[c.id] = null; });
+    return {id:'s'+i, name:n, count:0, tags:[], notes:'', scores};
+  });
   session.startTime = Date.now();
   session.elapsed = 0;
   session.notes = '';
@@ -703,6 +853,17 @@ function buildSummary() {
     tpCard.style.display = 'none';
   }
 
+  // Rubric scores
+  const rubricCard = document.getElementById('sum-rubric-card');
+  if (s.rubric && s.rubric.criteria.length && s.students.length) {
+    rubricCard.style.display = '';
+    const rubricWrap = document.getElementById('sum-rubric-scores');
+    rubricWrap.innerHTML = '';
+    s.students.forEach(st => rubricWrap.appendChild(renderRubricScoreRow(st)));
+  } else {
+    rubricCard.style.display = 'none';
+  }
+
   // Speaker notes
   const notesCard = document.getElementById('sum-speaker-notes-card');
   if (s.students.length) {
@@ -734,13 +895,37 @@ function csvField(v) {
   const str = String(v ?? '');
   return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
 }
+function totalFor(student) {
+  if (!session.rubric) return null;
+  let sum = 0, any = false;
+  session.rubric.criteria.filter(ToolshedRubric.isScored).forEach(c => {
+    const v = student.scores[c.id];
+    if (v != null) { sum += v; any = true; }
+  });
+  return any ? sum : null;
+}
+
 function exportCsv() {
   const s = session;
   if (!s.students.length) { showToast('No session data to export'); return; }
   const m = Math.floor(s.elapsed / 60), sec = s.elapsed % 60;
   const duration = `${m}:${String(sec).padStart(2,'0')}`;
-  const rows = [['Session Name', 'Class Name', 'Session Time', 'Student', 'Contributions', 'Notes']];
-  s.students.forEach(st => rows.push([s.name, s.className, duration, st.name, st.count, st.notes || '']));
+  const criteria = s.rubric ? s.rubric.criteria : [];
+  const header = ['Session Name', 'Class Name', 'Session Time', 'Student', 'Contributions']
+    .concat(criteria.map(c => c.name || 'Criterion'))
+    .concat(criteria.length ? ['Total'] : [])
+    .concat(['Notes']);
+  const rows = [header];
+  s.students.forEach(st => {
+    const row = [s.name, s.className, duration, st.name, st.count];
+    criteria.forEach(c => {
+      if (ToolshedRubric.isScored(c)) row.push(st.scores[c.id] == null ? '' : st.scores[c.id]);
+      else row.push(st.scores[c.id] || '');
+    });
+    if (criteria.length) { const t = totalFor(st); row.push(t == null ? '' : t); }
+    row.push(st.notes || '');
+    rows.push(row);
+  });
   const csv = rows.map(row => row.map(csvField).join(',')).join('\r\n');
   const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
@@ -756,13 +941,16 @@ function exportCsv() {
 
 function newSession() {
   if (!confirm('Start a new session? This will clear the current summary.')) return;
-  session = { name:'', className:'', type:'socratic', target:3, students:[], talkingPoints:[], notes:'', startTime:null, elapsed:0 };
+  session = { name:'', className:'', type:'socratic', target:3, students:[], talkingPoints:[], rubric:null, notes:'', startTime:null, elapsed:0 };
   tpCounter = 0;
   document.getElementById('session-name').value = '';
   document.getElementById('class-name').value = '';
   document.getElementById('students-input').value = '';
   document.getElementById('tp-list').innerHTML = '';
   document.getElementById('session-notes').value = '';
+  document.getElementById('rubric-select').value = '';
+  selectedRubric = null;
+  document.getElementById('rubric-editor-wrap').style.display = 'none';
   timerRunning = false; clearInterval(timerInterval);
   document.getElementById('timer-btn').textContent = '▶ Start';
   updateTimerDisplay();
@@ -915,6 +1103,7 @@ async function restoreLiveSession() {
     showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
   }
   await renderRosterList();
+  await renderRubricSelect();
   await renderPastSessions();
   await restoreLiveSession();
   document.getElementById('session-notes').addEventListener('input', scheduleLiveSave);
