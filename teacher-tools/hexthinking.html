@@ -729,26 +729,6 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     const svg = $('svgCanvas'); svg.innerHTML = '';
     const g = svgE('g',{transform:`translate(${panX},${panY}) scale(${zoom})`});
 
-    for(let i=0;i<placed.length;i++) for(let j=i+1;j<placed.length;j++) {
-      const a=placed[i],b=placed[j]; if(!adj(a,b))continue;
-      const m=mid(a,b);
-      const conn=connections.find(c=>(c.id1===a.id&&c.id2===b.id)||(c.id1===b.id&&c.id2===a.id));
-      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#E0DDD4','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
-      const zone=svgE('rect',{x:m.x-40,y:m.y-14,width:80,height:28,fill:'transparent',cursor:'pointer'});
-      zone.addEventListener('click',e=>{e.stopPropagation();openConn(a.id,b.id,m);});
-      g.appendChild(zone);
-      if(conn&&conn.label) {
-        const d=conn.label.length>16?conn.label.slice(0,15)+'…':conn.label;
-        const tw=d.length*6.2+14;
-        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#E0DDD4','stroke-width':1,'pointer-events':'none'}));
-        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6B6457','pointer-events':'none'});
-        txt.textContent=d; g.appendChild(txt);
-      } else {
-        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#E0DDD4','pointer-events':'none'});
-        plus.textContent='+'; g.appendChild(plus);
-      }
-    }
-
     placed.forEach(h => {
       const t=activity.terms[h.id];
       g.appendChild(svgE('polygon',{points:hexPts(h.x+2,h.y+3,HEX_R),fill:'rgba(44,41,36,0.05)','pointer-events':'none'}));
@@ -769,6 +749,28 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
       } else { text.textContent=t.text; }
       g.appendChild(text);
     });
+
+    // Connector lines/labels are drawn after the hexagons so they render
+    // on top, visible in the gap where two adjacent hexagons touch.
+    for(let i=0;i<placed.length;i++) for(let j=i+1;j<placed.length;j++) {
+      const a=placed[i],b=placed[j]; if(!adj(a,b))continue;
+      const m=mid(a,b);
+      const conn=connections.find(c=>(c.id1===a.id&&c.id2===b.id)||(c.id1===b.id&&c.id2===a.id));
+      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#A8A098','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
+      const zone=svgE('rect',{x:m.x-40,y:m.y-14,width:80,height:28,fill:'transparent',cursor:'pointer'});
+      zone.addEventListener('click',e=>{e.stopPropagation();openConn(a.id,b.id,m);});
+      g.appendChild(zone);
+      if(conn&&conn.label) {
+        const d=conn.label.length>16?conn.label.slice(0,15)+'…':conn.label;
+        const tw=d.length*6.2+14;
+        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#E0DDD4','stroke-width':1,'pointer-events':'none'}));
+        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6B6457','pointer-events':'none'});
+        txt.textContent=d; g.appendChild(txt);
+      } else {
+        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#A8A098','pointer-events':'none'});
+        plus.textContent='+'; g.appendChild(plus);
+      }
+    }
 
     svg.appendChild(g);
     $('zoomLabel').textContent=Math.round(zoom*100)+'%';
