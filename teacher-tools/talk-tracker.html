@@ -149,9 +149,6 @@
     <span class="header-sep">/</span>
     <span class="header-tool">Talk Tracker</span>
   </div>
-  <div class="header-right">
-    <button class="btn btn-outline btn-sm" id="header-end-btn" style="display:none" onclick="endSession()">End Session</button>
-  </div>
 </header>
 
 <!-- ═══════════════════════════════ SETUP SCREEN ═══════════════════════════════ -->
@@ -166,8 +163,8 @@
       <div class="card-title">📋 Session Details</div>
       <div class="row-2">
         <div class="field">
-          <label>Session name</label>
-          <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar"/>
+          <label>Session name <span class="required-mark">*</span></label>
+          <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar" required/>
         </div>
         <div class="field">
           <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
@@ -206,8 +203,8 @@
     <div class="card">
       <div class="card-title">👥 Students</div>
       <div class="field">
-        <label>Class list (one name per line)</label>
-        <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…"></textarea>
+        <label>Class list (one name per line) <span class="required-mark">*</span></label>
+        <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…" required></textarea>
         <p class="hint">Or paste comma-separated names.</p>
       </div>
     </div>
@@ -379,7 +376,6 @@ function startSession() {
   session.notes = '';
 
   document.getElementById('live-session-name').textContent = name;
-  document.getElementById('header-end-btn').style.display = '';
 
   renderLiveTalkingPoints();
   renderStudentGrid();
@@ -624,7 +620,6 @@ function endSession() {
   document.getElementById('timer-btn').textContent = '▶ Start';
   session.notes = document.getElementById('session-notes').value;
   buildSummary();
-  document.getElementById('header-end-btn').style.display = 'none';
   switchScreen('summary');
 }
 
@@ -644,6 +639,7 @@ function buildSummary() {
   const avg = s.students.length ? (total / s.students.length).toFixed(1) : 0;
   const statsEl = document.getElementById('sum-stats');
   statsEl.innerHTML = [
+    {num: `${m}:${String(sec).padStart(2,'0')}`, lbl: 'Duration'},
     {num: total, lbl: 'Total contributions'},
     {num: `${atTarget}/${s.students.length}`, lbl: 'Met target'},
     {num: avg, lbl: 'Avg per student'},
@@ -712,8 +708,10 @@ function csvField(v) {
 function exportCsv() {
   const s = session;
   if (!s.students.length) { showToast('No session data to export'); return; }
-  const rows = [['Session Name', 'Class Name', 'Student', 'Contributions', 'Notes']];
-  s.students.forEach(st => rows.push([s.name, s.className, st.name, st.count, st.notes || '']));
+  const m = Math.floor(s.elapsed / 60), sec = s.elapsed % 60;
+  const duration = `${m}:${String(sec).padStart(2,'0')}`;
+  const rows = [['Session Name', 'Class Name', 'Session Time', 'Student', 'Contributions', 'Notes']];
+  s.students.forEach(st => rows.push([s.name, s.className, duration, st.name, st.count, st.notes || '']));
   const csv = rows.map(row => row.map(csvField).join(',')).join('\r\n');
   const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
