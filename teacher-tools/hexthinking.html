@@ -62,7 +62,8 @@ body {
 }
 .brand-name { font-family: var(--font-serif); font-size: 17px; font-weight: 700; }
 .brand-name span { color: var(--green); }
-.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); }
+.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); text-decoration: none; transition: color .15s; }
+.header-tool:hover { color: var(--text); }
 .header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
 
 .btn {
@@ -290,7 +291,7 @@ body {
         <span class="brand-name">Teacher<span>Toolshed</span></span>
       </a>
       <span class="header-sep">/</span>
-      <span class="header-tool">Hexagonal Thinking</span>
+      <a class="header-tool" href="hexthinking.html">Hexagonal Thinking</a>
     </div>
   </header>
   <div class="teacher-body">
@@ -356,7 +357,7 @@ body {
         <span class="brand-name">Teacher<span>Toolshed</span></span>
       </a>
       <span class="header-sep">/</span>
-      <span class="header-tool">Hexagonal Thinking</span>
+      <a class="header-tool" href="hexthinking.html">Hexagonal Thinking</a>
       <a class="back-link" id="backToSetup" href="#">← New activity</a>
     </div>
     <div class="header-tools">

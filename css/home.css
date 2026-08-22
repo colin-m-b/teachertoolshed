@@ -63,16 +63,20 @@
 
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
 .tool-card {
+  display: block;
   background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 1.5rem;
   border-top: 3px solid var(--bg3);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   transition: border-top-color 0.15s, box-shadow 0.15s;
 }
 
@@ -133,7 +137,7 @@
   cursor: pointer;
 }
 
-.tool-link:hover { text-decoration: underline; }
+.tool-card:hover .tool-link { text-decoration: underline; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {

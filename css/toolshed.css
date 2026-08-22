@@ -63,7 +63,8 @@ body {
 }
 .brand-name { font-family: var(--font-serif); font-size: 17px; font-weight: 700; }
 .brand-name span { color: var(--green); }
-.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); }
+.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); text-decoration: none; transition: color .15s; }
+.header-tool:hover { color: var(--text); }
 .header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
 .header-right { display: flex; align-items: center; gap: 8px; }
 
@@ -188,6 +189,10 @@ textarea { resize: vertical; min-height: 90px; }
 .tab { flex: 1; font-family: var(--font-sans); font-size: 12px; font-weight: 600; padding: 6px 4px; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text-mid); border-radius: var(--radius-sm); cursor: pointer; text-align: center; transition: all .15s; }
 .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tab:hover:not(.active) { background: var(--surface); color: var(--text); }
+
+/* ── DASHED "ADD" BUTTON ── */
+.btn-add-tp { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: none; border: 1.5px dashed var(--border); color: var(--text-mid); font-family: var(--font-sans); font-size: 13px; font-weight: 600; padding: 9px; border-radius: var(--radius-sm); cursor: pointer; transition: all .15s; }
+.btn-add-tp:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
 /* ── RUBRIC BUILDER (js/toolshed-rubric.js) ── */
 .rubric-criteria { display: flex; flex-direction: column; gap: 10px; }
