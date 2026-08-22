@@ -51,8 +51,8 @@
   .order-meta{font-size:11px;color:var(--text-light)}
   .order-footer{padding:14px 16px;border-top:1px solid var(--border)}
   .order-footer .ls-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px}
-  .order-footer .timer-display{font-family:var(--font-serif);font-size:22px;font-weight:700;text-align:center;color:var(--text);margin-bottom:8px}
-  .order-footer .timer-btns{display:flex;gap:6px;justify-content:center}
+  .order-footer .timer-display{font-family:var(--font-serif);font-size:22px;font-weight:700;text-align:center;color:var(--text)}
+  .order-footer .timer-hint{font-size:11px;color:var(--text-light);text-align:center;margin-top:4px}
 
   .present-main{flex:1;overflow-y:auto;padding:24px 24px 60px}
   .present-inner{max-width:640px;margin:0 auto}
@@ -64,6 +64,8 @@
   .present-timer.amber{color:var(--accent)}
   .present-timer.over{color:var(--red)}
   .present-timer-label{font-size:11px;color:var(--text-light);margin-top:2px}
+  .present-timer-btns{display:flex;gap:6px;justify-content:center;margin-top:8px}
+  .group-summary-time{font-size:12px;color:var(--text-light);margin-bottom:12px}
 
   .criterion-live-row{margin-bottom:14px}
   .criterion-live-row:last-child{margin-bottom:0}
@@ -266,12 +268,9 @@
     <aside class="order-sidebar">
       <div class="order-list" id="order-list"></div>
       <div class="order-footer">
-        <div class="ls-label">Session Timer</div>
-        <div class="timer-display" id="session-timer">00:00</div>
-        <div class="timer-btns">
-          <button class="btn btn-outline btn-sm" id="session-timer-btn">▶ Start</button>
-          <button class="btn btn-outline btn-sm" id="session-timer-reset">↺</button>
-        </div>
+        <div class="ls-label">Total Time</div>
+        <div class="timer-display" id="total-timer">00:00</div>
+        <div class="timer-hint">Sum of every presentation</div>
       </div>
     </aside>
 
@@ -285,6 +284,10 @@
           <div class="present-timer-wrap">
             <div class="present-timer" id="present-timer">00:00</div>
             <div class="present-timer-label" id="present-timer-label"></div>
+            <div class="present-timer-btns">
+              <button class="btn btn-outline btn-sm" id="present-timer-toggle">▶ Start</button>
+              <button class="btn btn-outline btn-sm" id="present-timer-reset">↺</button>
+            </div>
           </div>
         </div>
 
@@ -344,8 +347,10 @@ let groupDefCounter = 0;
 
 let selectedRubric = null;          // {id?, name, criteria} currently shown in the editor
 let savedSessionId = null;
-let sessionTimerInterval = null, sessionTimerRunning = false;
-let presentTimerInterval = null;
+// The per-presentation timer never auto-starts and is never resumed running
+// after a reload — presentTimerRunning is a transient UI flag, not saved
+// session data, so it naturally starts false on every page load.
+let presentTimerInterval = null, presentTimerRunning = false;
 
 // ── UTILS ──
 function $(id) { return document.getElementById(id); }
@@ -632,11 +637,10 @@ async function startSession() {
     groupData, studentData,
     timeLimitSec: $('time-limit-select').value ? parseInt($('time-limit-select').value, 10) : null,
     currentIndex: 0,
-    sessionElapsed: 0,
     date: new Date().toISOString()
   };
   savedSessionId = null;
-  sessionTimerRunning = false;
+  presentTimerRunning = false;
 
   renderLiveScreen();
   switchScreen('live');
@@ -652,7 +656,7 @@ function switchScreen(id) {
 function renderLiveScreen() {
   renderOrderList();
   renderCurrentGroup();
-  updateSessionTimerDisplay();
+  updateTotalTimeDisplay();
 }
 
 function renderOrderList() {
@@ -672,7 +676,7 @@ function renderOrderList() {
 function currentGroup() { return session.groups[session.currentIndex]; }
 
 function jumpToGroup(i) {
-  stopPresentTimer();
+  stopPresentTimerInterval(); // clear only; renderCurrentGroup restarts it if presentTimerRunning
   session.currentIndex = i;
   renderOrderList();
   renderCurrentGroup();
@@ -718,7 +722,7 @@ function renderCurrentGroup() {
   $('prev-group-btn').disabled = session.currentIndex === 0;
   $('next-group-btn').textContent = session.currentIndex === session.groups.length - 1 ? 'Finish →' : 'Next →';
 
-  startPresentTimer();
+  syncPresentTimerForCurrentGroup();
 }
 
 function renderLiveCriterionRow(g, gd, criterion) {
@@ -880,18 +884,57 @@ function nextGroup() {
 }
 
 // ── TIMERS ──
-function startPresentTimer() {
-  stopPresentTimer();
-  presentTimerInterval = setInterval(() => {
-    const g = currentGroup();
-    if (!g) return;
-    session.groupData[g.id].elapsedSec++;
-    updatePresentTimerDisplay();
-    scheduleLiveSave();
-  }, 1000);
+// The per-presentation timer never auto-starts. The teacher presses Start;
+// pressing Next/Previous or jumping to another group in the sidebar carries
+// the running/paused state forward onto whichever group becomes current, so
+// a teacher who's mid-flow doesn't have to re-press Start for every student.
+// There's no separate whole-session timer — "Total Time" in the sidebar is
+// just the live sum of every presentation's recorded time.
+function tickPresentTimer() {
+  const g = currentGroup();
+  if (!g) return;
+  session.groupData[g.id].elapsedSec++;
   updatePresentTimerDisplay();
+  updateTotalTimeDisplay();
+  scheduleLiveSave();
 }
-function stopPresentTimer() { clearInterval(presentTimerInterval); }
+function startPresentTimerInterval() {
+  clearInterval(presentTimerInterval);
+  presentTimerInterval = setInterval(tickPresentTimer, 1000);
+}
+function stopPresentTimerInterval() {
+  clearInterval(presentTimerInterval);
+  presentTimerInterval = null;
+}
+function togglePresentTimer() {
+  if (!currentGroup()) return;
+  presentTimerRunning = !presentTimerRunning;
+  if (presentTimerRunning) startPresentTimerInterval();
+  else stopPresentTimerInterval();
+  updatePresentTimerControls();
+  scheduleLiveSave();
+}
+function resetPresentTimer() {
+  const g = currentGroup();
+  if (!g) return;
+  session.groupData[g.id].elapsedSec = 0;
+  updatePresentTimerDisplay();
+  updateTotalTimeDisplay();
+  scheduleLiveSave();
+}
+// Called whenever the current group changes: reflects that group's own
+// elapsed time/controls, and keeps the interval running (or not) to match
+// presentTimerRunning rather than resetting it.
+function syncPresentTimerForCurrentGroup() {
+  updatePresentTimerDisplay();
+  updatePresentTimerControls();
+  if (presentTimerRunning) startPresentTimerInterval();
+  else stopPresentTimerInterval();
+}
+function updatePresentTimerControls() {
+  const btn = $('present-timer-toggle');
+  if (btn) btn.textContent = presentTimerRunning ? '⏸ Pause' : '▶ Start';
+}
 function updatePresentTimerDisplay() {
   const g = currentGroup();
   if (!g) return;
@@ -908,30 +951,14 @@ function updatePresentTimerDisplay() {
     label.textContent = '';
   }
 }
-
-function toggleSessionTimer() {
-  if (sessionTimerRunning) {
-    clearInterval(sessionTimerInterval);
-    sessionTimerRunning = false;
-    $('session-timer-btn').textContent = '▶ Resume';
-  } else {
-    sessionTimerRunning = true;
-    $('session-timer-btn').textContent = '⏸ Pause';
-    sessionTimerInterval = setInterval(() => {
-      session.sessionElapsed++;
-      updateSessionTimerDisplay();
-      scheduleLiveSave();
-    }, 1000);
-  }
+function totalElapsedSec() {
+  if (!session) return 0;
+  return session.groups.reduce((sum, g) => sum + ((session.groupData[g.id] && session.groupData[g.id].elapsedSec) || 0), 0);
 }
-function resetSessionTimer() {
-  clearInterval(sessionTimerInterval);
-  sessionTimerRunning = false;
-  session.sessionElapsed = 0;
-  $('session-timer-btn').textContent = '▶ Start';
-  updateSessionTimerDisplay();
+function updateTotalTimeDisplay() {
+  const el = $('total-timer');
+  if (el) el.textContent = fmtTime(totalElapsedSec());
 }
-function updateSessionTimerDisplay() { $('session-timer').textContent = fmtTime(session ? session.sessionElapsed : 0); }
 
 // ── PERSISTENCE ──
 const LIVE_AUTOSAVE_ID = 'autosave-presentation';
@@ -949,7 +976,7 @@ async function restoreLiveSession() {
   if (!doc || !doc.data || !Array.isArray(doc.data.students) || !doc.data.students.length) return false;
   session = doc.data;
   savedSessionId = null;
-  sessionTimerRunning = false;
+  presentTimerRunning = false; // always resume paused, never silently ticking
   renderLiveScreen();
   switchScreen('live');
   $('header-end-btn').style.display = '';
@@ -969,10 +996,9 @@ async function persistSession() {
 // ── END SESSION / SUMMARY ──
 function endSession() {
   if (!confirm('End this session and go to the summary?')) return;
-  stopPresentTimer();
-  clearInterval(sessionTimerInterval);
+  stopPresentTimerInterval();
+  presentTimerRunning = false;
   session.groupData[currentGroup().id].done = true;
-  session.groupFeedbackFlush = $('group-feedback-input').value;
   session.groupData[currentGroup().id].feedback = $('group-feedback-input').value;
   buildSummary();
   switchScreen('summary');
@@ -997,13 +1023,14 @@ function buildSummary() {
   const s = session;
   $('sum-title').textContent = s.name;
   const groupCount = s.groups.length;
+  const totalSec = totalElapsedSec();
   $('sum-meta').textContent =
-    `${s.className ? s.className + ' · ' : ''}${s.mode === 'groups' ? groupCount + ' groups' : 'Individual'} · ${s.students.length} student${s.students.length === 1 ? '' : 's'} · ${fmtTime(s.sessionElapsed)} · ${new Date(s.date).toLocaleDateString()}`;
+    `${s.className ? s.className + ' · ' : ''}${s.mode === 'groups' ? groupCount + ' groups' : 'Individual'} · ${s.students.length} student${s.students.length === 1 ? '' : 's'} · ${fmtTime(totalSec)} · ${new Date(s.date).toLocaleDateString()}`;
 
   const totals = s.students.map(st => totalFor(st.id)).filter(t => t != null);
   const avg = totals.length ? (totals.reduce((a,b) => a+b, 0) / totals.length).toFixed(1) : '—';
   $('sum-stats').innerHTML = [
-    { num: fmtTime(s.sessionElapsed), lbl: 'Duration' },
+    { num: fmtTime(totalSec), lbl: 'Total Time' },
     { num: s.students.length, lbl: 'Students' },
     { num: groupCount, lbl: s.mode === 'groups' ? 'Groups' : 'Presenters' },
     { num: avg, lbl: 'Avg total score' }
@@ -1030,6 +1057,13 @@ function renderGroupSummaryCard(g) {
     members.className = 'group-summary-members';
     members.textContent = g.memberIds.map(memberName).join(', ');
     card.appendChild(members);
+  }
+
+  if (gd.elapsedSec) {
+    const time = document.createElement('div');
+    time.className = 'group-summary-time';
+    time.textContent = 'Time: ' + fmtTime(gd.elapsedSec);
+    card.appendChild(time);
   }
 
   if (session.rubric && session.rubric.criteria.length) {
@@ -1096,7 +1130,7 @@ function exportCsv() {
   const s = session;
   if (!s || !s.students.length) { showToast('No session data to export'); return; }
   const criteria = s.rubric ? s.rubric.criteria : [];
-  const header = ['Session Name', 'Class Name', 'Class Date', 'Group', 'Student']
+  const header = ['Session Name', 'Class Name', 'Class Date', 'Group', 'Time', 'Student']
     .concat(criteria.map(c => c.name || 'Criterion'))
     .concat(['Total', 'Group Feedback', 'Individual Feedback']);
   const rows = [header];
@@ -1104,7 +1138,7 @@ function exportCsv() {
   s.groups.forEach(g => {
     const gd = s.groupData[g.id];
     g.memberIds.forEach(sid => {
-      const row = [s.name, s.className, new Date(s.date).toLocaleDateString(), g.name, memberName(sid)];
+      const row = [s.name, s.className, new Date(s.date).toLocaleDateString(), g.name, fmtTime(gd.elapsedSec), memberName(sid)];
       criteria.forEach(c => {
         if (ToolshedRubric.isScored(c)) {
           row.push(effectiveScore(sid, c.id, gd.criteria[c.id]).value);
@@ -1134,6 +1168,8 @@ function exportCsv() {
 
 function newSession() {
   if (!confirm('Start a new session? This will clear the current summary.')) return;
+  stopPresentTimerInterval();
+  presentTimerRunning = false;
   session = null;
   savedSessionId = null;
   groupDefs = [];
@@ -1174,8 +1210,8 @@ function wireLiveEvents() {
     session.groupData[currentGroup().id].feedback = $('group-feedback-input').value;
     scheduleLiveSave();
   });
-  $('session-timer-btn').addEventListener('click', toggleSessionTimer);
-  $('session-timer-reset').addEventListener('click', resetSessionTimer);
+  $('present-timer-toggle').addEventListener('click', togglePresentTimer);
+  $('present-timer-reset').addEventListener('click', resetPresentTimer);
 }
 function wireSummaryEvents() {
   $('print-btn').addEventListener('click', () => window.print());
