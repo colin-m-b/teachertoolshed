@@ -68,7 +68,7 @@
 }
 
 .tool-card {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 1.5rem;
@@ -135,7 +135,7 @@
 
 .tool-link {
   font-size: 12px;
-  color: var(--forest2);
+  color: var(--forest);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -171,14 +171,14 @@
 }
 
 .plan {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 1.75rem;
 }
 
 .plan.featured {
-  border: 2px solid var(--forest2);
+  border: 2px solid var(--forest);
 }
 
 .plan-tier {
@@ -189,7 +189,7 @@
   margin-bottom: 1.25rem;
 }
 
-.plan-tier.hi { color: var(--forest2); }
+.plan-tier.hi { color: var(--forest); }
 
 .plan-price {
   font-family: 'Lora', Georgia, serif;
@@ -217,7 +217,7 @@
 }
 
 .feat-mark {
-  color: var(--forest2);
+  color: var(--forest);
   font-weight: 600;
 }
 
@@ -235,7 +235,7 @@
 
 .plan-btn:hover { opacity: 0.85; }
 .plan-btn.lo { background: var(--bg2); color: var(--ink); border: 1px solid var(--rule); }
-.plan-btn.hi { background: var(--forest); color: #eaf3de; border: none; }
+.plan-btn.hi { background: var(--forest); color: #fff; border: none; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {

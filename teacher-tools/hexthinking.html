@@ -3,24 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HexThinking — Hexagonal Thinking Made Easy</title>
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Anybody:wght@400;600;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<title>Hexagonal Thinking — Teacher Toolshed</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
-  --bg: #f4f1ec;
-  --bg-warm: #eae5dd;
+  --bg: #F7F5F0;
+  --bg-warm: #F0EDE6;
   --surface: #ffffff;
-  --border: #d8d2c8;
-  --border-light: #e8e3db;
-  --text: #2c2924;
-  --text-mid: #6b635a;
-  --text-dim: #9e9588;
-  --accent: #e86b30;
-  --accent-hover: #d45a22;
-  --accent-light: rgba(232,107,48,0.08);
+  --border: #E0DDD4;
+  --border-light: #EAE6DE;
+  --text: #28251E;
+  --text-mid: #6B6457;
+  --text-dim: #A8A098;
+  --accent: #B5843A;
+  --accent-hover: #9A6E2F;
+  --accent-light: rgba(181,132,58,0.08);
   --canvas-bg: #faf8f5;
   --canvas-dot: #ddd7ce;
   --shadow-sm: 0 1px 3px rgba(44,41,36,0.06);
@@ -28,11 +27,16 @@
   --shadow-lg: 0 8px 32px rgba(44,41,36,0.12);
   --radius: 10px;
   --radius-lg: 16px;
-  --red: #c94040;
+  --red: #C44A3F;
+  --font-serif: "Lora", Georgia, serif;
+  --font-sans: "DM Sans", "Helvetica Neue", sans-serif;
+  --green: #4A7C59;
+  --green-soft: #EBF4EE;
+  --green-border: #B8D9C2;
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -43,28 +47,35 @@ body {
 .view.active { display: flex; }
 
 /* ===== SHARED ===== */
-.app-header {
-  padding: 14px 24px;
+.header {
+  padding: 0 24px; height: 54px;
   display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--surface); flex-shrink: 0;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface); flex-shrink: 0; z-index: 10;
 }
+.header-left { display: flex; align-items: center; gap: 12px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
-.brand-hex { width: 30px; height: 30px; }
-.brand h1 { font-family: 'Anybody', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; }
-.brand h1 span { color: var(--accent); }
+.brand-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  background: var(--green-soft); border: 1.5px solid var(--green-border); border-radius: 6px;
+}
+.brand-name { font-family: var(--font-serif); font-size: 17px; font-weight: 700; }
+.brand-name span { color: var(--green); }
+.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); }
+.header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  padding: 10px 20px; font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
   border: none; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
 }
-.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(232,107,48,0.25); }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,107,48,0.3); }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(181,132,58,0.25); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(181,132,58,0.3); }
 .btn-primary:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
 
 .tool-btn {
-  padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+  padding: 7px 14px; font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600;
   border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-mid);
   cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px;
 }
@@ -75,7 +86,7 @@ body {
 #teacherView { flex-direction: column; min-height: 100vh; }
 .teacher-body { flex: 1; display: flex; justify-content: center; padding: 40px 32px 80px; }
 .teacher-content { width: 100%; max-width: 680px; }
-.teacher-content > h2 { font-family: 'Anybody', sans-serif; font-weight: 800; font-size: 1.8rem; letter-spacing: -0.03em; margin-bottom: 6px; }
+.teacher-content > h2 { font-family: var(--font-serif); font-weight: 700; font-size: 1.8rem; letter-spacing: -0.02em; margin-bottom: 6px; }
 .teacher-content > .subtitle { color: var(--text-mid); font-size: 0.95rem; margin-bottom: 36px; line-height: 1.55; }
 
 .card {
@@ -85,7 +96,7 @@ body {
 }
 .card:nth-child(2) { animation-delay: 0.04s; }
 .card:nth-child(3) { animation-delay: 0.08s; }
-.card h3 { font-family: 'Anybody', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.card h3 { font-family: var(--font-serif); font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
 .card .desc { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
 .step-num {
   display: inline-flex; align-items: center; justify-content: center;
@@ -105,7 +116,7 @@ body {
 }
 .color-cycle-btn:hover { transform: scale(1.12); }
 .group-name-input {
-  flex: 1; padding: 6px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+  flex: 1; padding: 6px 10px; font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
   color: var(--text); background: transparent; border: none;
 }
 .group-name-input:focus { outline: none; }
@@ -115,10 +126,10 @@ body {
   color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.15s; flex-shrink: 0;
 }
-.group-remove:hover { color: var(--red); background: rgba(201,64,64,0.08); }
+.group-remove:hover { color: var(--red); background: rgba(196,74,63,0.08); }
 .group-terms-area { position: relative; }
 .group-terms-input {
-  width: 100%; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+  width: 100%; padding: 12px 14px; font-family: var(--font-sans); font-size: 0.85rem;
   color: var(--text); background: var(--surface); border: none; resize: vertical; min-height: 80px; line-height: 1.65;
 }
 .group-terms-input:focus { outline: none; }
@@ -133,7 +144,7 @@ body {
 .add-group-btn {
   display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; margin-top: 4px;
   background: transparent; border: 1.5px dashed var(--border); border-radius: 8px; color: var(--text-mid);
-  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 500;
   cursor: pointer; transition: all 0.15s; align-self: flex-start;
 }
 .add-group-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -165,7 +176,7 @@ body {
 /* Instructions banner */
 .instructions-banner {
   display: flex; align-items: center; justify-content: center; gap: 24px;
-  padding: 10px 20px; background: #fdf6f0; border-bottom: 1px solid #f0ddd0;
+  padding: 10px 20px; background: #FBF4E8; border-bottom: 1px solid #E4CFA0;
   font-size: 0.8rem; color: var(--text-mid); flex-shrink: 0; animation: fadeUp 0.3s ease;
 }
 .instructions-banner .step { display: flex; align-items: center; gap: 6px; }
@@ -187,7 +198,7 @@ body {
 }
 .hex-tray.collapsed { width: 0; }
 .tray-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-.tray-header h3 { font-family: 'Anybody', sans-serif; font-size: 0.85rem; font-weight: 600; }
+.tray-header h3 { font-family: var(--font-serif); font-size: 0.85rem; font-weight: 600; }
 .tray-count { font-size: 0.72rem; color: var(--text-dim); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
 .tray-items { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
 .tray-items::-webkit-scrollbar { width: 4px; }
@@ -231,7 +242,7 @@ body {
 
 .conn-input-wrap { position: absolute; z-index: 100; display: none; }
 .conn-input-wrap input {
-  padding: 5px 10px; font-family: 'DM Sans', sans-serif; font-size: 0.76rem;
+  padding: 5px 10px; font-family: var(--font-sans); font-size: 0.76rem;
   border: 2px solid var(--accent); border-radius: 6px; background: var(--surface);
   color: var(--text); width: 150px; box-shadow: var(--shadow-md);
 }
@@ -250,19 +261,19 @@ body {
   transform: translateY(8px) scale(0.98); transition: transform 0.2s;
 }
 .modal-overlay.open .modal { transform: translateY(0) scale(1); }
-.modal h3 { font-family: 'Anybody', sans-serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
+.modal h3 { font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
 .modal p { color: var(--text-mid); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.5; }
 .link-box { display: flex; gap: 8px; }
-.link-box input { flex: 1; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+.link-box input { flex: 1; padding: 10px 14px; font-family: var(--font-sans); font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
 .link-box input:focus { outline: none; }
-.copy-btn { padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+.copy-btn { padding: 10px 18px; font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
 .copy-btn:hover { background: var(--accent-hover); }
-.modal-close { display: block; margin: 16px auto 0; padding: 8px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text-mid); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; }
+.modal-close { display: block; margin: 16px auto 0; padding: 8px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text-mid); font-family: var(--font-sans); font-size: 0.82rem; cursor: pointer; }
 .modal-close:hover { border-color: var(--text-mid); }
 
 @media (max-width: 768px) {
   .teacher-body { padding: 20px 16px 40px; }
-  .app-header { padding: 12px 16px; }
+  .header { padding: 0 16px; }
   .hex-tray { width: 190px; }
   .instructions-banner { flex-wrap: wrap; gap: 10px; font-size: 0.75rem; padding: 8px 14px; }
   .header-tools .tool-btn span.label { display: none; }
@@ -273,11 +284,22 @@ body {
 
 <!-- ===== TEACHER VIEW ===== -->
 <div class="view" id="teacherView">
-  <header class="app-header">
-    <a class="brand" href="#">
-      <svg class="brand-hex" viewBox="0 0 36 36" fill="none"><path d="M18 2L33 10.5V27.5L18 36L3 27.5V10.5L18 2Z" fill="rgba(232,107,48,0.12)" stroke="#e86b30" stroke-width="2"/><path d="M18 10L26 14.5V23.5L18 28L10 23.5V14.5L18 10Z" fill="rgba(232,107,48,0.25)" stroke="#e86b30" stroke-width="1.2"/></svg>
-      <h1>Hex<span>Thinking</span></h1>
-    </a>
+  <header class="header">
+    <div class="header-left">
+      <a class="brand" href="/">
+        <div class="brand-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+            <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+            <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+            <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          </svg>
+        </div>
+        <span class="brand-name">Teacher<span>Toolshed</span></span>
+      </a>
+      <span class="header-sep">/</span>
+      <span class="header-tool">Hexagonal Thinking</span>
+    </div>
   </header>
   <div class="teacher-body">
     <div class="teacher-content">
@@ -316,12 +338,21 @@ body {
 
 <!-- ===== STUDENT VIEW ===== -->
 <div class="view" id="studentView">
-  <header class="app-header">
-    <div style="display:flex;align-items:center;">
-      <a class="brand" href="#">
-        <svg class="brand-hex" viewBox="0 0 36 36" fill="none"><path d="M18 2L33 10.5V27.5L18 36L3 27.5V10.5L18 2Z" fill="rgba(232,107,48,0.12)" stroke="#e86b30" stroke-width="2"/><path d="M18 10L26 14.5V23.5L18 28L10 23.5V14.5L18 10Z" fill="rgba(232,107,48,0.25)" stroke="#e86b30" stroke-width="1.2"/></svg>
-        <h1>Hex<span>Thinking</span></h1>
+  <header class="header">
+    <div class="header-left">
+      <a class="brand" href="/">
+        <div class="brand-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+            <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+            <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+            <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          </svg>
+        </div>
+        <span class="brand-name">Teacher<span>Toolshed</span></span>
       </a>
+      <span class="header-sep">/</span>
+      <span class="header-tool">Hexagonal Thinking</span>
       <a class="back-link" id="backToSetup" href="#">← New activity</a>
     </div>
     <div class="header-tools">
@@ -702,18 +733,18 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
       const a=placed[i],b=placed[j]; if(!adj(a,b))continue;
       const m=mid(a,b);
       const conn=connections.find(c=>(c.id1===a.id&&c.id2===b.id)||(c.id1===b.id&&c.id2===a.id));
-      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#d8d2c8','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
+      g.appendChild(svgE('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#E0DDD4','stroke-width':1.5,'stroke-dasharray':'4 3','pointer-events':'none'}));
       const zone=svgE('rect',{x:m.x-40,y:m.y-14,width:80,height:28,fill:'transparent',cursor:'pointer'});
       zone.addEventListener('click',e=>{e.stopPropagation();openConn(a.id,b.id,m);});
       g.appendChild(zone);
       if(conn&&conn.label) {
         const d=conn.label.length>16?conn.label.slice(0,15)+'…':conn.label;
         const tw=d.length*6.2+14;
-        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#d8d2c8','stroke-width':1,'pointer-events':'none'}));
-        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6b635a','pointer-events':'none'});
+        g.appendChild(svgE('rect',{x:m.x-tw/2,y:m.y-10,width:tw,height:20,rx:4,fill:'#fff',stroke:'#E0DDD4','stroke-width':1,'pointer-events':'none'}));
+        const txt=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'11','font-weight':'500',fill:'#6B6457','pointer-events':'none'});
         txt.textContent=d; g.appendChild(txt);
       } else {
-        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#d8d2c8','pointer-events':'none'});
+        const plus=svgE('text',{x:m.x,y:m.y+4,'text-anchor':'middle','font-family':"'DM Sans',sans-serif",'font-size':'14','font-weight':'600',fill:'#E0DDD4','pointer-events':'none'});
         plus.textContent='+'; g.appendChild(plus);
       }
     }
@@ -728,7 +759,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
       g.appendChild(svgE('polygon',{points:hexPts(h.x,h.y,HEX_R-4),fill:t.color,opacity:'0.07','pointer-events':'none'}));
 
       const fs = hexFontSize(t.text);
-      const text=svgE('text',{x:h.x,y:h.y,'text-anchor':'middle','dominant-baseline':'central','font-family':"'DM Sans',sans-serif",'font-size':fs,'font-weight':'600',fill:'#2c2924','pointer-events':'none'});
+      const text=svgE('text',{x:h.x,y:h.y,'text-anchor':'middle','dominant-baseline':'central','font-family':"'DM Sans',sans-serif",'font-size':fs,'font-weight':'600',fill:'#28251E','pointer-events':'none'});
       const words=t.text.split(' ');
       if(words.length>1&&t.text.length>12){
         const half=Math.ceil(words.length/2);
