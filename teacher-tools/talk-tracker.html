@@ -164,9 +164,15 @@
     <!-- Session Details -->
     <div class="card">
       <div class="card-title">📋 Session Details</div>
-      <div class="field">
-        <label>Session name</label>
-        <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar"/>
+      <div class="row-2">
+        <div class="field">
+          <label>Session name</label>
+          <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar"/>
+        </div>
+        <div class="field">
+          <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <input type="text" id="class-name" placeholder="e.g. Period 3 English 10"/>
+        </div>
       </div>
       <div class="row-2">
         <div class="field">
@@ -276,6 +282,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button class="btn btn-outline btn-sm" onclick="printSummary()">🖨 Print</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCsv()">📥 Export CSV</button>
         <button class="btn btn-outline btn-sm" onclick="newSession()">+ New Session</button>
       </div>
     </div>
@@ -315,8 +322,8 @@
 <script>
 // ── STATE ──
 let session = {
-  name: '', type: 'socratic', target: 3,
-  students: [],   // {id, name, count, tags:[]}
+  name: '', className: '', type: 'socratic', target: 3,
+  students: [],   // {id, name, count, tags:[], notes:''}
   talkingPoints:[], // {id, text, covered}
   notes: '',
   startTime: null, elapsed: 0
@@ -363,6 +370,7 @@ function startSession() {
   if (names.length < 1) { showToast('Add at least one student'); return; }
 
   session.name = name;
+  session.className = document.getElementById('class-name').value.trim();
   session.type = document.getElementById('session-type').value;
   session.target = parseInt(document.getElementById('target-count').value);
   session.students = names.map((n, i) => ({id:'s'+i, name:n, count:0, tags:[], notes:''}));
@@ -629,7 +637,7 @@ function buildSummary() {
   const tps = s.talkingPoints.filter(t=>t.text);
   const covered = tps.filter(t=>t.covered).length;
   document.getElementById('sum-meta').textContent =
-    `${s.type} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
+    `${s.className ? s.className + ' · ' : ''}${s.type} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
 
   const total = s.students.reduce((a,st)=>a+st.count,0);
   const atTarget = s.students.filter(st=>st.count>=s.target).length;
@@ -696,11 +704,35 @@ function buildSummary() {
 
 function printSummary() { window.print(); }
 
+// ── CSV EXPORT ──
+function csvField(v) {
+  const str = String(v ?? '');
+  return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+}
+function exportCsv() {
+  const s = session;
+  if (!s.students.length) { showToast('No session data to export'); return; }
+  const rows = [['Session Name', 'Class Name', 'Student', 'Contributions', 'Notes']];
+  s.students.forEach(st => rows.push([s.name, s.className, st.name, st.count, st.notes || '']));
+  const csv = rows.map(row => row.map(csvField).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const safeName = (s.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `talk-tracker-${safeName || 'session'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function newSession() {
   if (!confirm('Start a new session? This will clear the current summary.')) return;
-  session = { name:'', type:'socratic', target:3, students:[], talkingPoints:[], notes:'', startTime:null, elapsed:0 };
+  session = { name:'', className:'', type:'socratic', target:3, students:[], talkingPoints:[], notes:'', startTime:null, elapsed:0 };
   tpCounter = 0;
   document.getElementById('session-name').value = '';
+  document.getElementById('class-name').value = '';
   document.getElementById('students-input').value = '';
   document.getElementById('tp-list').innerHTML = '';
   document.getElementById('session-notes').value = '';
@@ -712,10 +744,12 @@ function newSession() {
 
 function clearSetup() {
   const hasContent = document.getElementById('session-name').value ||
+    document.getElementById('class-name').value ||
     document.getElementById('students-input').value || session.talkingPoints.length;
   if (!hasContent) return;
   if (!confirm('Clear the session setup?')) return;
   document.getElementById('session-name').value = '';
+  document.getElementById('class-name').value = '';
   document.getElementById('students-input').value = '';
   session.talkingPoints = [];
   tpCounter = 0;
