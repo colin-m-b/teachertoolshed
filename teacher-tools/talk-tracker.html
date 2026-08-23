@@ -197,7 +197,6 @@
             <option value="socratic">Socratic Seminar</option>
             <option value="debate">Debate</option>
             <option value="discussion">Discussion</option>
-            <option value="presentation">Presentations</option>
           </select>
         </div>
         <div class="field">
@@ -802,6 +801,17 @@ function endSession() {
 }
 
 // ── SUMMARY ──
+// Session types are stored as short codes; the summary shows the readable label.
+// 'presentation' is no longer offered (that's the Presentation Grader's job) but
+// stays mapped here so sessions saved before it was removed still read correctly.
+const SESSION_TYPE_LABELS = {
+  socratic: 'Socratic Seminar',
+  debate: 'Debate',
+  discussion: 'Discussion',
+  presentation: 'Presentations'
+};
+function sessionTypeLabel(type) { return SESSION_TYPE_LABELS[type] || type || ''; }
+
 function buildSummary() {
   const s = session;
   document.getElementById('sum-title').textContent = s.name;
@@ -810,7 +820,7 @@ function buildSummary() {
   const tps = s.talkingPoints.filter(t=>t.text);
   const covered = tps.filter(t=>t.covered).length;
   document.getElementById('sum-meta').textContent =
-    `${s.className ? s.className + ' · ' : ''}${s.type} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
+    `${s.className ? s.className + ' · ' : ''}${sessionTypeLabel(s.type)} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
 
   const total = s.students.reduce((a,st)=>a+st.count,0);
   const atTarget = s.students.filter(st=>st.count>=s.target).length;
@@ -1131,7 +1141,7 @@ function showToast(msg, dur=2200) {
 // Print styles
 const ps = document.createElement('style');
 ps.media = 'print';
-ps.textContent = `.header,button{display:none!important}.summary-body{padding:0}.speaker-notes-row:has(textarea:placeholder-shown){display:none}`;
+ps.textContent = `.header,.tool-footer,button{display:none!important}.summary-body{padding:0}.speaker-notes-row:has(textarea:placeholder-shown){display:none}`;
 document.head.appendChild(ps);
 </script>
 </body>

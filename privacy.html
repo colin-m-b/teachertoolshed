@@ -55,10 +55,15 @@
   <h2>What we don't do</h2>
   <ul>
     <li>No accounts, no sign-in, no server-side database.</li>
-    <li>No analytics, tracking scripts, or third-party embeds.</li>
+    <li>No analytics, no tracking scripts, no advertising, no embedded third-party widgets.</li>
     <li>No network request ever carries student names, rosters, scores, or notes anywhere.</li>
   </ul>
-  <p>The only outside requests any page makes are for the Google Fonts used to render the text you see. No page content is included in those requests.</p>
+  <p>Pages do make two kinds of outside request, and neither one carries anything you've typed:</p>
+  <ul>
+    <li><strong>Google Fonts</strong>, on every page, for the typefaces used to render text.</li>
+    <li><strong>A PDF library</strong> (jsPDF, from the cdnjs.com public code archive) — fetched by the Seating Chart Maker only at the moment you click <em>Download PDF</em>, and not at all otherwise. It's the code that builds the file; your chart is assembled into a PDF inside your browser and saved straight to your device. The chart itself is never uploaded.</li>
+  </ul>
+  <p>Both requests ask for a file and receive it. No page content — no names, no rosters, no scores — is attached to either one.</p>
 
   <h2>Backing up your data</h2>
   <p>Because everything lives only in one browser, it can be lost if you clear your browser's site data, switch devices, or reinstall your browser. Use <a class="link" href="teacher-tools/rosters.html">Export backup</a> on the class lists page regularly — it downloads a single file with everything saved across every tool, which you can re-import on this or any other device with Import backup.</p>
