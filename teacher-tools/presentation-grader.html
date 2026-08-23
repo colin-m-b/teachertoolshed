@@ -33,6 +33,7 @@
   .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text);border-radius:4px}
   .group-def-row input:focus{outline:none;background:var(--surface)}
   .group-def-count{font-size:11px;color:var(--text-light);flex-shrink:0;white-space:nowrap}
+  .group-def-solo-label{flex:1;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text)}
   .group-def-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
   .group-def-remove:hover{color:var(--red)}
 
@@ -43,7 +44,7 @@
   .assign-name{font-size:13px;font-weight:600;color:var(--text)}
   .assign-badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface);white-space:nowrap;flex-shrink:0}
   .assign-badge.assigned{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover)}
-  .unassigned-warning{font-size:12.5px;color:var(--red);margin-top:8px;font-weight:600}
+  .unassigned-note{font-size:12.5px;color:var(--text-mid);margin-top:8px;font-weight:600}
   .unassigned-ok{font-size:12.5px;color:var(--green);margin-top:8px;font-weight:600}
 
   /* ─── LIVE ─── */
@@ -211,7 +212,7 @@
           <label>Groups</label>
           <div id="group-defs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <button class="btn-add-tp" id="add-group-btn">+ Add group</button>
-          <p class="hint" style="margin-top:8px">Click a group to make it the active target, then click students below to assign them to it.</p>
+          <p class="hint" style="margin-top:8px">Click a group — or "Presenting solo" below, for students going on their own today — to make it the active target, then click students below to assign them.</p>
         </div>
         <div class="row-2">
           <div class="field">
@@ -360,6 +361,7 @@ let mode = 'individual';           // setup-time only
 let groupDefs = [];                 // [{id, name}] — setup-time group shells
 let assignment = {};                // {studentName: groupDefId|null} — setup-time
 let activeGroupId = null;           // setup-time: which group tapping a student assigns them to
+const SOLO_ID = '__solo__';         // reserved pseudo-group id: "presenting on their own today"
 let groupDefCounter = 0;
 
 let selectedRubric = null;          // {id?, name, criteria} currently shown in the editor
@@ -448,7 +450,7 @@ function setMode(m) {
   $('groups-builder').style.display = m === 'groups' ? '' : 'none';
   $('mode-hint').textContent = m === 'individual'
     ? 'Each student presents on their own — one entry per student, no grouping needed.'
-    : 'Create groups below, then assign each student to one.';
+    : 'Create groups below and assign students. Anyone you leave unassigned won\'t be in today\'s session.';
 }
 
 function addGroupDef(name) {
@@ -517,6 +519,32 @@ function renderGroupDefs() {
     row.appendChild(rm);
     wrap.appendChild(row);
   });
+
+  // Permanent target for students presenting on their own today — always
+  // available, not removable, not editable. Anyone tapped in here becomes
+  // their own one-person group when the session starts.
+  const soloCount = names.filter(n => assignment[n] === SOLO_ID).length;
+  const soloRow = document.createElement('div');
+  soloRow.className = 'group-def-row' + (activeGroupId === SOLO_ID ? ' active' : '');
+  soloRow.dataset.groupId = SOLO_ID;
+  soloRow.title = 'Click to make this the active target for students presenting solo';
+  soloRow.addEventListener('click', () => setActiveGroup(SOLO_ID));
+
+  const soloDot = document.createElement('span');
+  soloDot.className = 'group-def-dot';
+
+  const soloLabel = document.createElement('span');
+  soloLabel.className = 'group-def-solo-label';
+  soloLabel.textContent = '🎤 Presenting solo';
+
+  const soloCountEl = document.createElement('span');
+  soloCountEl.className = 'group-def-count';
+  soloCountEl.textContent = soloCount ? `${soloCount} assigned` : '';
+
+  soloRow.appendChild(soloDot);
+  soloRow.appendChild(soloLabel);
+  soloRow.appendChild(soloCountEl);
+  wrap.appendChild(soloRow);
 }
 
 function currentStudentNames() {
@@ -542,7 +570,7 @@ function renderAssignList() {
   const wrap = $('assign-list');
   wrap.innerHTML = '';
   const names = currentStudentNames();
-  let unassigned = 0;
+  let notPresenting = 0;
 
   names.forEach(name => {
     const row = document.createElement('div');
@@ -554,11 +582,19 @@ function renderAssignList() {
     label.textContent = name;
 
     const groupId = assignment[name];
-    const group = groupDefs.find(g => g.id === groupId);
-    if (!group) unassigned++;
+    let badgeText = '— Not presenting —';
+    let isAssigned = false;
+    if (groupId === SOLO_ID) {
+      badgeText = '🎤 Solo';
+      isAssigned = true;
+    } else {
+      const group = groupDefs.find(g => g.id === groupId);
+      if (group) { badgeText = group.name; isAssigned = true; }
+    }
+    if (!isAssigned) notPresenting++;
     const badge = document.createElement('span');
-    badge.className = 'assign-badge' + (group ? ' assigned' : '');
-    badge.textContent = group ? group.name : '— Unassigned —';
+    badge.className = 'assign-badge' + (isAssigned ? ' assigned' : '');
+    badge.textContent = badgeText;
 
     row.addEventListener('click', () => {
       if (!activeGroupId) { showToast('Click a group above first, then tap students to assign them'); return; }
@@ -575,12 +611,12 @@ function renderAssignList() {
   const status = $('unassigned-status');
   if (!names.length) {
     status.textContent = '';
-  } else if (unassigned > 0) {
-    status.className = 'unassigned-warning';
-    status.textContent = `${unassigned} student${unassigned === 1 ? '' : 's'} not yet in a group`;
+  } else if (notPresenting > 0) {
+    status.className = 'unassigned-note';
+    status.textContent = `${names.length - notPresenting} presenting today · ${notPresenting} not assigned — they won't present unless you assign them`;
   } else {
     status.className = 'unassigned-ok';
-    status.textContent = 'Everyone is assigned to a group';
+    status.textContent = 'Everyone is presenting today';
   }
 }
 
@@ -656,18 +692,32 @@ async function startSession() {
 
   let groups;
   if (mode === 'groups') {
-    const unassigned = names.filter(n => !assignment[n]);
-    if (unassigned.length) {
-      showToast(`Assign ${unassigned.length} student${unassigned.length === 1 ? '' : 's'} to a group first`);
-      return;
-    }
-    if (!groupDefs.length) { showToast('Add at least one group, or switch to Individual'); return; }
-    groups = groupDefs
+    const realGroups = groupDefs
       .map(g => ({ id: g.id, name: g.name.trim() || 'Group', memberNames: names.filter(n => assignment[n] === g.id) }))
       .filter(g => g.memberNames.length);
+    const soloGroups = names
+      .filter(n => assignment[n] === SOLO_ID)
+      .map(n => ({ id: nextId('g'), name: n, memberNames: [n] }));
+    groups = [...realGroups, ...soloGroups];
+
+    if (!groups.length) {
+      showToast('Assign at least one student to a group or Presenting Solo, or switch to Individual');
+      return;
+    }
+
+    const notPresenting = names.filter(n => !assignment[n]);
+    if (notPresenting.length) {
+      const ok = confirm(
+        `${notPresenting.length} student${notPresenting.length === 1 ? '' : 's'} won't be presenting today:\n\n` +
+        notPresenting.join(', ') +
+        `\n\nThey won't appear in the running order or the report.\n\nStart anyway?`
+      );
+      if (!ok) return;
+    }
   } else {
     groups = names.map(n => ({ id: nextId('g'), name: n, memberNames: [n] }));
   }
+  const presentingNames = names.filter(n => groups.some(g => g.memberNames.includes(n)));
 
   // If a new rubric was being drafted with a name but never explicitly saved, save it now
   // rather than silently discarding the teacher's work.
@@ -678,7 +728,7 @@ async function startSession() {
     ? { name: selectedRubric.name, criteria: selectedRubric.criteria.map(c => ({ ...c, descriptions: (c.descriptions || []).slice() })) }
     : null;
 
-  const students = names.map(n => ({ id: nextId('s'), name: n }));
+  const students = presentingNames.map(n => ({ id: nextId('s'), name: n }));
   const nameToId = {};
   students.forEach(s => { nameToId[s.name] = s.id; });
 
