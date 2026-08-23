@@ -47,6 +47,11 @@
   .desk:hover{border-color:var(--accent);z-index:5}
   .desk.drag-over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 3px rgba(74,124,89,.15)}
   .desk.dragging-source{opacity:.45}
+  /* Tap-to-swap: works where HTML5 drag-and-drop doesn't (touchscreens) */
+  body.swap-mode .desk{cursor:pointer}
+  body.swap-mode .desk.empty{cursor:pointer}
+  .desk.swap-selected{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px rgba(181,132,58,.18);z-index:6}
+  .btn-outline.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .desk.empty{background:var(--surface-2);color:var(--text-light);cursor:default;border-style:dashed}
   .desk.empty:hover{border-color:var(--border)}
   .desk-num{position:absolute;top:-2px;left:-2px;background:var(--accent);color:#fff;font-size:16px;font-weight:700;line-height:1;padding:3px 9px 4px;border-radius:6px 0 8px 0;pointer-events:none;font-variant-numeric:tabular-nums}
@@ -439,9 +444,12 @@ function generate() {
 
   const shuffled = [...students].sort(() => Math.random() - .5);
   desks = buildLayout(shuffled);
+  // Desk ids are stable across a reshuffle, so a pending swap selection would
+  // survive and point at a desk that now holds someone else. Drop it.
+  swapFirst = null;
   renderDesks();
   document.getElementById('toolbar-info').textContent =
-    `${students.length} students · ${template} layout · desks numbered from the front · drag names to swap`;
+    `${students.length} students · ${template} layout · desks numbered from the front · drag names to swap, or use Swap Names`;
 }
 
 function buildLayout(names) {
@@ -593,6 +601,11 @@ function layoutCircle(students, W, H) {
 
 // ── RENDER ──
 function renderDesks() {
+  // Swap-mode state goes stale whenever the chart is rebuilt (randomize, clear,
+  // load, layout change). Reconcile it here so every caller is covered.
+  if (swapFirst !== null && !desks.some(d => d.id === swapFirst)) swapFirst = null;
+  if (swapping && !desks.some(d => d.name)) { swapping = false; swapFirst = null; applySwapChrome(); }
+
   const classroom = document.getElementById('classroom');
   classroom.querySelectorAll('.desk').forEach(e => e.remove());
   document.getElementById('empty-state').style.display = desks.length ? 'none' : '';
@@ -608,7 +621,8 @@ function renderDesks() {
 
   desks.forEach(desk => {
     const el = document.createElement('div');
-    el.className = 'desk' + (desk.name ? '' : ' empty');
+    el.className = 'desk' + (desk.name ? '' : ' empty')
+      + (swapping && swapFirst === desk.id ? ' swap-selected' : '');
     el.id = desk.id;
     el.style.cssText = `left:${desk.x}px;top:${desk.y}px;width:${DW}px;height:${DH}px`;
 
@@ -622,11 +636,15 @@ function renderDesks() {
     nameEl.textContent = desk.name || 'Empty';
     el.appendChild(nameEl);
 
-    // Double-click to rename
-    el.addEventListener('dblclick', () => openRenameModal(desk.id));
+    // Tap to swap (swap mode only — see handleSwapTap)
+    el.addEventListener('click', () => handleSwapTap(desk.id));
 
-    // Drag for swap
-    el.draggable = true;
+    // Double-click to rename. Suppressed in swap mode so the two taps of a
+    // swap can't also fire the rename dialog.
+    el.addEventListener('dblclick', () => { if (!swapping) openRenameModal(desk.id); });
+
+    // Drag for swap. Disabled in swap mode to keep the two gestures distinct.
+    el.draggable = !swapping;
     el.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', desk.id);
       setTimeout(() => el.classList.add('dragging-source'), 0);
@@ -660,9 +678,62 @@ function swapNames(aId, bId) {
   showToast('Names swapped');
 }
 
+// Tap-to-swap mode. Dragging a desk onto another also swaps, but HTML5
+// drag-and-drop doesn't fire on touchscreens, so this is the path that works
+// on a tablet: turn it on, tap one desk, tap another.
 function swapMode() {
-  showToast('Drag a desk name onto another desk to swap them');
+  swapping ? exitSwapMode() : enterSwapMode();
 }
+
+// Button + body chrome only. Kept render-free so renderDesks() can call it
+// while reconciling stale state without recursing back into itself.
+function applySwapChrome() {
+  document.body.classList.toggle('swap-mode', swapping);
+  const btn = document.getElementById('swap-btn');
+  btn.classList.toggle('active', swapping);
+  btn.textContent = swapping ? 'Done Swapping' : 'Swap Names';
+}
+
+function enterSwapMode() {
+  if (!desks.some(d => d.name)) { showToast('Make a seating chart first'); return; }
+  swapping = true;
+  swapFirst = null;
+  applySwapChrome();
+  renderDesks();
+  showToast('Tap two desks to swap them. Tap Done Swapping when finished.', 3200);
+}
+
+function exitSwapMode() {
+  swapping = false;
+  swapFirst = null;
+  applySwapChrome();
+  renderDesks();
+}
+
+// A desk tap only means something while swap mode is on.
+function handleSwapTap(id) {
+  if (!swapping) return;
+  if (swapFirst === null) {
+    swapFirst = id;
+    renderDesks();
+    return;
+  }
+  if (swapFirst === id) {   // tapping the same desk again deselects it
+    swapFirst = null;
+    renderDesks();
+    return;
+  }
+  const first = swapFirst;
+  swapFirst = null;
+  swapNames(first, id);     // swapNames re-renders and toasts
+}
+
+// Escape cancels a half-finished swap, then leaves the mode.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !swapping) return;
+  if (swapFirst !== null) { swapFirst = null; renderDesks(); }
+  else exitSwapMode();
+});
 
 // ── RENAME ──
 function openRenameModal(id) {
