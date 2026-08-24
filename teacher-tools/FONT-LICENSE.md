@@ -1,9 +1,14 @@
 # Embedded font licence
 
-`seating-chart-maker.html` embeds a subset of **Liberation Sans Bold** (base64,
-in the `vn-font` script block at the end of the file) so that the PDF export can
-render diacritics. jsPDF's built-in fonts use WinAnsi/CP1252 encoding, which
-cannot represent Vietnamese, Polish, Czech, Turkish or Scandinavian characters.
+`js/toolshed-pdf-font.js` holds a subset of **Liberation Sans Bold** (base64) so
+that PDF exports can render diacritics. jsPDF's built-in fonts use WinAnsi/CP1252
+encoding, which cannot represent Vietnamese, Polish, Czech, Turkish or
+Scandinavian characters — a name like `Nguyễn` comes out as `NguyÅn`.
+
+Used by `seating-chart-maker.html` (desk labels) and `stack-splitter.js`
+(coversheet names). It lived inline in the seating chart until Stack Splitter
+needed the same face; `ToolshedPdfFont.register(doc)` returns the family name to
+pass to `setFont`.
 
 | | |
 |---|---|
@@ -107,3 +112,27 @@ jsPDF (MIT licence) — see `vendor/jspdf-LICENSE.txt`. Vendored locally rather
 than loaded from a CDN, unlike its lazy-loaded use in
 `seating-chart-maker.html`, because `purewrite.html` must keep working with
 no network connection once a student has loaded it.
+
+---
+
+## `vendor/` — Stack Splitter libraries
+
+All four are fetched with `npm pack` and committed unmodified. Their licence
+texts sit beside them in `vendor/`.
+
+| File | Library | Licence |
+|---|---|---|
+| `qrcode.js` | QR Code Generator for JavaScript (Kazuhiko Arase) | MIT |
+| `jsQR.js` | jsQR | Apache-2.0 |
+| `pdf.min.mjs`, `pdf.worker.min.mjs` | PDF.js (Mozilla) — the `legacy` build, for wider browser support | Apache-2.0 |
+| `pdf-lib.min.js` | pdf-lib | MIT |
+
+They are vendored rather than loaded from a CDN for the same reason as jsPDF:
+the tool has to keep working on a school network that blocks third-party hosts,
+and a scan of student work should never depend on an outside request.
+
+`qrcode.js` is loaded eagerly (56KB). The other three total roughly 2.3MB and are
+fetched only when a teacher actually drops a scan in — a teacher who only wants
+coversheets never pays for them.
+
+"The word 'QR Code' is a registered trademark of DENSO WAVE INCORPORATED."

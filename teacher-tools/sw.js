@@ -13,6 +13,7 @@ const SHELL_ASSETS = [
   'purewrite.html',
   'purewrite-setup.html',
   'purewrite-export.js',
+  '../js/toolshed-zip.js',
   'vendor/jspdf.umd.min.js',
   '../css/toolshed.css',
   '../favicon.svg'
