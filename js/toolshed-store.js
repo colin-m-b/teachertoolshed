@@ -48,12 +48,24 @@
 
   /* A student may arrive as a plain string (legacy data, pasted lists) or as
      an object. Normalize to {id, name} so every tool can rely on stable ids. */
+  /* A student carries two identifiers, and they do different jobs:
+
+       id   internal uuid, stable across renames. Every tool keys its own
+            data off this (talk tallies, group assignments, grades).
+       sid  the school's student number, optional. Human-facing, and the
+            only key that stays unique when two students share a name.
+
+     sid is omitted rather than stored empty so records that never had one
+     stay clean. */
   function normalizeStudents(students) {
     if (!Array.isArray(students)) return [];
     return students.map(function (s) {
       if (typeof s === 'string') return { id: uid(), name: s.trim() };
       if (s && typeof s === 'object') {
-        return { id: s.id || uid(), name: String(s.name == null ? '' : s.name).trim() };
+        var out = { id: s.id || uid(), name: String(s.name == null ? '' : s.name).trim() };
+        var sid = String(s.sid == null ? '' : s.sid).trim();
+        if (sid) out.sid = sid;
+        return out;
       }
       return null;
     }).filter(function (s) { return s && s.name; });

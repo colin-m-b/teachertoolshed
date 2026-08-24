@@ -109,7 +109,7 @@
 
     <div class="editor" id="editor" style="display:none">
       <h1 class="page-title" id="editor-title">New class list</h1>
-      <p class="page-sub">Give it a name, then paste or type one student name per line.</p>
+      <p class="page-sub">Give it a name, then paste or type one student per line.</p>
 
       <div class="card">
         <div class="field">
@@ -118,8 +118,10 @@
         </div>
         <div class="field">
           <label>Students <span class="count-badge" id="count-badge">0</span></label>
-          <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…"></textarea>
-          <p class="hint">One name per line. Comma-separated names on a single line work too.</p>
+          <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;&#10;— or with student ID numbers —&#10;&#10;82984196, Ada Lovelace&#10;82984197, Grace Hopper"></textarea>
+          <p class="hint">One student per line. Student ID numbers are optional — paste
+          straight from a spreadsheet, or type <code>ID, Name</code>. IDs keep students with
+          the same name apart, so add them if any of your classes have repeats.</p>
         </div>
       </div>
 
@@ -204,7 +206,8 @@ async function openRoster(id) {
   currentId = r.id;
   document.getElementById('editor-title').textContent = r.name;
   document.getElementById('roster-name').value = r.name;
-  document.getElementById('students-input').value = r.students.map(s => s.name).join('\n');
+  document.getElementById('students-input').value =
+    r.students.map(s => s.sid ? `${s.sid}\t${s.name}` : s.name).join('\n');
   document.getElementById('delete-btn').style.visibility = '';
   updateCount();
   showEditor(true);
@@ -212,34 +215,89 @@ async function openRoster(id) {
   snapshot();
 }
 
-function parseNames(raw) {
-  const byLine = raw.split('\n').map(s => s.trim()).filter(Boolean);
-  if (byLine.length === 1 && byLine[0].includes(','))
-    return byLine[0].split(',').map(s => s.trim()).filter(Boolean);
-  return byLine;
+/* A field counts as a school ID only if it starts with a digit. That test is
+   what lets a surname-first name survive: "Nguyen, Van An" has no
+   digit-leading field, so it stays one student instead of becoming ID
+   "Nguyen". */
+const ID_RE = /^[0-9][0-9A-Za-z-]*$/;
+
+function parseStudentLine(line) {
+  // Tab wins over comma. A paste out of a spreadsheet is tab-separated, and
+  // names themselves may legitimately contain commas.
+  const fields = (line.includes('\t') ? line.split('\t') : line.split(','))
+    .map(s => s.trim()).filter(Boolean);
+  if (!fields.length) return null;
+
+  if (fields.length >= 2) {
+    if (ID_RE.test(fields[0]))
+      return { sid: fields[0], name: fields.slice(1).join(' ').trim() };
+    if (ID_RE.test(fields[fields.length - 1]))
+      return { sid: fields[fields.length - 1], name: fields.slice(0, -1).join(' ').trim() };
+  }
+  // No ID anywhere — put the line back together as a single name.
+  return { sid: '', name: line.includes('\t') ? fields.join(' ') : fields.join(', ') };
+}
+
+function parseStudents(raw) {
+  const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+
+  /* Legacy convenience: one line of comma-separated names is a list of
+     students, not a single student. An ID + name pair on one line looks the
+     same to a naive split, so it is carved out here. */
+  if (lines.length === 1 && lines[0].includes(',') && !lines[0].includes('\t')) {
+    const f = lines[0].split(',').map(s => s.trim()).filter(Boolean);
+    const looksLikePair = f.length === 2 && (ID_RE.test(f[0]) || ID_RE.test(f[1]));
+    if (!looksLikePair) return f.map(n => ({ sid: '', name: n }));
+  }
+
+  return lines.map(parseStudentLine).filter(s => s && s.name);
 }
 
 function updateCount() {
-  const n = parseNames(document.getElementById('students-input').value).length;
+  const n = parseStudents(document.getElementById('students-input').value).length;
   document.getElementById('count-badge').textContent = n;
 }
 
 async function saveCurrent() {
   const name = document.getElementById('roster-name').value.trim();
   if (!name) { showToast('Give the class list a name first'); document.getElementById('roster-name').focus(); return; }
-  const students = parseNames(document.getElementById('students-input').value);
-  if (!students.length) { showToast('Add at least one student'); return; }
+  const parsed = parseStudents(document.getElementById('students-input').value);
+  if (!parsed.length) { showToast('Add at least one student'); return; }
 
-  // Keep existing student ids stable across edits, so other tools can rely on them
+  /* Keep existing student ids stable across edits, so other tools can rely on
+     them. Matching runs in two passes over a pool that each match removes an
+     entry from:
+
+       1. school ID — the only key that stays unique when names repeat
+       2. name — the fallback for lists that carry no IDs
+
+     Consuming the pool entry is the point. Keying a lookup on name alone (as
+     this did before) handed two students called "Nguyen Van An" the same
+     internal id, which silently merged their talk-tracker tallies and their
+     grades. Two passes rather than one so a name match cannot steal an entry
+     that a later ID match needs. */
   let existing = currentId ? await ToolshedStore.getRoster(currentId) : null;
-  const prevByName = {};
-  if (existing) existing.students.forEach(s => { prevByName[s.name.toLowerCase()] = s.id; });
+  const pool = existing
+    ? existing.students.map(s => ({ id: s.id, sid: s.sid || '', key: s.name.toLowerCase() }))
+    : [];
+  const keptIds = new Array(parsed.length);
+
+  parsed.forEach((p, i) => {
+    if (!p.sid) return;
+    const j = pool.findIndex(e => e.sid && e.sid === p.sid);
+    if (j >= 0) keptIds[i] = pool.splice(j, 1)[0].id;
+  });
+  parsed.forEach((p, i) => {
+    if (keptIds[i]) return;
+    const j = pool.findIndex(e => e.key === p.name.toLowerCase());
+    if (j >= 0) keptIds[i] = pool.splice(j, 1)[0].id;
+  });
 
   const saved = await ToolshedStore.saveRoster({
     id: currentId || undefined,
     createdAt: existing ? existing.createdAt : undefined,
     name,
-    students: students.map(n => ({ id: prevByName[n.toLowerCase()], name: n }))
+    students: parsed.map((p, i) => ({ id: keptIds[i], sid: p.sid || undefined, name: p.name }))
   });
 
   currentId = saved.id;
