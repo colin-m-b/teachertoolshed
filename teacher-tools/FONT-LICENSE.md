@@ -57,3 +57,53 @@ Note that CJK, Arabic, Thai and other large scripts are not practical to embed
 this way — the fonts run to several megabytes. If a student's name ever needs
 one, use the Print button and choose "Save as PDF": the browser renders text
 with real system fonts and handles any script.
+
+---
+
+## `purewrite-export.js` — Liberation Serif Regular
+
+`purewrite.html`'s PDF export needs a serif face for MLA formatting (Times New
+Roman), so it embeds a subset of **Liberation Serif Regular** instead —
+Liberation Serif is the metric-compatible, SIL OFL-licensed substitute for
+Times New Roman, the same role Liberation Sans plays for Arial/Helvetica.
+Same font family as the system already ships (`/usr/share/fonts/truetype/liberation/`
+on most Linux distros, and it's what LibreOffice substitutes for Times New
+Roman by default), same OFL terms, same subsetting technique as above —
+embedded under the internal name `PureWriteSerif`, not "Liberation".
+
+| | |
+|---|---|
+| Font | Liberation Serif Regular |
+| Copyright | Copyright (c) 2012 Red Hat, Inc.<br>Digitized data copyright (c) 2010 Google Corporation. |
+| Licence | SIL Open Font License, Version 1.1 — https://scripts.sil.org/OFL |
+| Trademark | Liberation is a trademark of Red Hat, Inc. |
+
+### Subset contents
+
+The same range list as `ToolshedSans` above, plus typographic punctuation
+common in essay writing that Basic Latin doesn't cover:
+
+- U+0020–U+007E, U+00A0–U+00FF, U+0100–U+017F, U+01A0–U+01A1, U+01AF–U+01B0,
+  U+1E00–U+1EFF (see above for what each range covers)
+- U+2013, U+2014 — en dash, em dash
+- U+2018, U+2019, U+201C, U+201D — curly single/double quotes
+- U+2026 — ellipsis
+
+`purewrite.html` checks a student's text against this exact range list before
+a PDF export and, if it finds anything outside it (CJK, Arabic, Thai, etc.),
+suggests the Word (.docx) download instead — a `.docx` stores literal text
+rather than drawn glyphs, so it has no equivalent limitation.
+
+### Regenerating
+
+Same recipe as above, with `LiberationSerif-Regular.ttf` as the source and
+the extended range list.
+
+---
+
+## `vendor/jspdf.umd.min.js`
+
+jsPDF (MIT licence) — see `vendor/jspdf-LICENSE.txt`. Vendored locally rather
+than loaded from a CDN, unlike its lazy-loaded use in
+`seating-chart-maker.html`, because `purewrite.html` must keep working with
+no network connection once a student has loaded it.

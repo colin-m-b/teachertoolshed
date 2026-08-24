@@ -62,13 +62,16 @@
 }
 
 .tools-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
 .tool-card {
   display: block;
+  flex: 1 1 280px;
+  max-width: 300px;
   background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
@@ -143,5 +146,5 @@
 @media (max-width: 640px) {
   .hero { padding: 4rem 1.25rem 3.5rem; }
   .tools { padding: 2.5rem 1.25rem; }
-  .tools-grid { grid-template-columns: 1fr; }
+  .tool-card { flex-basis: 100%; max-width: none; }
 }
