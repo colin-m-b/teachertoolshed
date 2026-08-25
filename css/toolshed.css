@@ -137,6 +137,14 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .card-title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
+/* ── WARNING BANNER (heads-up, non-blocking / .bad = needs attention) ── */
+.warn-box { background: var(--accent-soft); border: 1px solid #E4CFA0; border-radius: var(--radius); padding: 12px 15px; font-size: 13px; color: var(--accent-hover); line-height: 1.6; margin-bottom: 16px; }
+.warn-box.bad { background: var(--red-soft); border-color: #E8BEB8; color: #9E3A31; }
+.warn-box ul { margin: 7px 0 0 18px; }
+.warn-box li { margin-bottom: 2px; }
+.warn-box p { margin: 0 0 6px; }
+.warn-box p:last-child { margin-bottom: 0; }
+
 /* ── MODAL ── */
 .modal-bd {
   display: none;
