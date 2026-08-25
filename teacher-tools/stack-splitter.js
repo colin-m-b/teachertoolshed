@@ -307,6 +307,7 @@ function resetSplit() {
   $('split-upload').style.display = '';
   $('split-progress').style.display = 'none';
   $('split-review').style.display = 'none';
+  $('export-success').classList.remove('show');
   $('file-input').value = '';
 }
 
@@ -657,10 +658,25 @@ function buildNames(groups) {
   });
 }
 
+/* Shows a confirmation that stays on screen rather than a toast that
+   fades in a few seconds. The "save to a folder" path has no browser-level
+   download indicator at all — no download bar, no notification, nothing
+   outside this app — so a transient toast is the ONLY feedback a teacher
+   gets, and it is very easy to miss right after dismissing the native
+   folder picker. A persistent, named confirmation is the fix. */
+function showExportSuccess(text) {
+  $('export-success-text').textContent = text;
+  $('export-success').classList.add('show');
+}
+function hideExportSuccess() {
+  $('export-success').classList.remove('show');
+}
+
 async function exportSplit(forceZip) {
   const groups = groupsOf().filter(g => !g.orphan && g.owner && g.owner.name);
   if (!groups.length) { showToast('Nothing to export yet — assign at least one group'); return; }
 
+  hideExportSuccess();
   const btn = forceZip ? $('export-zip-btn') : $('export-btn');
   const label = btn.textContent;
   btn.disabled = true;
@@ -697,6 +713,11 @@ async function exportSplit(forceZip) {
         dir = await window.showDirectoryPicker({ mode: 'readwrite' });
       } catch (e) {
         if (e.name === 'AbortError') { showToast('Export cancelled'); return; }
+        // Anything else (permission denied, a locked/removable drive that
+        // vanished, etc.) used to fall through to a silent zip download —
+        // which looks identical to this bug report if the teacher didn't
+        // notice a second download appear. Say what happened instead.
+        showToast('Could not save to that folder (' + e.message + ') — downloading a zip instead', 5000);
       }
       if (dir) {
         for (const f of files) {
@@ -705,18 +726,23 @@ async function exportSplit(forceZip) {
           await w.write(f.bytes);
           await w.close();
         }
-        showToast('Wrote ' + files.length + ' files to the folder you chose', 4200);
+        showExportSuccess('Wrote ' + files.length + ' file' + (files.length === 1 ? '' : 's') +
+          ' to "' + dir.name + '".');
+        showToast('Wrote ' + files.length + ' files to "' + dir.name + '"', 4200);
         return;
       }
     }
 
     const zip = ToolshedZip.makeZip(files);
     const blob = new Blob([zip], { type: 'application/zip' });
+    const zipName = (safePart(scanClassName()) || 'split') + '_split.zip';
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = (safePart(scanClassName()) || 'split') + '_split.zip';
+    a.download = zipName;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    showExportSuccess('Downloaded ' + files.length + ' file' + (files.length === 1 ? '' : 's') +
+      ' as "' + zipName + '".');
     showToast('Downloaded ' + files.length + ' files as a zip', 4200);
   } catch (e) {
     showToast('Export failed: ' + e.message, 6000);
