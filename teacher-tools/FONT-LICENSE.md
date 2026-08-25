@@ -126,13 +126,30 @@ texts sit beside them in `vendor/`.
 | `jsQR.js` | jsQR | Apache-2.0 |
 | `pdf.min.mjs`, `pdf.worker.min.mjs` | PDF.js (Mozilla) — the `legacy` build, for wider browser support | Apache-2.0 |
 | `pdf-lib.min.js` | pdf-lib | MIT |
+| `wasm/jbig2.wasm`, `wasm/jbig2_nowasm_fallback.js` | PDF.js's JBIG2/CCITT codec (PDFium, Mozilla) | BSD-3-Clause / Apache-2.0 |
+| `wasm/openjpeg.wasm`, `wasm/openjpeg_nowasm_fallback.js` | PDF.js's JPX codec (OpenJPEG, Mozilla) | BSD-2-Clause / Apache-2.0 |
+| `wasm/qcms_bg.wasm` | PDF.js's colour management module (QCMS, Mozilla) | BSD-3-Clause / Apache-2.0 |
 
 They are vendored rather than loaded from a CDN for the same reason as jsPDF:
 the tool has to keep working on a school network that blocks third-party hosts,
 and a scan of student work should never depend on an outside request.
 
-`qrcode.js` is loaded eagerly (56KB). The other three total roughly 2.3MB and are
+`qrcode.js` is loaded eagerly (56KB). The rest total roughly 3.3MB and are
 fetched only when a teacher actually drops a scan in — a teacher who only wants
 coversheets never pays for them.
 
 "The word 'QR Code' is a registered trademark of DENSO WAVE INCORPORATED."
+
+### Why `wasm/` is required, not optional
+
+PDF.js v6 moved CCITT fax and JBIG2 decoding into a single shared module,
+loaded from a location passed as the `wasmUrl` option to `getDocument()`. This
+is not a JBIG2-specific concern: `wasmUrl` is needed for *any* black-and-white
+fax-compressed scan, including plain CCITT Group 4, which is what most
+photocopier "scan to PDF (black & white)" modes actually produce. Without it,
+`getDocument()` still resolves and every page still "renders" — but silently,
+with nothing drawn, no thrown error, and no console output the app itself can
+catch and surface. A teacher sees "0 students found" on a perfectly good scan.
+`openjpeg.wasm`/`qcms_bg.wasm` cover JPX-compressed and colour-managed scans
+for the same reason — vendored for the scanners that use them, not because
+this specific bug required them.

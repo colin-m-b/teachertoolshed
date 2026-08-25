@@ -334,7 +334,14 @@ async function handleFile(file) {
     // for pdf-lib at export time has to be a separate one.
     // Teardown lives on the loading task in pdf.js v6 — PDFDocumentProxy
     // has no destroy() — so the task reference has to be kept.
-    const task = pdfjs.getDocument({ data: bytes.slice() });
+    // wasmUrl points pdf.js at its JBIG2/OpenJPEG codec assets. pdf.js v6
+    // routes CCITT G4 fax decoding — the format most photocopier "scan to
+    // PDF (black & white)" modes actually produce — through the same
+    // module as JBIG2, so this is needed even for a plain CCITT scan with
+    // no JBIG2 content anywhere in it. Without it every page silently
+    // renders blank (no thrown error, just nothing drawn) and detection
+    // finds zero coversheets on an otherwise perfectly good scan.
+    const task = pdfjs.getDocument({ data: bytes.slice(), wasmUrl: 'vendor/wasm/' });
     const doc = await task.promise;
     const total = doc.numPages;
 
