@@ -1,150 +1,126 @@
-/* ── HERO ── */
-.hero {
-  padding: 5.5rem 2rem 5rem;
+/* ── MASTHEAD ── */
+.masthead {
+  padding-top: 34px;
   text-align: center;
-  border-bottom: 1px solid var(--rule);
 }
 
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--forest-bg);
-  color: var(--forest2);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 5px 14px;
-  border-radius: 20px;
-  margin-bottom: 2rem;
-  border: 1px solid var(--forest-border);
+.masthead__inner {
+  border-bottom: 3px double var(--ink);
+  padding-bottom: 22px;
 }
 
-.hero-eyebrow-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--forest2);
-  border-radius: 50%;
-  flex-shrink: 0;
+.masthead h1 {
+  font-size: clamp(40px, 6.2vw, 82px);
+  letter-spacing: 0.005em;
 }
 
-.hero h1 {
-  font-family: 'Lora', Georgia, serif;
-  font-size: clamp(36px, 5vw, 54px);
-  font-weight: 500;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin-bottom: 1.25rem;
-}
-
-.hero-sub {
-  font-size: 16px;
-  color: var(--mid);
-  line-height: 1.7;
-  max-width: 420px;
-  margin: 0 auto 2.5rem;
+.masthead__sub {
+  margin: 14px auto 0;
+  max-width: 54ch;
+  font-size: 19px;
   font-style: italic;
+  color: var(--body-muted);
+  text-wrap: pretty;
 }
 
-.hero-cta {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
+/* ── TOOL GRID ── */
+.tool-grid-wrap {
+  padding-top: 32px;
 }
 
-/* ── TOOLS ── */
-.tools {
-  padding: 4rem 2rem;
-  border-bottom: 1px solid var(--rule);
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.tools-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  border-top: var(--hairline);
+  border-left: var(--hairline);
 }
 
 .tool-card {
-  display: block;
-  flex: 1 1 280px;
-  max-width: 300px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  padding: 1.5rem;
-  border-top: 3px solid var(--bg3);
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: border-top-color 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 26px 24px;
+  border-right: var(--hairline);
+  border-bottom: var(--hairline);
+  color: var(--ink);
+  min-height: 252px;
 }
-
-.tool-card.live { border-top-color: var(--forest2); }
 
 .tool-card:hover {
-  box-shadow: 0 2px 12px rgba(26,24,20,0.07);
+  background: var(--paper-hover);
+  color: var(--ink);
 }
 
-.tool-card-top {
+.tool-card__eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+}
+
+.tool-card__name {
+  font-size: 31px;
+}
+
+.tool-card__desc {
+  font-size: 17.5px;
+  flex: 1;
+  text-wrap: pretty;
+}
+
+.tool-card__footer {
+  border-top: var(--hairline);
+  padding-top: 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+  gap: 10px;
 }
 
-.tool-num {
-  font-size: 11px;
-  color: var(--mid);
-  letter-spacing: 0.06em;
+.tool-card__fact {
+  color: var(--meta);
 }
 
-.tool-status-live {
-  font-size: 11px;
-  color: var(--forest2);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.tool-card__open {
+  color: var(--accent);
 }
 
-.live-dot {
-  width: 5px;
-  height: 5px;
-  background: var(--forest2);
-  border-radius: 50%;
+@media (max-width: 600px) {
+  .tool-card {
+    min-height: 0;
+  }
 }
 
-.tool-name {
-  font-size: 15px;
-  font-weight: 500;
+/* ── AUTHOR'S NOTE ── */
+.note {
+  padding: 48px var(--gutter) 60px;
+}
+
+.note__inner {
+  max-width: 60ch;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.note__kicker {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--meta);
+}
+
+.note p:first-of-type {
+  margin-top: 16px;
+  font-size: 21px;
+  line-height: 1.55;
   color: var(--ink);
-  margin-bottom: 8px;
+  text-wrap: pretty;
 }
 
-.tool-desc {
-  font-size: 13px;
-  color: var(--mid);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
-}
-
-.tool-link {
-  font-size: 12px;
-  color: var(--forest);
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.tool-card:hover .tool-link { text-decoration: underline; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 640px) {
-  .hero { padding: 4rem 1.25rem 3.5rem; }
-  .tools { padding: 2.5rem 1.25rem; }
-  .tool-card { flex-basis: 100%; max-width: none; }
+.note p + p {
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--body-muted);
 }

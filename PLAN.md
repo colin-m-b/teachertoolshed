@@ -8,7 +8,7 @@ This plan is written to be executed phase by phase. Complete phases in order, co
 
 ## Decisions already made (do not re-litigate)
 
-1. **Design system:** the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html` (Lora headings + DM Sans body, `#F7F5F0` background, `#B5843A` accent) becomes the system for the entire site, including the landing page and the hex tool.
+1. **Design system:** the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html` (Lora headings + DM Sans body, `#F7F5F0` background, `#B5843A` accent) becomes the system for the tools — including the hex tool — but **not** the landing page. The landing page (`index.html`) runs a separate editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, no warm/cream tones — tokens in `css/theme.css`) per an explicit site-owner decision that rejected cream/beige for the landing page and invented "time saved" claims. The two systems are intentionally different; do not unify them by re-skinning the landing page into cream + gold, and do not carry the landing page's ink palette into the tool pages without a separate decision to do so.
 2. **Architecture:** stays a static HTML site. No frameworks, no build step, no npm. Shared code goes in plain `.css` and `.js` files.
 3. **Persistence:** local-first. A shared roster/data store in the browser (IndexedDB) used by all tools, with JSON export/import as backup. **No accounts, no server, no analytics.** The store is written behind an async interface so a cloud backend could be swapped in later — but no cloud code is written now.
 4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls.
@@ -125,12 +125,9 @@ Tokens above + reset + base body styles + shared components (buttons, inputs, ca
 
 Use the brand icon SVG currently in `seating-chart-maker.html` (lines ~182–190) as the canonical brand mark. Prefix shared classes `ts-` to avoid colliding with existing per-tool class names.
 
-### 1b. Restyle the landing page
+### 1b. Restyle the landing page — SUPERSEDED, do not execute
 
-- `index.html`: swap fonts link to the standard one (Inter → DM Sans); link `css/toolshed.css` first.
-- Rewrite `css/base.css`, `css/nav.css`, `css/home.css` on the new tokens: forest greens → gold accent family (`--forest`→`--accent`, `--forest-bg`→`--accent-soft`, `--forest-border`→ `--border-focus` at ~35% opacity or `#E5D3B3`; amber pill stays in the `--accent-soft`/`--accent` family). Keep layout/structure; this is a re-skin, not a redesign.
-- Nav adopts the shared brand mark + wordmark so landing and tools match.
-- Keep the existing "Live" status dots green (`--green`).
+The landing page has already been redesigned onto its own editorial print system (see "Decisions already made" above) and must **not** be re-skinned into cream + gold. `index.html` links `css/theme.css` + `css/home.css`, not `css/toolshed.css`; `css/base.css` and `css/nav.css` have been deleted (their contents are superseded by `css/theme.css`). Leave the landing page alone in this phase — skip straight to 1c.
 
 ### 1c. Restyle the hex tool
 
