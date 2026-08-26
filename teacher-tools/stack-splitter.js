@@ -25,6 +25,69 @@ function showToast(msg, dur) {
   showToast._t = setTimeout(() => t.classList.add('hidden'), dur || 2600);
 }
 
+/* ── filename preferences ──────────────────────────────────
+   Which fields go into each split file's name, and in what order.
+   Different teachers file these differently (by class, by ID, by name
+   only), so this is a per-browser preference rather than a fixed
+   convention. Persisted the same way PureWrite keeps its prefs. */
+const FN_PREFS_KEY = 'stackSplitter:filenameFields';
+const FN_DEFAULTS = { className: true, studentName: true, studentId: true, assignment: true };
+
+function loadFnPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FN_PREFS_KEY));
+    if (saved && typeof saved === 'object') return Object.assign({}, FN_DEFAULTS, saved);
+  } catch (e) { /* fall through to defaults */ }
+  return Object.assign({}, FN_DEFAULTS);
+}
+
+function saveFnPrefs(prefs) {
+  try { localStorage.setItem(FN_PREFS_KEY, JSON.stringify(prefs)); } catch (e) { /* ignore */ }
+}
+
+function readFnPrefsFromCheckboxes() {
+  return {
+    className: $('fn-class').checked,
+    studentName: $('fn-name').checked,
+    studentId: $('fn-sid').checked,
+    assignment: $('fn-assignment').checked
+  };
+}
+
+function applyFnPrefsToCheckboxes(prefs) {
+  $('fn-class').checked = !!prefs.className;
+  $('fn-name').checked = !!prefs.studentName;
+  $('fn-sid').checked = !!prefs.studentId;
+  $('fn-assignment').checked = !!prefs.assignment;
+}
+
+function initFilenameSettings() {
+  applyFnPrefsToCheckboxes(loadFnPrefs());
+  ['fn-class', 'fn-name', 'fn-sid', 'fn-assignment'].forEach(id => {
+    $(id).addEventListener('change', () => {
+      let prefs = readFnPrefsFromCheckboxes();
+      if (!prefs.className && !prefs.studentName && !prefs.studentId && !prefs.assignment) {
+        // At least one field has to survive, or every file is named "student".
+        $(id).checked = true;
+        prefs = readFnPrefsFromCheckboxes();
+        showToast('File names need at least one field checked');
+      }
+      saveFnPrefs(prefs);
+      updateFilenamePreview();
+    });
+  });
+  updateFilenamePreview();
+}
+
+function updateFilenamePreview() {
+  const el = $('filename-preview');
+  if (!el) return;
+  const groups = (typeof scan !== 'undefined' && scan) ? groupsOf().filter(g => !g.orphan && g.owner && g.owner.name) : [];
+  const sample = groups[0] || { owner: { name: 'Jamie Rivera', sid: '10245' } };
+  const names = buildNames([sample]);
+  el.innerHTML = 'Example: <strong>' + esc(names[0]) + '</strong>';
+}
+
 /* ── lazy library loading ─────────────────────────────────
    The split half pulls ~2.3MB of pdf.js/pdf-lib/jsQR. A teacher who
    only wants coversheets should never pay for it, so nothing below is
@@ -529,6 +592,8 @@ function renderReview() {
   $('groups').querySelectorAll('.thumb').forEach(el => {
     el.addEventListener('click', () => openInspector(parseInt(el.dataset.page, 10)));
   });
+
+  updateFilenamePreview();
 }
 
 /* ── page inspector ─────────────────────────────────────── */
@@ -640,16 +705,27 @@ function scanClassName() {
 }
 
 function buildNames(groups) {
-  /* Matches PureWrite's Class_ID_Task convention so both tools' output
-     sorts together. Falls back to the name when there is no ID, and
-     de-duplicates rather than letting one file overwrite another. */
+  /* Which fields land in the name, and in what order, is a per-teacher
+     preference (see "filename preferences" above) — not everyone files
+     by class, and some want the student's name and ID together rather
+     than one or the other. De-duplicates rather than letting one file
+     overwrite another. */
+  const prefs = loadFnPrefs();
   const used = {};
   return groups.map(g => {
-    const who = g.owner.sid ? safePart(g.owner.sid) : safePart(g.owner.name);
-    const assignment = safePart(
-      (scan.pages[g.start].qr && scan.pages[g.start].qr.assignment) || scanAssignment());
-    const cls = safePart(scan.pages[g.start].qr ? scan.pages[g.start].qr.className : scanClassName());
-    let base = [cls, who, assignment].filter(Boolean).join('_');
+    const page = (typeof scan !== 'undefined' && scan && g.start != null) ? scan.pages[g.start] : null;
+    const parts = [];
+    if (prefs.className) {
+      const cls = page && page.qr ? page.qr.className : (scan ? scanClassName() : '');
+      parts.push(safePart(cls));
+    }
+    if (prefs.studentName) parts.push(safePart(g.owner.name));
+    if (prefs.studentId) parts.push(safePart(g.owner.sid));
+    if (prefs.assignment) {
+      const asg = (page && page.qr && page.qr.assignment) || (scan ? scanAssignment() : 'Work');
+      parts.push(safePart(asg));
+    }
+    let base = parts.filter(Boolean).join('_');
     if (!base) base = 'student';
     let name = base, n = 2;
     while (used[name.toLowerCase()]) name = base + '-' + (n++);
@@ -800,3 +876,4 @@ if (!window.showDirectoryPicker) {
 }
 
 initCovers();
+initFilenameSettings();
