@@ -1,9 +1,14 @@
 # Embedded font licence
 
-`seating-chart-maker.html` embeds a subset of **Liberation Sans Bold** (base64,
-in the `vn-font` script block at the end of the file) so that the PDF export can
-render diacritics. jsPDF's built-in fonts use WinAnsi/CP1252 encoding, which
-cannot represent Vietnamese, Polish, Czech, Turkish or Scandinavian characters.
+`js/toolshed-pdf-font.js` holds a subset of **Liberation Sans Bold** (base64) so
+that PDF exports can render diacritics. jsPDF's built-in fonts use WinAnsi/CP1252
+encoding, which cannot represent Vietnamese, Polish, Czech, Turkish or
+Scandinavian characters — a name like `Nguyễn` comes out as `NguyÅn`.
+
+Used by `seating-chart-maker.html` (desk labels) and `stack-splitter.js`
+(coversheet names). It lived inline in the seating chart until Stack Splitter
+needed the same face; `ToolshedPdfFont.register(doc)` returns the family name to
+pass to `setFont`.
 
 | | |
 |---|---|
@@ -57,3 +62,94 @@ Note that CJK, Arabic, Thai and other large scripts are not practical to embed
 this way — the fonts run to several megabytes. If a student's name ever needs
 one, use the Print button and choose "Save as PDF": the browser renders text
 with real system fonts and handles any script.
+
+---
+
+## `purewrite-export.js` — Liberation Serif Regular
+
+`purewrite.html`'s PDF export needs a serif face for MLA formatting (Times New
+Roman), so it embeds a subset of **Liberation Serif Regular** instead —
+Liberation Serif is the metric-compatible, SIL OFL-licensed substitute for
+Times New Roman, the same role Liberation Sans plays for Arial/Helvetica.
+Same font family as the system already ships (`/usr/share/fonts/truetype/liberation/`
+on most Linux distros, and it's what LibreOffice substitutes for Times New
+Roman by default), same OFL terms, same subsetting technique as above —
+embedded under the internal name `PureWriteSerif`, not "Liberation".
+
+| | |
+|---|---|
+| Font | Liberation Serif Regular |
+| Copyright | Copyright (c) 2012 Red Hat, Inc.<br>Digitized data copyright (c) 2010 Google Corporation. |
+| Licence | SIL Open Font License, Version 1.1 — https://scripts.sil.org/OFL |
+| Trademark | Liberation is a trademark of Red Hat, Inc. |
+
+### Subset contents
+
+The same range list as `ToolshedSans` above, plus typographic punctuation
+common in essay writing that Basic Latin doesn't cover:
+
+- U+0020–U+007E, U+00A0–U+00FF, U+0100–U+017F, U+01A0–U+01A1, U+01AF–U+01B0,
+  U+1E00–U+1EFF (see above for what each range covers)
+- U+2013, U+2014 — en dash, em dash
+- U+2018, U+2019, U+201C, U+201D — curly single/double quotes
+- U+2026 — ellipsis
+
+`purewrite.html` checks a student's text against this exact range list before
+a PDF export and, if it finds anything outside it (CJK, Arabic, Thai, etc.),
+suggests the Word (.docx) download instead — a `.docx` stores literal text
+rather than drawn glyphs, so it has no equivalent limitation.
+
+### Regenerating
+
+Same recipe as above, with `LiberationSerif-Regular.ttf` as the source and
+the extended range list.
+
+---
+
+## `vendor/jspdf.umd.min.js`
+
+jsPDF (MIT licence) — see `vendor/jspdf-LICENSE.txt`. Vendored locally rather
+than loaded from a CDN, unlike its lazy-loaded use in
+`seating-chart-maker.html`, because `purewrite.html` must keep working with
+no network connection once a student has loaded it.
+
+---
+
+## `vendor/` — Stack Splitter libraries
+
+All four are fetched with `npm pack` and committed unmodified. Their licence
+texts sit beside them in `vendor/`.
+
+| File | Library | Licence |
+|---|---|---|
+| `qrcode.js` | QR Code Generator for JavaScript (Kazuhiko Arase) | MIT |
+| `jsQR.js` | jsQR | Apache-2.0 |
+| `pdf.min.mjs`, `pdf.worker.min.mjs` | PDF.js (Mozilla) — the `legacy` build, for wider browser support | Apache-2.0 |
+| `pdf-lib.min.js` | pdf-lib | MIT |
+| `wasm/jbig2.wasm`, `wasm/jbig2_nowasm_fallback.js` | PDF.js's JBIG2/CCITT codec (PDFium, Mozilla) | BSD-3-Clause / Apache-2.0 |
+| `wasm/openjpeg.wasm`, `wasm/openjpeg_nowasm_fallback.js` | PDF.js's JPX codec (OpenJPEG, Mozilla) | BSD-2-Clause / Apache-2.0 |
+| `wasm/qcms_bg.wasm` | PDF.js's colour management module (QCMS, Mozilla) | BSD-3-Clause / Apache-2.0 |
+
+They are vendored rather than loaded from a CDN for the same reason as jsPDF:
+the tool has to keep working on a school network that blocks third-party hosts,
+and a scan of student work should never depend on an outside request.
+
+`qrcode.js` is loaded eagerly (56KB). The rest total roughly 3.3MB and are
+fetched only when a teacher actually drops a scan in — a teacher who only wants
+coversheets never pays for them.
+
+"The word 'QR Code' is a registered trademark of DENSO WAVE INCORPORATED."
+
+### Why `wasm/` is required, not optional
+
+PDF.js v6 moved CCITT fax and JBIG2 decoding into a single shared module,
+loaded from a location passed as the `wasmUrl` option to `getDocument()`. This
+is not a JBIG2-specific concern: `wasmUrl` is needed for *any* black-and-white
+fax-compressed scan, including plain CCITT Group 4, which is what most
+photocopier "scan to PDF (black & white)" modes actually produce. Without it,
+`getDocument()` still resolves and every page still "renders" — but silently,
+with nothing drawn, no thrown error, and no console output the app itself can
+catch and surface. A teacher sees "0 students found" on a perfectly good scan.
+`openjpeg.wasm`/`qcms_bg.wasm` cover JPX-compressed and colour-managed scans
+for the same reason — vendored for the scanners that use them, not because
+this specific bug required them.

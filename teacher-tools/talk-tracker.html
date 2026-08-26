@@ -4,31 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Talk Tracker — Teacher Toolshed</title>
+<meta name="description" content="Track participation in seminars, debates, and discussions — tap to tally, tag by talking point.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
 <style>
-  :root {
-    --bg:#F7F5F0;--surface:#FFFFFF;--surface-2:#F0EDE6;--border:#E0DDD4;
-    --border-focus:#B5843A;--text:#28251E;--text-mid:#6B6457;--text-light:#A8A098;
-    --accent:#B5843A;--accent-hover:#9A6E2F;--accent-soft:#FBF4E8;
-    --green:#4A7C59;--green-soft:#EBF4EE;--green-border:#B8D9C2;
-    --red:#C44A3F;--red-soft:#FAECEA;
-    --radius:10px;--radius-sm:6px;
-    --shadow:0 1px 3px rgba(40,37,30,.08),0 1px 2px rgba(40,37,30,.05);
-    --font-serif:"Lora",Georgia,serif;--font-sans:"DM Sans","Helvetica Neue",sans-serif;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
-  body{font-family:var(--font-sans);background:var(--bg);color:var(--text);display:flex;flex-direction:column;font-size:15px;line-height:1.5}
-
-  /* HEADER */
-  .header{background:var(--surface);border-bottom:1.5px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
-  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
-  .brand-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--accent-soft);border:1.5px solid #E4CFA0;border-radius:6px}
-  .brand-name{font-family:var(--font-serif);font-size:17px;font-weight:700}
-  .brand-name span{color:var(--accent)}
-  .header-tool{font-family:var(--font-serif);font-size:15px;font-weight:600;color:var(--text-mid)}
-  .header-sep{color:var(--border);font-size:18px;margin:0 4px}
-  .header-right{display:flex;align-items:center;gap:8px}
+  body{display:flex;flex-direction:column}
 
   /* SCREENS */
   .screen{display:none;flex:1;overflow:hidden;flex-direction:column}
@@ -40,20 +22,7 @@
   .page-title{font-family:var(--font-serif);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
   .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
 
-  .card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);margin-bottom:16px}
-  .card-title{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-
-  .field{margin-bottom:14px}
-  .field:last-child{margin-bottom:0}
-  label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
-  .hint{font-size:12px;color:var(--text-light);margin-top:4px;line-height:1.5}
-
-  input[type=text],textarea,select{width:100%;font-family:var(--font-sans);font-size:14px;color:var(--text);background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 13px;transition:border-color .15s,background .15s,box-shadow .15s}
-  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--border-focus);background:#fff;box-shadow:0 0 0 3px rgba(181,132,58,.1)}
-  input[type=text]::placeholder,textarea::placeholder{color:var(--text-light)}
-  textarea{resize:vertical;min-height:90px}
-
-  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{margin-bottom:16px}
 
   /* TALKING POINTS */
   .tp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
@@ -61,35 +30,6 @@
   .tp-row input{flex:1}
   .tp-row .btn-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
   .tp-row .btn-remove:hover{color:var(--red)}
-  .btn-add-tp{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:none;border:1.5px dashed var(--border);color:var(--text-mid);font-family:var(--font-sans);font-size:13px;font-weight:600;padding:9px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s}
-  .btn-add-tp:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-
-  /* RUBRIC */
-  .rubric-list{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
-  .rubric-row{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
-  .rubric-criterion{flex:1}
-  .rubric-criterion input{margin-bottom:6px}
-  .rubric-score-row{display:flex;align-items:center;gap:8px}
-  .rubric-score-row label{font-size:12px;color:var(--text-mid);margin-bottom:0;white-space:nowrap}
-  .rubric-score-row input[type=number]{width:56px;text-align:center;padding:5px 8px;font-size:13px}
-  .pro-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border:1px solid #E4CFA0;border-radius:4px;padding:2px 6px;margin-left:6px}
-  .pro-lock-inline{opacity:.5;pointer-events:none}
-
-  /* BUTTONS */
-  .btn{font-family:var(--font-sans);font-size:13px;font-weight:600;border:none;border-radius:var(--radius-sm);padding:9px 18px;cursor:pointer;transition:background .15s,transform .1s;display:inline-flex;align-items:center;gap:6px}
-  .btn:active{transform:scale(.97)}
-  .btn-primary{background:var(--accent);color:#fff}
-  .btn-primary:hover{background:var(--accent-hover)}
-  .btn-green{background:var(--green);color:#fff}
-  .btn-green:hover{background:#3A6349}
-  .btn-outline{background:none;border:1.5px solid var(--border);color:var(--text-mid)}
-  .btn-outline:hover{background:var(--surface-2);color:var(--text)}
-  .btn-ghost{background:none;border:none;color:var(--text-mid);font-family:var(--font-sans);font-size:13px;cursor:pointer;padding:6px 10px}
-  .btn-ghost:hover{color:var(--text)}
-  .btn-sm{padding:6px 12px;font-size:12px}
-  .btn-full{width:100%;justify-content:center}
-  .btn-danger{background:var(--red);color:#fff}
-  .btn-danger:hover{background:#a33d33}
 
   .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
 
@@ -148,16 +88,21 @@
   .tag-btn{display:block;width:100%;background:none;border:none;text-align:left;font-family:var(--font-sans);font-size:13px;color:var(--text);padding:7px 10px;cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
   .tag-btn:hover{background:var(--surface-2)}
 
+  /* NOTE BUTTON + POPUP */
+  .note-btn{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;color:var(--text-light);cursor:pointer;transition:all .15s}
+  .note-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .note-btn.has-note{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .note-popup{display:none;position:fixed;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px;box-shadow:0 4px 16px rgba(40,37,30,.14);z-index:110;width:220px}
+  .note-popup.open{display:block}
+  .note-popup-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);margin-bottom:6px}
+  .note-popup textarea{width:100%;min-height:70px;font-size:13px;margin-bottom:8px}
+
   /* ─── SUMMARY SCREEN ─── */
   .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px;max-width:760px;margin:0 auto;width:100%}
   .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
   .summary-title{font-family:var(--font-serif);font-size:24px;font-weight:700;margin-bottom:4px}
   .summary-meta{font-size:13px;color:var(--text-mid)}
 
-  .stat-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-  .stat-box{flex:1;min-width:100px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;text-align:center}
-  .stat-num{font-family:var(--font-serif);font-size:28px;font-weight:700;color:var(--accent);line-height:1}
-  .stat-lbl{font-size:12px;color:var(--text-mid);margin-top:4px}
 
   /* BAR CHART */
   .bar-section{margin-bottom:20px}
@@ -168,70 +113,60 @@
   .bar-val{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
   .bar-fill.zero{background:var(--border)}
 
-  /* RUBRIC SUMMARY */
-  .rubric-table{width:100%;border-collapse:collapse;font-size:13px}
-  .rubric-table th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);padding:6px 10px;border-bottom:1.5px solid var(--border)}
-  .rubric-table td{padding:8px 10px;border-bottom:1px solid var(--surface-2);vertical-align:top}
-  .rubric-table tr:last-child td{border-bottom:none}
-  .score-input-cell input{width:56px;text-align:center;font-size:13px;padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-sans)}
-  .score-input-cell input:focus{outline:none;border-color:var(--border-focus)}
-
   /* NOTES REVIEW */
   .notes-review{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
   .notes-review h3{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:10px}
   .notes-review textarea{font-size:13px}
 
-  .pro-lock-card{background:var(--accent-soft);border:1.5px solid #E4CFA0;border-radius:var(--radius);padding:16px 18px;text-align:center;margin-bottom:16px}
-  .pro-lock-card strong{display:block;font-family:var(--font-serif);font-size:15px;margin-bottom:4px}
-  .pro-lock-card p{font-size:13px;color:var(--text-mid);margin-bottom:10px}
+  /* PAST SESSIONS */
+  .past-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--surface-2)}
+  .past-row:last-child{border-bottom:none}
+  .past-name{font-size:13px;font-weight:600;color:var(--text)}
+  .past-meta{font-size:11.5px;color:var(--text-light);margin-top:2px}
+  .past-actions{display:flex;gap:6px;flex-shrink:0}
 
-  /* MODAL */
-  .modal-bd{display:none;position:fixed;inset:0;background:rgba(40,37,30,.35);z-index:500;align-items:center;justify-content:center}
-  .modal-bd.open{display:flex}
-  .modal{background:var(--surface);border-radius:12px;padding:24px;width:min(360px,92vw);box-shadow:0 8px 32px rgba(40,37,30,.2);animation:popIn .18s ease}
-  @keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  /* SPEAKER NOTES */
+  .speaker-notes-row{margin-bottom:12px}
+  .speaker-notes-row:last-child{margin-bottom:0}
+  .speaker-notes-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+  .speaker-notes-row textarea{width:100%;min-height:56px;font-size:13px}
 
-  /* TOAST */
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(40,37,30,.85);color:#fff;font-size:13px;font-weight:500;padding:9px 20px;border-radius:24px;z-index:400;pointer-events:none;transition:opacity .3s}
-  .toast.hidden{opacity:0}
+  /* RUBRIC SCORES (summary) */
+  .rubric-score-row{margin-bottom:16px;padding-bottom:16px;border-bottom:1.5px dashed var(--border)}
+  .rubric-score-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+  .rubric-score-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .criterion-live-row{margin-bottom:14px}
+  .criterion-live-row:last-child{margin-bottom:0}
+  .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+  input.criterion-live-score{width:90px}
+  .criterion-live-note{min-height:56px;font-size:13px}
+
+  @media (max-width: 768px) {
+    .live-layout { flex-direction: column; }
+    .live-sidebar { width: 100%; max-height: 32vh; border-left: none; border-top: 1.5px solid var(--border); }
+  }
 </style>
 </head>
 <body>
 
 <div class="toast hidden" id="toast"></div>
 
-<div class="modal-bd" id="upgrade-modal">
-  <div class="modal" style="text-align:center">
-    <div style="font-size:36px;margin-bottom:10px">⭐</div>
-    <div style="font-family:var(--font-serif);font-size:18px;font-weight:700;margin-bottom:6px">Upgrade to Pro</div>
-    <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6">Unlock CSV export, printable reports, rubric scoring, saved class lists, speaker timer, and session history.</p>
-    <div style="font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px">$5<span style="font-size:14px;font-weight:400;color:var(--text-mid)">/month</span></div>
-    <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">or $48/year — save 20%</p>
-    <button class="btn btn-primary btn-full" onclick="closeUpgrade()">Upgrade to Pro →</button>
-    <button class="btn-ghost btn-full" style="margin-top:6px" onclick="closeUpgrade()">Maybe later</button>
-  </div>
-</div>
-
 <header class="header">
-  <div style="display:flex;align-items:center;gap:12px">
+  <div class="header-left">
     <a class="brand" href="/">
       <div class="brand-icon">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="4" cy="8" r="2.5" fill="#B5843A" opacity=".8"/>
-          <circle cx="12" cy="5" r="2.5" fill="#B5843A" opacity=".6"/>
-          <circle cx="9" cy="12" r="2.5" fill="#B5843A" opacity=".5"/>
-          <line x1="4" y1="8" x2="12" y2="5" stroke="#B5843A" stroke-width="1" opacity=".4"/>
-          <line x1="12" y1="5" x2="9" y2="12" stroke="#B5843A" stroke-width="1" opacity=".4"/>
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
         </svg>
       </div>
       <span class="brand-name">Teacher<span>Toolshed</span></span>
     </a>
     <span class="header-sep">/</span>
-    <span class="header-tool">Talk Tracker</span>
-  </div>
-  <div class="header-right">
-    <button class="btn btn-outline btn-sm" id="header-end-btn" style="display:none" onclick="endSession()">End Session</button>
-    <button class="btn btn-outline btn-sm" onclick="showUpgrade()">⭐ Go Pro</button>
+    <a class="header-tool" href="talk-tracker.html">Talk Tracker</a>
   </div>
 </header>
 
@@ -240,14 +175,20 @@
   <div class="setup-body">
     <p class="page-eyebrow">Talk Tracker</p>
     <h1 class="page-title">Set Up Your Session</h1>
-    <p class="page-sub">Add your students, name the session, and optionally set up talking points and a rubric before you begin.</p>
+    <p class="page-sub">Add your students, name the session, and optionally set up talking points before you begin.</p>
 
     <!-- Session Details -->
     <div class="card">
       <div class="card-title">📋 Session Details</div>
-      <div class="field">
-        <label>Session name</label>
-        <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar"/>
+      <div class="row-2">
+        <div class="field">
+          <label>Session name <span class="required-mark">*</span></label>
+          <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar" required/>
+        </div>
+        <div class="field">
+          <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <input type="text" id="class-name" placeholder="e.g. Period 3 English 10"/>
+        </div>
       </div>
       <div class="row-2">
         <div class="field">
@@ -256,7 +197,6 @@
             <option value="socratic">Socratic Seminar</option>
             <option value="debate">Debate</option>
             <option value="discussion">Discussion</option>
-            <option value="presentation">Presentations</option>
           </select>
         </div>
         <div class="field">
@@ -281,10 +221,23 @@
     <div class="card">
       <div class="card-title">👥 Students</div>
       <div class="field">
-        <label>Class list (one name per line)</label>
-        <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…"></textarea>
+        <label>Use a saved class list</label>
+        <select id="roster-select" onchange="loadRoster()">
+          <option value="">— Saved classes —</option>
+        </select>
+        <p class="hint">Shared with every tool. <a href="rosters.html" class="link">Manage class lists →</a></p>
+      </div>
+      <div class="field">
+        <label>Class list (one name per line) <span class="required-mark">*</span></label>
+        <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…" required></textarea>
         <p class="hint">Or paste comma-separated names.</p>
       </div>
+    </div>
+
+    <!-- Past sessions -->
+    <div class="card" id="past-card" style="display:none">
+      <div class="card-title">🗂 Past Sessions</div>
+      <div id="past-list"></div>
     </div>
 
     <!-- Talking Points -->
@@ -295,46 +248,25 @@
       <p class="hint" style="margin-top:8px">Track which topics get covered during the session.</p>
     </div>
 
-    <!-- Speaker Timer -->
-    <div class="card">
-      <div class="card-title">⏱ Speaker Timer <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock-inline">
-        <div class="field">
-          <label>Timer per speaker</label>
-          <select disabled>
-            <option>2 minutes</option><option>3 minutes</option><option>5 minutes</option>
-          </select>
-        </div>
-      </div>
-      <p class="hint" style="margin-top:8px">Available with Pro. Time individual speakers automatically.</p>
-    </div>
-
     <!-- Rubric -->
     <div class="card">
-      <div class="card-title">📊 Rubric <span class="pro-badge">Pro</span></div>
-      <p style="font-size:13px;color:var(--text-mid);margin-bottom:12px">Define scoring criteria to evaluate participation quality. Scores are assigned in the Summary screen after the session.</p>
-      <div class="rubric-list" id="rubric-preview">
-        <!-- Sample criteria shown greyed out for free users -->
-        <div class="rubric-row" style="opacity:.45">
-          <div class="rubric-criterion">
-            <input type="text" value="Quality of contributions" disabled/>
-            <div class="rubric-score-row">
-              <label>Min:</label><input type="number" value="0" disabled style="width:56px;text-align:center"/>
-              <label>Max:</label><input type="number" value="4" disabled style="width:56px;text-align:center"/>
-            </div>
-          </div>
-        </div>
-        <div class="rubric-row" style="opacity:.45">
-          <div class="rubric-criterion">
-            <input type="text" value="Builds on others' ideas" disabled/>
-            <div class="rubric-score-row">
-              <label>Min:</label><input type="number" value="0" disabled style="width:56px;text-align:center"/>
-              <label>Max:</label><input type="number" value="4" disabled style="width:56px;text-align:center"/>
-            </div>
-          </div>
-        </div>
+      <div class="card-title">📊 Rubric <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="field">
+        <label>Use a saved rubric</label>
+        <select id="rubric-select" onchange="onRubricSelectChange()">
+          <option value="">— No rubric (participation only) —</option>
+          <option value="__new__">+ New rubric…</option>
+        </select>
       </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="showUpgrade()">Unlock Rubric Builder →</button>
+      <div id="rubric-editor-wrap" style="display:none">
+        <div class="field">
+          <label>Rubric name <span class="required-mark">*</span></label>
+          <input type="text" id="rubric-name-input" placeholder="e.g. Socratic Seminar Participation" maxlength="80"/>
+        </div>
+        <div id="rubric-criteria-container"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="saveRubricFromEditor()">Save rubric</button>
+        <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool. Scored after the session, alongside the tally — not live during discussion.</p>
+      </div>
     </div>
 
     <div class="setup-actions">
@@ -364,7 +296,7 @@
 
     <!-- Right Sidebar -->
     <aside class="live-sidebar">
-      <!-- Timer (Pro placeholder) -->
+      <!-- Session Timer -->
       <div class="ls-section">
         <div class="ls-label">Session Timer</div>
         <div class="timer-display" id="session-timer">00:00</div>
@@ -399,7 +331,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
         <button class="btn btn-outline btn-sm" onclick="printSummary()">🖨 Print</button>
-        <button class="btn btn-outline btn-sm" onclick="showUpgrade()">📥 Export CSV <span class="pro-badge">Pro</span></button>
+        <button class="btn btn-outline btn-sm" onclick="exportCsv()">📥 Export CSV</button>
         <button class="btn btn-outline btn-sm" onclick="newSession()">+ New Session</button>
       </div>
     </div>
@@ -419,14 +351,16 @@
       <div id="sum-tp"></div>
     </div>
 
-    <!-- Rubric -->
-    <div class="card">
-      <div class="card-title">📋 Rubric Scoring <span class="pro-badge">Pro</span></div>
-      <div class="pro-lock-card">
-        <strong>Detailed rubric scoring</strong>
-        <p>Score each student on your rubric criteria here, then export to CSV or print a report.</p>
-        <button class="btn btn-outline btn-sm" onclick="showUpgrade()">Upgrade to Pro →</button>
-      </div>
+    <!-- Rubric Scores -->
+    <div class="card" id="sum-rubric-card" style="display:none">
+      <div class="card-title">📊 Rubric Scores</div>
+      <div id="sum-rubric-scores"></div>
+    </div>
+
+    <!-- Speaker Notes -->
+    <div class="card" id="sum-speaker-notes-card" style="display:none">
+      <div class="card-title">🗒 Speaker Notes</div>
+      <div id="sum-speaker-notes"></div>
     </div>
 
     <!-- Notes Review -->
@@ -437,22 +371,27 @@
   </div>
 </div>
 
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
 <div class="tag-popup" id="tag-popup"></div>
+<div class="note-popup" id="note-popup"></div>
 
+<script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-rubric.js"></script>
 <script>
-const isPro = false;
-
 // ── STATE ──
 let session = {
-  name: '', type: 'socratic', target: 3,
-  students: [],   // {id, name, count, tags:[]}
+  name: '', className: '', type: 'socratic', target: 3,
+  students: [],   // {id, name, count, tags:[], notes:'', scores:{}}
   talkingPoints:[], // {id, text, covered}
+  rubric: null,   // {name, criteria:[...]} snapshot, or null
   notes: '',
   startTime: null, elapsed: 0
 };
 let timerInterval = null;
 let timerRunning = false;
 let tagPopupFor = null;
+let selectedRubric = null;   // setup-time: rubric currently shown in the editor
 
 // ── SETUP: TALKING POINTS ──
 let tpCounter = 0;
@@ -483,24 +422,133 @@ function renderTalkingPoints() {
   });
 }
 
+// ── SETUP: RUBRIC ──
+async function renderRubricSelect(selectId) {
+  const sel = document.getElementById('rubric-select');
+  sel.innerHTML = '<option value="">— No rubric (participation only) —</option><option value="__new__">+ New rubric…</option>';
+  (await ToolshedStore.listDocs('rubric')).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = d.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectId || '';
+}
+
+async function onRubricSelectChange() {
+  const val = document.getElementById('rubric-select').value;
+  if (val === '') {
+    selectedRubric = null;
+    document.getElementById('rubric-editor-wrap').style.display = 'none';
+    return;
+  }
+  if (val === '__new__') {
+    selectedRubric = { id: null, name: '', criteria: [ToolshedRubric.blankCriterion()] };
+  } else {
+    const doc = await ToolshedStore.getDoc(val);
+    if (!doc) { showToast('That rubric could not be found'); await renderRubricSelect(); return; }
+    selectedRubric = { id: doc.id, name: doc.name, criteria: doc.data.criteria };
+  }
+  document.getElementById('rubric-editor-wrap').style.display = '';
+  document.getElementById('rubric-name-input').value = selectedRubric.name;
+  ToolshedRubric.render(document.getElementById('rubric-criteria-container'), selectedRubric, { onChange: () => {} });
+}
+
+async function saveRubricFromEditor() {
+  const name = document.getElementById('rubric-name-input').value.trim();
+  if (!name) { showToast('Give the rubric a name first'); document.getElementById('rubric-name-input').focus(); return; }
+  selectedRubric.name = name;
+  const saved = await ToolshedStore.saveDoc({
+    id: selectedRubric.id || undefined,
+    tool: 'rubric',
+    name,
+    data: { criteria: selectedRubric.criteria }
+  });
+  selectedRubric.id = saved.id;
+  await renderRubricSelect(saved.id);
+  showToast(`Saved rubric "${name}"`);
+}
+
+// ── SUMMARY: RUBRIC SCORES ──
+function renderRubricScoreRow(student) {
+  const row = document.createElement('div');
+  row.className = 'rubric-score-row';
+  const name = document.createElement('div');
+  name.className = 'rubric-score-name';
+  name.textContent = student.name;
+  row.appendChild(name);
+  session.rubric.criteria.forEach(c => row.appendChild(renderStudentCriterionRow(student, c)));
+  return row;
+}
+
+function renderStudentCriterionRow(student, criterion) {
+  const row = document.createElement('div');
+  row.className = 'criterion-live-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'criterion-live-name';
+  nameEl.textContent = criterion.name || '(untitled criterion)';
+  row.appendChild(nameEl);
+  if (criterion.descriptions && criterion.descriptions[0]) {
+    const desc = document.createElement('div');
+    desc.className = 'criterion-live-desc';
+    desc.textContent = criterion.descriptions[0];
+    row.appendChild(desc);
+  }
+  if (ToolshedRubric.isScored(criterion)) {
+    const input = document.createElement('input');
+    input.type = 'number'; input.step = '1';
+    input.min = criterion.min; input.max = criterion.max;
+    input.className = 'criterion-live-score';
+    input.placeholder = `${criterion.min}–${criterion.max}`;
+    input.value = student.scores[criterion.id] == null ? '' : student.scores[criterion.id];
+    input.addEventListener('input', () => {
+      const v = input.value === '' ? null : Math.max(criterion.min, Math.min(criterion.max, parseInt(input.value, 10) || 0));
+      student.scores[criterion.id] = v;
+      schedulePersist();
+    });
+    row.appendChild(input);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.className = 'criterion-live-note';
+    ta.placeholder = 'Notes…';
+    ta.value = student.scores[criterion.id] || '';
+    ta.addEventListener('input', () => { student.scores[criterion.id] = ta.value; schedulePersist(); });
+    row.appendChild(ta);
+  }
+  return row;
+}
+
 // ── START SESSION ──
-function startSession() {
+async function startSession() {
   const name = document.getElementById('session-name').value.trim();
   if (!name) { showToast('Please enter a session name'); return; }
   const raw = document.getElementById('students-input').value;
   const names = parseNames(raw);
   if (names.length < 1) { showToast('Add at least one student'); return; }
 
+  // If a new rubric was being drafted with a name but never explicitly saved, save it now
+  // rather than silently discarding the teacher's work.
+  if (document.getElementById('rubric-select').value === '__new__' && selectedRubric && document.getElementById('rubric-name-input').value.trim()) {
+    await saveRubricFromEditor();
+  }
+  const rubricSnapshot = selectedRubric
+    ? { name: selectedRubric.name, criteria: selectedRubric.criteria.map(c => ({ ...c, descriptions: (c.descriptions || []).slice() })) }
+    : null;
+
   session.name = name;
+  session.className = document.getElementById('class-name').value.trim();
   session.type = document.getElementById('session-type').value;
   session.target = parseInt(document.getElementById('target-count').value);
-  session.students = names.map((n, i) => ({id:'s'+i, name:n, count:0, tags:[]}));
+  session.rubric = rubricSnapshot;
+  session.students = names.map((n, i) => {
+    const scores = {};
+    if (rubricSnapshot) rubricSnapshot.criteria.forEach(c => { scores[c.id] = null; });
+    return {id:'s'+i, name:n, count:0, tags:[], notes:'', scores};
+  });
   session.startTime = Date.now();
   session.elapsed = 0;
   session.notes = '';
 
   document.getElementById('live-session-name').textContent = name;
-  document.getElementById('header-end-btn').style.display = '';
 
   renderLiveTalkingPoints();
   renderStudentGrid();
@@ -542,9 +590,16 @@ function renderStudentGrid() {
       tags.appendChild(tg);
     });
 
+    const noteBtn = document.createElement('button');
+    noteBtn.className = 'note-btn' + (s.notes ? ' has-note' : '');
+    noteBtn.textContent = '✎';
+    noteBtn.title = 'Add note';
+    noteBtn.addEventListener('click', e => openNotePopup(s.id, e));
+
     card.appendChild(countDiv);
     card.appendChild(nameDiv);
     card.appendChild(tags);
+    card.appendChild(noteBtn);
 
     card.addEventListener('click', (e) => {
       if (session.talkingPoints.length > 0) {
@@ -602,6 +657,8 @@ function updateStudentCard(s) {
     tg.className = 's-tag'; tg.textContent = t;
     tagsDiv.appendChild(tg);
   });
+  const noteBtn = card.querySelector('.note-btn');
+  if (noteBtn) noteBtn.classList.toggle('has-note', !!s.notes);
 }
 
 function updateLiveStats() {
@@ -609,6 +666,7 @@ function updateLiveStats() {
   const atTarget = session.students.filter(s=>s.count>=session.target).length;
   document.getElementById('live-stats').textContent =
     `${total} contribution${total!==1?'s':''} · ${atTarget}/${session.students.length} at target`;
+  scheduleLiveSave(); // every tally change funnels through here
 }
 
 // ── TAG POPUP ──
@@ -647,6 +705,35 @@ function closeTagPopup() {
   tagPopupFor = null;
 }
 document.addEventListener('click', closeTagPopup);
+
+// ── NOTE POPUP ──
+let notePopupFor = null;
+document.getElementById('note-popup').addEventListener('click', e => e.stopPropagation());
+function openNotePopup(studentId, e) {
+  e.stopPropagation();
+  notePopupFor = studentId;
+  const s = session.students.find(x => x.id === studentId);
+  if (!s) return;
+  const popup = document.getElementById('note-popup');
+  popup.innerHTML = `<div class="note-popup-title">Note — ${esc(s.name)}</div>
+    <textarea id="note-popup-input" placeholder="Observation about this student…"></textarea>
+    <button class="btn btn-primary btn-sm btn-full" id="note-popup-done">Done</button>`;
+  const ta = popup.querySelector('#note-popup-input');
+  ta.value = s.notes || '';
+  ta.addEventListener('input', () => { s.notes = ta.value; updateStudentCard(s); scheduleLiveSave(); });
+  popup.querySelector('#note-popup-done').addEventListener('click', closeNotePopup);
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  popup.style.left = Math.min(rect.left, window.innerWidth - 236) + 'px';
+  popup.style.top = Math.min(rect.bottom + 4, window.innerHeight - 140) + 'px';
+  popup.classList.add('open');
+  ta.focus();
+}
+function closeNotePopup() {
+  document.getElementById('note-popup').classList.remove('open');
+  notePopupFor = null;
+}
+document.addEventListener('click', closeNotePopup);
 
 // ── LIVE: TALKING POINTS ──
 function renderLiveTalkingPoints() {
@@ -707,11 +794,24 @@ function endSession() {
   document.getElementById('timer-btn').textContent = '▶ Start';
   session.notes = document.getElementById('session-notes').value;
   buildSummary();
-  document.getElementById('header-end-btn').style.display = 'none';
   switchScreen('summary');
+  // The session graduates from work-in-progress to a saved session
+  clearLiveSave();
+  persistSession().then(renderPastSessions).catch(() => {});
 }
 
 // ── SUMMARY ──
+// Session types are stored as short codes; the summary shows the readable label.
+// 'presentation' is no longer offered (that's the Presentation Tracker's job) but
+// stays mapped here so sessions saved before it was removed still read correctly.
+const SESSION_TYPE_LABELS = {
+  socratic: 'Socratic Seminar',
+  debate: 'Debate',
+  discussion: 'Discussion',
+  presentation: 'Presentations'
+};
+function sessionTypeLabel(type) { return SESSION_TYPE_LABELS[type] || type || ''; }
+
 function buildSummary() {
   const s = session;
   document.getElementById('sum-title').textContent = s.name;
@@ -720,13 +820,14 @@ function buildSummary() {
   const tps = s.talkingPoints.filter(t=>t.text);
   const covered = tps.filter(t=>t.covered).length;
   document.getElementById('sum-meta').textContent =
-    `${s.type} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
+    `${s.className ? s.className + ' · ' : ''}${sessionTypeLabel(s.type)} · ${s.students.length} students · ${m}:${String(sec).padStart(2,'0')} · ${new Date().toLocaleDateString()}`;
 
   const total = s.students.reduce((a,st)=>a+st.count,0);
   const atTarget = s.students.filter(st=>st.count>=s.target).length;
   const avg = s.students.length ? (total / s.students.length).toFixed(1) : 0;
   const statsEl = document.getElementById('sum-stats');
   statsEl.innerHTML = [
+    {num: `${m}:${String(sec).padStart(2,'0')}`, lbl: 'Duration'},
     {num: total, lbl: 'Total contributions'},
     {num: `${atTarget}/${s.students.length}`, lbl: 'Met target'},
     {num: avg, lbl: 'Avg per student'},
@@ -762,43 +863,267 @@ function buildSummary() {
     tpCard.style.display = 'none';
   }
 
+  // Rubric scores
+  const rubricCard = document.getElementById('sum-rubric-card');
+  if (s.rubric && s.rubric.criteria.length && s.students.length) {
+    rubricCard.style.display = '';
+    const rubricWrap = document.getElementById('sum-rubric-scores');
+    rubricWrap.innerHTML = '';
+    s.students.forEach(st => rubricWrap.appendChild(renderRubricScoreRow(st)));
+  } else {
+    rubricCard.style.display = 'none';
+  }
+
+  // Speaker notes
+  const notesCard = document.getElementById('sum-speaker-notes-card');
+  if (s.students.length) {
+    notesCard.style.display = '';
+    document.getElementById('sum-speaker-notes').innerHTML = s.students.map(st =>
+      `<div class="speaker-notes-row">
+        <div class="speaker-notes-name">${esc(st.name)}</div>
+        <textarea data-student-id="${st.id}" placeholder="Notes for ${esc(st.name)}…">${esc(st.notes || '')}</textarea>
+      </div>`
+    ).join('');
+    document.querySelectorAll('#sum-speaker-notes textarea').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const st = s.students.find(x => x.id === ta.dataset.studentId);
+        if (st) st.notes = ta.value;
+        schedulePersist();
+      });
+    });
+  } else {
+    notesCard.style.display = 'none';
+  }
+
   document.getElementById('sum-notes').value = session.notes;
 }
 
 function printSummary() { window.print(); }
 
+// ── CSV EXPORT ──
+function csvField(v) {
+  const str = String(v ?? '');
+  return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+}
+function totalFor(student) {
+  if (!session.rubric) return null;
+  let sum = 0, any = false;
+  session.rubric.criteria.filter(ToolshedRubric.isScored).forEach(c => {
+    const v = student.scores[c.id];
+    if (v != null) { sum += v; any = true; }
+  });
+  return any ? sum : null;
+}
+
+function exportCsv() {
+  const s = session;
+  if (!s.students.length) { showToast('No session data to export'); return; }
+  const m = Math.floor(s.elapsed / 60), sec = s.elapsed % 60;
+  const duration = `${m}:${String(sec).padStart(2,'0')}`;
+  const criteria = s.rubric ? s.rubric.criteria : [];
+  const header = ['Session Name', 'Class Name', 'Session Time', 'Student', 'Contributions']
+    .concat(criteria.map(c => c.name || 'Criterion'))
+    .concat(criteria.length ? ['Total'] : [])
+    .concat(['Notes']);
+  const rows = [header];
+  s.students.forEach(st => {
+    const row = [s.name, s.className, duration, st.name, st.count];
+    criteria.forEach(c => {
+      if (ToolshedRubric.isScored(c)) row.push(st.scores[c.id] == null ? '' : st.scores[c.id]);
+      else row.push(st.scores[c.id] || '');
+    });
+    if (criteria.length) { const t = totalFor(st); row.push(t == null ? '' : t); }
+    row.push(st.notes || '');
+    rows.push(row);
+  });
+  const csv = rows.map(row => row.map(csvField).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const safeName = (s.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `talk-tracker-${safeName || 'session'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function newSession() {
   if (!confirm('Start a new session? This will clear the current summary.')) return;
-  session = { name:'', type:'socratic', target:3, students:[], talkingPoints:[], notes:'', startTime:null, elapsed:0 };
+  session = { name:'', className:'', type:'socratic', target:3, students:[], talkingPoints:[], rubric:null, notes:'', startTime:null, elapsed:0 };
   tpCounter = 0;
   document.getElementById('session-name').value = '';
+  document.getElementById('class-name').value = '';
   document.getElementById('students-input').value = '';
   document.getElementById('tp-list').innerHTML = '';
   document.getElementById('session-notes').value = '';
+  document.getElementById('rubric-select').value = '';
+  selectedRubric = null;
+  document.getElementById('rubric-editor-wrap').style.display = 'none';
   timerRunning = false; clearInterval(timerInterval);
   document.getElementById('timer-btn').textContent = '▶ Start';
   updateTimerDisplay();
+  savedSessionId = null;   // the next session becomes its own saved record
+  clearLiveSave();
+  renderPastSessions();
   switchScreen('setup');
 }
 
 function clearSetup() {
   const hasContent = document.getElementById('session-name').value ||
+    document.getElementById('class-name').value ||
     document.getElementById('students-input').value || session.talkingPoints.length;
   if (!hasContent) return;
   if (!confirm('Clear the session setup?')) return;
   document.getElementById('session-name').value = '';
+  document.getElementById('class-name').value = '';
   document.getElementById('students-input').value = '';
   session.talkingPoints = [];
   tpCounter = 0;
   renderTalkingPoints();
 }
 
-// ── UPGRADE ──
-function showUpgrade() { document.getElementById('upgrade-modal').classList.add('open'); }
-function closeUpgrade() { document.getElementById('upgrade-modal').classList.remove('open'); }
-document.getElementById('upgrade-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('upgrade-modal')) closeUpgrade();
-});
+// ── CLASS LISTS ──
+async function renderRosterList() {
+  const sel = document.getElementById('roster-select');
+  sel.innerHTML = '<option value="">— Saved classes —</option>';
+  (await ToolshedStore.listRosters()).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = `${r.name} (${r.studentCount})`;
+    sel.appendChild(o);
+  });
+}
+
+async function loadRoster() {
+  const id = document.getElementById('roster-select').value;
+  if (!id) return;
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await renderRosterList(); return; }
+  document.getElementById('students-input').value = r.students.map(s => s.name).join('\n');
+  // A saved list usually names the class too — fill it in if it's still blank
+  const classField = document.getElementById('class-name');
+  if (!classField.value.trim()) classField.value = r.name;
+  showToast(`Loaded ${r.name} — ${r.students.length} students`);
+}
+
+// ── PAST SESSIONS ──
+async function renderPastSessions() {
+  const docs = await ToolshedStore.listDocs('tracker');
+  const card = document.getElementById('past-card');
+  const list = document.getElementById('past-list');
+  card.style.display = docs.length ? '' : 'none';
+  list.innerHTML = '';
+
+  docs.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'past-row';
+    const when = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
+    row.innerHTML = `<div><div class="past-name"></div><div class="past-meta">${when}</div></div>
+      <div class="past-actions">
+        <button class="btn btn-outline btn-sm">Open</button>
+        <button class="btn-ghost" style="font-size:12px">Delete</button>
+      </div>`;
+    row.querySelector('.past-name').textContent = d.name;
+    const btns = row.querySelectorAll('button');
+    btns[0].onclick = () => openPastSession(d.id);
+    btns[1].onclick = () => deletePastSession(d.id, d.name);
+    list.appendChild(row);
+  });
+}
+
+async function openPastSession(id) {
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !doc.data) { showToast('That session could not be found'); await renderPastSessions(); return; }
+  session = doc.data;
+  savedSessionId = id;
+  buildSummary();
+  switchScreen('summary');
+}
+
+async function deletePastSession(id, name) {
+  if (!confirm(`Delete the saved session "${name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteDoc(id);
+  if (savedSessionId === id) savedSessionId = null;
+  await renderPastSessions();
+  showToast(`Deleted ${name}`);
+}
+
+// Persist the finished session, and keep updating the same record as notes
+// and scores are edited on the summary screen.
+let savedSessionId = null;
+async function persistSession() {
+  const label = session.className ? `${session.name} — ${session.className}` : session.name;
+  const saved = await ToolshedStore.saveDoc({
+    id: savedSessionId || undefined,
+    tool: 'tracker',
+    name: label,
+    data: session
+  });
+  savedSessionId = saved.id;
+  return saved;
+}
+
+let persistTimer = null;
+function schedulePersist() {
+  if (!savedSessionId) return;      // only after the session has been ended once
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => { persistSession().catch(() => {}); }, 400);
+}
+
+// ── LIVE AUTOSAVE ──
+// Keeps a mid-discussion reload from losing the tally. Cleared once the
+// session is ended (it becomes a saved session at that point) or reset.
+const LIVE_AUTOSAVE_ID = 'autosave-tracker';
+let liveTimer = null;
+function scheduleLiveSave() {
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => {
+    session.notes = document.getElementById('session-notes').value;
+    ToolshedStore.saveDoc({
+      id: LIVE_AUTOSAVE_ID, tool: '_autosave', name: 'tracker', data: session
+    }).catch(() => {});
+  }, 400);
+}
+function clearLiveSave() {
+  clearTimeout(liveTimer);
+  ToolshedStore.deleteDoc(LIVE_AUTOSAVE_ID).catch(() => {});
+}
+
+async function restoreLiveSession() {
+  const doc = await ToolshedStore.getDoc(LIVE_AUTOSAVE_ID);
+  if (!doc || !doc.data || !Array.isArray(doc.data.students) || !doc.data.students.length) return false;
+  session = doc.data;
+  document.getElementById('live-session-name').textContent = session.name;
+  document.getElementById('session-notes').value = session.notes || '';
+  renderLiveTalkingPoints();
+  renderStudentGrid();
+  updateLiveStats();
+  updateTimerDisplay();
+  switchScreen('live');
+  showToast('Picked up where you left off', 3000);
+  return true;
+}
+
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
+  }
+  await renderRosterList();
+  await renderRubricSelect();
+  await renderPastSessions();
+  await restoreLiveSession();
+  document.getElementById('session-notes').addEventListener('input', scheduleLiveSave);
+  // The summary's notes box previously never wrote back to state, so
+  // post-session reflections were dropped from the saved session.
+  document.getElementById('sum-notes').addEventListener('input', e => {
+    session.notes = e.target.value;
+    schedulePersist();
+  });
+})();
 
 // ── UTILS ──
 function switchScreen(id) {
@@ -816,7 +1141,7 @@ function showToast(msg, dur=2200) {
 // Print styles
 const ps = document.createElement('style');
 ps.media = 'print';
-ps.textContent = `.header,.pro-lock-card,button{display:none!important}.summary-body{padding:0}`;
+ps.textContent = `.header,.tool-footer,button{display:none!important}.summary-body{padding:0}.speaker-notes-row:has(textarea:placeholder-shown){display:none}`;
 document.head.appendChild(ps);
 </script>
 </body>

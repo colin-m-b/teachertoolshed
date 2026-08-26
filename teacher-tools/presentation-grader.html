@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation Tracker — Teacher Toolshed</title>
+<meta name="description" content="Grade individual or group presentations against a rubric, with per-student overrides and a printable report.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<style>
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column}
+
+  .screen{display:none;flex:1;overflow:hidden;flex-direction:column}
+  .screen.active{display:flex}
+
+  /* ─── SETUP ─── */
+  .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px}
+  .setup-body-inner{max-width:760px;margin:0 auto;width:100%}
+  .page-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .page-title{font-family:var(--font-serif);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
+  .card{margin-bottom:16px}
+  .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
+
+  /* group-def rows in setup — click to make the "active" tap-assign target */
+  .group-def-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .12s,border-color .12s}
+  .group-def-row:hover{border-color:#E4CFA0}
+  .group-def-row.active{background:var(--accent-soft);border-color:var(--accent)}
+  .group-def-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+  .group-def-row.active .group-def-dot{background:var(--accent)}
+  .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text);border-radius:4px}
+  .group-def-row input:focus{outline:none;background:var(--surface)}
+  .group-def-count{font-size:11px;color:var(--text-light);flex-shrink:0;white-space:nowrap}
+  .group-def-solo-label{flex:1;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text)}
+  .group-def-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
+  .group-def-remove:hover{color:var(--red)}
+
+  /* per-student assignment rows — click to assign to the active group */
+  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 6px;border-bottom:1px solid var(--surface-2);cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
+  .assign-row:hover{background:var(--surface-2)}
+  .assign-row:last-child{border-bottom:none}
+  .assign-name{font-size:13px;font-weight:600;color:var(--text)}
+  .assign-badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface);white-space:nowrap;flex-shrink:0}
+  .assign-badge.assigned{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover)}
+  .unassigned-note{font-size:12.5px;color:var(--text-mid);margin-top:8px;font-weight:600}
+  .unassigned-ok{font-size:12.5px;color:var(--green);margin-top:8px;font-weight:600}
+
+  /* ─── LIVE ─── */
+  .live-layout{flex:1;display:flex;overflow:hidden}
+
+  .order-sidebar{width:250px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .order-list{flex:1;overflow-y:auto;padding:8px}
+  .order-item{width:100%;text-align:left;background:none;border:1.5px solid transparent;border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;font-family:var(--font-sans);margin-bottom:2px;display:flex;align-items:center;gap:8px;transition:background .12s,border-color .12s}
+  .order-item:hover{background:var(--surface-2)}
+  .order-item.current{background:var(--accent-soft);border-color:#E4CFA0}
+  .order-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+  .order-item.done .order-dot{background:var(--green)}
+  .order-item.current .order-dot{background:var(--accent)}
+  .order-name{font-size:13px;font-weight:600;color:var(--text)}
+  .order-meta{font-size:11px;color:var(--text-light)}
+  .order-footer{padding:14px 16px;border-top:1px solid var(--border)}
+  .order-footer .ls-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px}
+  .order-footer .timer-display{font-family:var(--font-serif);font-size:22px;font-weight:700;text-align:center;color:var(--text)}
+  .order-footer .timer-hint{font-size:11px;color:var(--text-light);text-align:center;margin-top:4px}
+
+  .present-main{flex:1;overflow-y:auto;padding:24px 24px 60px}
+  .present-inner{max-width:640px;margin:0 auto}
+  .present-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+  .present-group-name{font-family:var(--font-serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .present-members{font-size:13px;color:var(--text-mid);margin-top:2px}
+  .present-timer-wrap{text-align:center;flex-shrink:0}
+  .present-timer{font-family:var(--font-serif);font-size:30px;font-weight:700;color:var(--text)}
+  .present-timer.amber{color:var(--accent)}
+  .present-timer.over{color:var(--red)}
+  .present-timer-label{font-size:11px;color:var(--text-light);margin-top:2px}
+  .present-timer-btns{display:flex;gap:6px;justify-content:center;margin-top:8px}
+  .group-summary-time{font-size:12px;color:var(--text-light);margin-bottom:12px}
+
+  .criterion-live-row{margin-bottom:14px}
+  .criterion-live-row:last-child{margin-bottom:0}
+  .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+  input.criterion-live-score{width:90px}
+  .criterion-live-note{min-height:56px;font-size:13px}
+
+  .member-card{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+  .member-card:last-child{margin-bottom:0}
+  .member-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .member-score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12.5px}
+  .member-score-row:last-of-type{margin-bottom:8px}
+  .member-score-label{flex:1;color:var(--text-mid)}
+  .score-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface)}
+  .score-pill:hover{border-color:var(--accent);color:var(--accent)}
+  .score-pill.overridden{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover);font-weight:700}
+  .score-pill-input{width:60px;padding:3px 6px;font-size:12px}
+  .score-revert{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:14px;padding:2px 4px}
+  .score-revert:hover{color:var(--accent)}
+  .member-feedback{font-size:12.5px;min-height:48px}
+
+  .present-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+
+  /* ─── SUMMARY ─── */
+  .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px}
+  .summary-body-inner{max-width:760px;margin:0 auto;width:100%}
+  .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
+  .summary-title{font-family:var(--font-serif);font-size:24px;font-weight:700;margin-bottom:4px}
+  .summary-meta{font-size:13px;color:var(--text-mid)}
+  .group-summary-card{margin-bottom:16px}
+  .group-summary-name{font-family:var(--font-serif);font-size:16px;font-weight:700;margin-bottom:2px}
+  .group-summary-members{font-size:12px;color:var(--text-light);margin-bottom:12px}
+  .gs-criteria{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .gs-crit-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--surface-2)}
+  .gs-crit-row:last-child{border-bottom:none}
+  .gs-crit-name{color:var(--text-mid)}
+  .gs-crit-val{font-weight:700;color:var(--text);text-align:right;max-width:60%}
+  .gs-feedback{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);margin-bottom:12px;white-space:pre-wrap}
+  .gs-feedback:empty{display:none}
+  .gs-member{border-top:1.5px dashed var(--border);padding-top:10px;margin-top:10px}
+  .gs-member-name{font-size:13px;font-weight:700;margin-bottom:4px}
+  .gs-member-scores{font-size:12px;color:var(--text-mid);margin-bottom:4px}
+  .gs-member-scores .edited{color:var(--accent-hover);font-weight:700}
+  .gs-member-feedback{font-size:12.5px;color:var(--text-mid);white-space:pre-wrap}
+
+  @media print {
+    .header, .order-sidebar, .present-timer-wrap, .tool-footer, button { display: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    .live-layout { flex-direction: column; }
+    .order-sidebar { width: 100%; max-height: 32vh; border-right: none; border-bottom: 1.5px solid var(--border); }
+    .present-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast hidden" id="toast"></div>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <a class="header-tool" href="presentation-grader.html">Presentation Tracker</a>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-outline btn-sm" id="header-end-btn" style="display:none" onclick="endSession()">End Session →</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ SETUP SCREEN ═══════════════════════════════ -->
+<div class="screen active" id="screen-setup">
+  <div class="setup-body"><div class="setup-body-inner">
+    <p class="page-eyebrow">Presentation Tracker</p>
+    <h1 class="page-title">Set Up Your Session</h1>
+    <p class="page-sub">Add your students, group them if this is group work, and optionally attach a rubric.</p>
+
+    <!-- Session Details -->
+    <div class="card">
+      <div class="card-title">📋 Session Details</div>
+      <div class="row-2">
+        <div class="field">
+          <label>Session name <span class="required-mark">*</span></label>
+          <input type="text" id="session-name" placeholder="e.g. Romeo &amp; Juliet Book Talks"/>
+        </div>
+        <div class="field">
+          <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <input type="text" id="class-name" placeholder="e.g. Period 3 English 10"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div class="card">
+      <div class="card-title">👥 Students</div>
+      <div class="field">
+        <label>Use a saved class list</label>
+        <select id="roster-select" onchange="loadRoster()">
+          <option value="">— Saved classes —</option>
+        </select>
+        <p class="hint">Shared with every tool. <a href="rosters.html" class="link">Manage class lists →</a></p>
+      </div>
+      <div class="field">
+        <label>Class list (one name per line) <span class="required-mark">*</span></label>
+        <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;…" required></textarea>
+        <p class="hint">Or paste comma-separated names.</p>
+      </div>
+    </div>
+
+    <!-- Grouping -->
+    <div class="card">
+      <div class="card-title">🧑‍🤝‍🧑 Grouping</div>
+      <div class="template-tabs" style="margin-bottom:6px">
+        <div class="tab active" id="mode-tab-individual">Individual</div>
+        <div class="tab" id="mode-tab-groups">Groups</div>
+      </div>
+      <p class="hint" style="margin-bottom:14px" id="mode-hint">Each student presents on their own — one entry per student, no grouping needed.</p>
+
+      <div id="groups-builder" style="display:none">
+        <div class="field">
+          <label>Groups</label>
+          <div id="group-defs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+          <button class="btn-add-tp" id="add-group-btn">+ Add group</button>
+          <p class="hint" style="margin-top:8px">Click a group — or "Presenting solo" below, for students going on their own today — to make it the active target, then click students below to assign them.</p>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label>Auto-split unassigned into groups of</label>
+            <select id="auto-split-size">
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+          <div class="field">
+            <label style="visibility:hidden">Auto-split</label>
+            <button class="btn btn-outline btn-full" id="auto-split-btn">Auto-split</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Assign students to groups</label>
+          <p class="hint" style="margin-bottom:8px">Click a student to assign them to the active group. Click an assigned student again to remove them.</p>
+          <div id="assign-list"></div>
+          <p id="unassigned-status"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rubric -->
+    <div class="card">
+      <div class="card-title">📊 Rubric <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="field">
+        <label>Use a saved rubric</label>
+        <select id="rubric-select">
+          <option value="">— No rubric (feedback only) —</option>
+          <option value="__new__">+ New rubric…</option>
+        </select>
+      </div>
+      <div id="rubric-editor-wrap" style="display:none">
+        <div class="field">
+          <label>Rubric name <span class="required-mark">*</span></label>
+          <input type="text" id="rubric-name-input" placeholder="e.g. MYP Oral Presentation" maxlength="80"/>
+        </div>
+        <div id="rubric-criteria-container"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" id="save-rubric-btn">Save rubric</button>
+        <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool.</p>
+      </div>
+    </div>
+
+    <!-- Time limit -->
+    <div class="card">
+      <div class="card-title">⏱ Time Limit <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="field">
+        <label>How many minutes?</label>
+        <input type="number" id="time-limit-input" min="1" max="20" step="1" placeholder="No limit" value="3" style="max-width:140px"/>
+        <p class="hint">Leave blank for no limit. 1–20 minutes per presentation.</p>
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn-ghost" id="clear-setup-btn">Clear</button>
+      <button class="btn btn-primary" id="start-session-btn" style="padding:11px 28px">Start Session →</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- ═══════════════════════════════ LIVE SCREEN ═══════════════════════════════ -->
+<div class="screen" id="screen-live">
+  <div class="live-layout">
+    <aside class="order-sidebar">
+      <div class="order-list" id="order-list"></div>
+      <div class="order-footer">
+        <div class="ls-label">Total Time</div>
+        <div class="timer-display" id="total-timer">00:00</div>
+        <div class="timer-hint">Sum of every presentation</div>
+      </div>
+    </aside>
+
+    <main class="present-main">
+      <div class="present-inner">
+        <div class="present-header">
+          <div>
+            <div class="present-group-name" id="present-group-name"></div>
+            <div class="present-members" id="present-members"></div>
+          </div>
+          <div class="present-timer-wrap">
+            <div class="present-timer" id="present-timer">00:00</div>
+            <div class="present-timer-label" id="present-timer-label"></div>
+            <div class="present-timer-btns">
+              <button class="btn btn-outline btn-sm" id="present-timer-toggle">▶ Start</button>
+              <button class="btn btn-outline btn-sm" id="present-timer-reset">↺</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="live-rubric-card" style="display:none">
+          <div class="card-title">📊 Rubric</div>
+          <div id="live-rubric-criteria"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" id="group-feedback-title">💬 Group Feedback</div>
+          <textarea id="group-feedback-input" placeholder="Overall feedback for the group…"></textarea>
+        </div>
+
+        <div id="members-feedback-list"></div>
+
+        <div class="present-nav">
+          <button class="btn btn-outline" id="prev-group-btn">← Previous</button>
+          <button class="btn btn-primary" id="next-group-btn">Next →</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SUMMARY SCREEN ═══════════════════════════════ -->
+<div class="screen" id="screen-summary">
+  <div class="summary-body"><div class="summary-body-inner">
+    <div class="summary-header">
+      <div>
+        <div class="summary-title" id="sum-title">Session Summary</div>
+        <div class="summary-meta" id="sum-meta"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-outline btn-sm" id="print-btn">🖨 Print</button>
+        <button class="btn btn-outline btn-sm" id="export-csv-btn">📥 Export CSV</button>
+        <button class="btn btn-outline btn-sm" id="new-session-btn">+ New Session</button>
+      </div>
+    </div>
+
+    <div class="stat-row" id="sum-stats"></div>
+
+    <div id="sum-groups"></div>
+  </div></div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
+<script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-rubric.js"></script>
+<script>
+'use strict';
+
+// ── STATE ──
+let session = null;
+let mode = 'individual';           // setup-time only
+let groupDefs = [];                 // [{id, name}] — setup-time group shells
+let assignment = {};                // {studentName: groupDefId|null} — setup-time
+let activeGroupId = null;           // setup-time: which group tapping a student assigns them to
+const SOLO_ID = '__solo__';         // reserved pseudo-group id: "presenting on their own today"
+let groupDefCounter = 0;
+
+let selectedRubric = null;          // {id?, name, criteria} currently shown in the editor
+let savedSessionId = null;
+// The per-presentation timer never auto-starts and is never resumed running
+// after a reload — presentTimerRunning is a transient UI flag, not saved
+// session data, so it naturally starts false on every page load.
+let presentTimerInterval = null, presentTimerRunning = false;
+
+// ── UTILS ──
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg, dur = 2400) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+}
+function parseNames(raw) {
+  const byLine = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (byLine.length === 1 && byLine[0].includes(','))
+    return byLine[0].split(',').map(s => s.trim()).filter(Boolean);
+  return byLine;
+}
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function timeLimitSecFromInput() {
+  const raw = $('time-limit-input').value;
+  if (raw === '') return null;
+  const mins = Math.round(parseFloat(raw));
+  if (!Number.isFinite(mins)) return null;
+  return Math.max(1, Math.min(20, mins)) * 60;
+}
+let localId = 0;
+function nextId(prefix) { return prefix + (++localId); }
+
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
+  }
+  await renderRosterList();
+  await renderRubricSelect();
+  wireSetupEvents();
+  wireLiveEvents();
+  wireSummaryEvents();
+  const resumed = await restoreLiveSession();
+  if (!resumed) {
+    setMode('individual');
+    refreshAssignList();
+  }
+})();
+
+// ── CLASS LISTS ──
+async function renderRosterList() {
+  const sel = $('roster-select');
+  sel.innerHTML = '<option value="">— Saved classes —</option>';
+  (await ToolshedStore.listRosters()).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = `${r.name} (${r.studentCount})`;
+    sel.appendChild(o);
+  });
+}
+async function loadRoster() {
+  const id = $('roster-select').value;
+  if (!id) return;
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await renderRosterList(); return; }
+  $('students-input').value = r.students.map(s => s.name).join('\n');
+  const classField = $('class-name');
+  if (!classField.value.trim()) classField.value = r.name;
+  refreshAssignList();
+  showToast(`Loaded ${r.name} — ${r.students.length} students`);
+}
+
+// ── GROUPING (setup screen) ──
+function setMode(m) {
+  mode = m;
+  $('mode-tab-individual').classList.toggle('active', m === 'individual');
+  $('mode-tab-groups').classList.toggle('active', m === 'groups');
+  $('groups-builder').style.display = m === 'groups' ? '' : 'none';
+  $('mode-hint').textContent = m === 'individual'
+    ? 'Each student presents on their own — one entry per student, no grouping needed.'
+    : 'Create groups below and assign students. Anyone you leave unassigned won\'t be in today\'s session.';
+}
+
+function addGroupDef(name) {
+  const g = { id: nextId('g'), name: name || `Group ${groupDefs.length + 1}` };
+  groupDefs.push(g);
+  activeGroupId = g.id; // a freshly added group becomes the tap-assign target
+  renderGroupDefs();
+  renderAssignList();
+}
+function removeGroupDef(id) {
+  groupDefs = groupDefs.filter(g => g.id !== id);
+  Object.keys(assignment).forEach(name => { if (assignment[name] === id) assignment[name] = null; });
+  if (activeGroupId === id) activeGroupId = groupDefs.length ? groupDefs[groupDefs.length - 1].id : null;
+  renderGroupDefs();
+  renderAssignList();
+}
+function setActiveGroup(id) {
+  activeGroupId = id;
+  renderGroupDefs();
+  renderAssignList();
+}
+function renderGroupDefs() {
+  const wrap = $('group-defs-list');
+  wrap.innerHTML = '';
+  const names = currentStudentNames();
+  groupDefs.forEach(g => {
+    const count = names.filter(n => assignment[n] === g.id).length;
+
+    const row = document.createElement('div');
+    row.className = 'group-def-row' + (g.id === activeGroupId ? ' active' : '');
+    row.dataset.groupId = g.id;
+    row.title = 'Click to make this the active group';
+    row.addEventListener('click', () => setActiveGroup(g.id));
+
+    const dot = document.createElement('span');
+    dot.className = 'group-def-dot';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = g.name;
+    // Renaming happens in-place — activating a group via mousedown (not the row's
+    // click handler, which re-renders and would kill focus mid-click) keeps this
+    // input alive so typing actually sticks.
+    input.addEventListener('mousedown', () => {
+      if (g.id !== activeGroupId) {
+        activeGroupId = g.id;
+        document.querySelectorAll('.group-def-row').forEach(r => r.classList.toggle('active', r.dataset.groupId === activeGroupId));
+      }
+    });
+    input.addEventListener('click', e => e.stopPropagation());
+    input.addEventListener('input', () => { g.name = input.value; renderAssignList(); });
+
+    const countEl = document.createElement('span');
+    countEl.className = 'group-def-count';
+    countEl.textContent = count ? `${count} assigned` : '';
+
+    const rm = document.createElement('button');
+    rm.className = 'group-def-remove';
+    rm.textContent = '×';
+    rm.title = 'Remove group';
+    rm.addEventListener('click', (e) => { e.stopPropagation(); removeGroupDef(g.id); });
+
+    row.appendChild(dot);
+    row.appendChild(input);
+    row.appendChild(countEl);
+    row.appendChild(rm);
+    wrap.appendChild(row);
+  });
+
+  // Permanent target for students presenting on their own today — always
+  // available, not removable, not editable. Anyone tapped in here becomes
+  // their own one-person group when the session starts.
+  const soloCount = names.filter(n => assignment[n] === SOLO_ID).length;
+  const soloRow = document.createElement('div');
+  soloRow.className = 'group-def-row' + (activeGroupId === SOLO_ID ? ' active' : '');
+  soloRow.dataset.groupId = SOLO_ID;
+  soloRow.title = 'Click to make this the active target for students presenting solo';
+  soloRow.addEventListener('click', () => setActiveGroup(SOLO_ID));
+
+  const soloDot = document.createElement('span');
+  soloDot.className = 'group-def-dot';
+
+  const soloLabel = document.createElement('span');
+  soloLabel.className = 'group-def-solo-label';
+  soloLabel.textContent = '🎤 Presenting solo';
+
+  const soloCountEl = document.createElement('span');
+  soloCountEl.className = 'group-def-count';
+  soloCountEl.textContent = soloCount ? `${soloCount} assigned` : '';
+
+  soloRow.appendChild(soloDot);
+  soloRow.appendChild(soloLabel);
+  soloRow.appendChild(soloCountEl);
+  wrap.appendChild(soloRow);
+}
+
+function currentStudentNames() {
+  const seen = new Set();
+  return parseNames($('students-input').value).filter(n => {
+    const key = n.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function refreshAssignList() {
+  const names = currentStudentNames();
+  const namesSet = new Set(names.map(n => n.toLowerCase()));
+  Object.keys(assignment).forEach(n => { if (!namesSet.has(n.toLowerCase())) delete assignment[n]; });
+  names.forEach(n => { if (!(n in assignment)) assignment[n] = null; });
+  renderGroupDefs();
+  renderAssignList();
+}
+
+function renderAssignList() {
+  const wrap = $('assign-list');
+  wrap.innerHTML = '';
+  const names = currentStudentNames();
+  let notPresenting = 0;
+
+  names.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'assign-row';
+    row.title = activeGroupId ? 'Click to assign to the active group' : 'Click a group above first';
+
+    const label = document.createElement('span');
+    label.className = 'assign-name';
+    label.textContent = name;
+
+    const groupId = assignment[name];
+    let badgeText = '— Not presenting —';
+    let isAssigned = false;
+    if (groupId === SOLO_ID) {
+      badgeText = '🎤 Solo';
+      isAssigned = true;
+    } else {
+      const group = groupDefs.find(g => g.id === groupId);
+      if (group) { badgeText = group.name; isAssigned = true; }
+    }
+    if (!isAssigned) notPresenting++;
+    const badge = document.createElement('span');
+    badge.className = 'assign-badge' + (isAssigned ? ' assigned' : '');
+    badge.textContent = badgeText;
+
+    row.addEventListener('click', () => {
+      if (!activeGroupId) { showToast('Click a group above first, then tap students to assign them'); return; }
+      assignment[name] = assignment[name] === activeGroupId ? null : activeGroupId;
+      renderGroupDefs();
+      renderAssignList();
+    });
+
+    row.appendChild(label);
+    row.appendChild(badge);
+    wrap.appendChild(row);
+  });
+
+  const status = $('unassigned-status');
+  if (!names.length) {
+    status.textContent = '';
+  } else if (notPresenting > 0) {
+    status.className = 'unassigned-note';
+    status.textContent = `${names.length - notPresenting} presenting today · ${notPresenting} not assigned — they won't present unless you assign them`;
+  } else {
+    status.className = 'unassigned-ok';
+    status.textContent = 'Everyone is presenting today';
+  }
+}
+
+function autoSplit() {
+  const size = parseInt($('auto-split-size').value, 10);
+  const names = currentStudentNames();
+  const unassigned = names.filter(n => !assignment[n]);
+  if (!unassigned.length) { showToast('Everyone is already assigned'); return; }
+
+  for (let i = 0; i < unassigned.length; i += size) {
+    const chunk = unassigned.slice(i, i + size);
+    const g = { id: nextId('g'), name: `Group ${groupDefs.length + 1}` };
+    groupDefs.push(g);
+    chunk.forEach(n => { assignment[n] = g.id; });
+  }
+  renderGroupDefs();
+  renderAssignList();
+  showToast(`Split ${unassigned.length} students into ${Math.ceil(unassigned.length / size)} group${unassigned.length > size ? 's' : ''}`);
+}
+
+// ── RUBRIC (setup screen) ──
+async function renderRubricSelect(selectId) {
+  const sel = $('rubric-select');
+  sel.innerHTML = '<option value="">— No rubric (feedback only) —</option><option value="__new__">+ New rubric…</option>';
+  (await ToolshedStore.listDocs('rubric')).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = d.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectId || '';
+}
+
+async function onRubricSelectChange() {
+  const val = $('rubric-select').value;
+  if (val === '') {
+    selectedRubric = null;
+    $('rubric-editor-wrap').style.display = 'none';
+    return;
+  }
+  if (val === '__new__') {
+    selectedRubric = { id: null, name: '', criteria: [ToolshedRubric.blankCriterion()] };
+  } else {
+    const doc = await ToolshedStore.getDoc(val);
+    if (!doc) { showToast('That rubric could not be found'); await renderRubricSelect(); return; }
+    selectedRubric = { id: doc.id, name: doc.name, criteria: doc.data.criteria };
+  }
+  $('rubric-editor-wrap').style.display = '';
+  $('rubric-name-input').value = selectedRubric.name;
+  ToolshedRubric.render($('rubric-criteria-container'), selectedRubric, { onChange: () => {} });
+}
+
+async function saveRubricFromEditor() {
+  const name = $('rubric-name-input').value.trim();
+  if (!name) { showToast('Give the rubric a name first'); $('rubric-name-input').focus(); return; }
+  selectedRubric.name = name;
+  const saved = await ToolshedStore.saveDoc({
+    id: selectedRubric.id || undefined,
+    tool: 'rubric',
+    name,
+    data: { criteria: selectedRubric.criteria }
+  });
+  selectedRubric.id = saved.id;
+  await renderRubricSelect(saved.id);
+  showToast(`Saved rubric "${name}"`);
+}
+
+// ── START SESSION ──
+async function startSession() {
+  const name = $('session-name').value.trim();
+  if (!name) { showToast('Please enter a session name'); $('session-name').focus(); return; }
+  const names = currentStudentNames();
+  if (!names.length) { showToast('Add at least one student'); return; }
+
+  let groups;
+  if (mode === 'groups') {
+    const realGroups = groupDefs
+      .map(g => ({ id: g.id, name: g.name.trim() || 'Group', memberNames: names.filter(n => assignment[n] === g.id) }))
+      .filter(g => g.memberNames.length);
+    const soloGroups = names
+      .filter(n => assignment[n] === SOLO_ID)
+      .map(n => ({ id: nextId('g'), name: n, memberNames: [n] }));
+    groups = [...realGroups, ...soloGroups];
+
+    if (!groups.length) {
+      showToast('Assign at least one student to a group or Presenting Solo, or switch to Individual');
+      return;
+    }
+
+    const notPresenting = names.filter(n => !assignment[n]);
+    if (notPresenting.length) {
+      const ok = confirm(
+        `${notPresenting.length} student${notPresenting.length === 1 ? '' : 's'} won't be presenting today:\n\n` +
+        notPresenting.join(', ') +
+        `\n\nThey won't appear in the running order or the report.\n\nStart anyway?`
+      );
+      if (!ok) return;
+    }
+  } else {
+    groups = names.map(n => ({ id: nextId('g'), name: n, memberNames: [n] }));
+  }
+  const presentingNames = names.filter(n => groups.some(g => g.memberNames.includes(n)));
+
+  // If a new rubric was being drafted with a name but never explicitly saved, save it now
+  // rather than silently discarding the teacher's work.
+  if ($('rubric-select').value === '__new__' && selectedRubric && $('rubric-name-input').value.trim()) {
+    await saveRubricFromEditor();
+  }
+  const rubricSnapshot = selectedRubric
+    ? { name: selectedRubric.name, criteria: selectedRubric.criteria.map(c => ({ ...c, descriptions: (c.descriptions || []).slice() })) }
+    : null;
+
+  const students = presentingNames.map(n => ({ id: nextId('s'), name: n }));
+  const nameToId = {};
+  students.forEach(s => { nameToId[s.name] = s.id; });
+
+  const finalGroups = groups.map(g => ({ id: g.id, name: g.name, memberIds: g.memberNames.map(n => nameToId[n]) }));
+
+  const groupData = {};
+  finalGroups.forEach(g => {
+    const criteria = {};
+    if (rubricSnapshot) rubricSnapshot.criteria.forEach(c => { criteria[c.id] = null; });
+    groupData[g.id] = { criteria, feedback: '', elapsedSec: 0, done: false };
+  });
+  const studentData = {};
+  students.forEach(s => { studentData[s.id] = { overrides: {}, feedback: '' }; });
+
+  session = {
+    name, className: $('class-name').value.trim(),
+    mode, rubric: rubricSnapshot,
+    students, groups: finalGroups,
+    groupData, studentData,
+    timeLimitSec: timeLimitSecFromInput(),
+    currentIndex: 0,
+    date: new Date().toISOString()
+  };
+  savedSessionId = null;
+  presentTimerRunning = false;
+
+  renderLiveScreen();
+  switchScreen('live');
+  $('header-end-btn').style.display = '';
+}
+
+// ── LIVE SCREEN ──
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + id).classList.add('active');
+}
+
+function renderLiveScreen() {
+  renderOrderList();
+  renderCurrentGroup();
+  updateTotalTimeDisplay();
+}
+
+function renderOrderList() {
+  const wrap = $('order-list');
+  wrap.innerHTML = '';
+  session.groups.forEach((g, i) => {
+    const btn = document.createElement('button');
+    const gd = session.groupData[g.id];
+    btn.className = 'order-item' + (i === session.currentIndex ? ' current' : '') + (gd.done ? ' done' : '');
+    btn.innerHTML = `<span class="order-dot"></span><span><div class="order-name"></div><div class="order-meta">${g.memberIds.length} student${g.memberIds.length === 1 ? '' : 's'}</div></span>`;
+    btn.querySelector('.order-name').textContent = g.name;
+    btn.addEventListener('click', () => jumpToGroup(i));
+    wrap.appendChild(btn);
+  });
+}
+
+function currentGroup() { return session.groups[session.currentIndex]; }
+
+function jumpToGroup(i) {
+  stopPresentTimerInterval(); // clear only; renderCurrentGroup restarts it if presentTimerRunning
+  session.currentIndex = i;
+  renderOrderList();
+  renderCurrentGroup();
+  scheduleLiveSave();
+}
+
+function memberName(id) {
+  const s = session.students.find(x => x.id === id);
+  return s ? s.name : '(removed)';
+}
+
+function renderCurrentGroup() {
+  const g = currentGroup();
+  if (!g) return;
+  const gd = session.groupData[g.id];
+  const solo = g.memberIds.length === 1;
+
+  $('present-group-name').textContent = g.name;
+  $('present-members').textContent = solo ? '' : g.memberIds.map(memberName).join(', ');
+  $('group-feedback-title').textContent = solo ? '💬 Feedback' : '💬 Group Feedback';
+  $('group-feedback-input').value = gd.feedback || '';
+  $('group-feedback-input').placeholder = solo ? 'Feedback for this student…' : 'Overall feedback for the group…';
+
+  // Rubric criteria (group-level)
+  const rubricCard = $('live-rubric-card');
+  const critWrap = $('live-rubric-criteria');
+  critWrap.innerHTML = '';
+  if (session.rubric && session.rubric.criteria.length) {
+    rubricCard.style.display = '';
+    session.rubric.criteria.forEach(c => critWrap.appendChild(renderLiveCriterionRow(g, gd, c)));
+  } else {
+    rubricCard.style.display = 'none';
+  }
+
+  // Per-member section (skipped entirely for a solo group — the rubric +
+  // feedback box above already fully cover that one student)
+  const membersWrap = $('members-feedback-list');
+  membersWrap.innerHTML = '';
+  if (!solo) {
+    g.memberIds.forEach(sid => membersWrap.appendChild(renderMemberCard(g, gd, sid)));
+  }
+
+  $('prev-group-btn').disabled = session.currentIndex === 0;
+  $('next-group-btn').textContent = session.currentIndex === session.groups.length - 1 ? 'Finish →' : 'Next →';
+
+  syncPresentTimerForCurrentGroup();
+}
+
+function renderLiveCriterionRow(g, gd, criterion) {
+  const row = document.createElement('div');
+  row.className = 'criterion-live-row';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'criterion-live-name';
+  nameEl.textContent = criterion.name || '(untitled criterion)';
+  row.appendChild(nameEl);
+  if (criterion.descriptions && criterion.descriptions[0]) {
+    const desc = document.createElement('div');
+    desc.className = 'criterion-live-desc';
+    desc.textContent = criterion.descriptions[0];
+    row.appendChild(desc);
+  }
+
+  if (ToolshedRubric.isScored(criterion)) {
+    const input = document.createElement('input');
+    input.type = 'number'; input.step = '1';
+    input.min = criterion.min; input.max = criterion.max;
+    input.className = 'criterion-live-score';
+    input.placeholder = `${criterion.min}–${criterion.max}`;
+    input.value = gd.criteria[criterion.id] == null ? '' : gd.criteria[criterion.id];
+    input.addEventListener('input', () => {
+      const v = input.value === '' ? null : Math.max(criterion.min, Math.min(criterion.max, parseInt(input.value, 10) || 0));
+      gd.criteria[criterion.id] = v;
+      refreshMemberScorePills(criterion.id);
+      scheduleLiveSave();
+    });
+    row.appendChild(input);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.className = 'criterion-live-note';
+    ta.placeholder = 'Notes…';
+    ta.value = gd.criteria[criterion.id] || '';
+    ta.addEventListener('input', () => { gd.criteria[criterion.id] = ta.value; scheduleLiveSave(); });
+    row.appendChild(ta);
+  }
+  return row;
+}
+
+function effectiveScore(sid, critId, groupVal) {
+  const ov = session.studentData[sid].overrides[critId];
+  return (ov !== undefined && ov !== null) ? { value: ov, overridden: true } : { value: groupVal, overridden: false };
+}
+
+function renderMemberCard(g, gd, sid) {
+  const card = document.createElement('div');
+  card.className = 'member-card';
+  card.dataset.studentId = sid;
+  const name = document.createElement('div');
+  name.className = 'member-name';
+  name.textContent = memberName(sid);
+  card.appendChild(name);
+
+  if (session.rubric) {
+    session.rubric.criteria.filter(ToolshedRubric.isScored).forEach(c => {
+      card.appendChild(renderMemberScoreRow(sid, c, gd));
+    });
+  }
+
+  const fb = document.createElement('textarea');
+  fb.className = 'member-feedback';
+  fb.placeholder = `Feedback for ${memberName(sid)}…`;
+  fb.value = session.studentData[sid].feedback || '';
+  fb.addEventListener('input', () => { session.studentData[sid].feedback = fb.value; scheduleLiveSave(); });
+  card.appendChild(fb);
+
+  return card;
+}
+
+function renderMemberScoreRow(sid, criterion, gd) {
+  const row = document.createElement('div');
+  row.className = 'member-score-row';
+  row.dataset.criterionId = criterion.id;
+  const label = document.createElement('span');
+  label.className = 'member-score-label';
+  label.textContent = criterion.name || '(untitled)';
+  row.appendChild(label);
+  row.appendChild(buildScorePill(sid, criterion, gd));
+  return row;
+}
+
+function buildScorePill(sid, criterion, gd) {
+  const wrap = document.createElement('span');
+  wrap.className = 'member-score-pill-wrap';
+  const { value, overridden } = effectiveScore(sid, criterion.id, gd.criteria[criterion.id]);
+
+  const pill = document.createElement('span');
+  pill.className = 'score-pill' + (overridden ? ' overridden' : '');
+  pill.textContent = value == null ? '—' : (overridden ? `${value} · edited` : `${value} (group)`);
+  pill.title = 'Click to set a score for this student';
+  pill.addEventListener('click', () => openScoreEditor(wrap, sid, criterion, gd));
+  wrap.appendChild(pill);
+
+  if (overridden) {
+    const revert = document.createElement('button');
+    revert.className = 'score-revert';
+    revert.textContent = '↺';
+    revert.title = 'Revert to the group score';
+    revert.addEventListener('click', (e) => {
+      e.stopPropagation();
+      delete session.studentData[sid].overrides[criterion.id];
+      wrap.replaceWith(buildScorePill(sid, criterion, gd));
+      scheduleLiveSave();
+    });
+    wrap.appendChild(revert);
+  }
+  return wrap;
+}
+
+function openScoreEditor(wrap, sid, criterion, gd) {
+  const { value } = effectiveScore(sid, criterion.id, gd.criteria[criterion.id]);
+  wrap.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'number'; input.step = '1';
+  input.min = criterion.min; input.max = criterion.max;
+  input.className = 'score-pill-input';
+  input.value = value == null ? '' : value;
+  const commit = () => {
+    const raw = input.value === '' ? null : Math.max(criterion.min, Math.min(criterion.max, parseInt(input.value, 10) || 0));
+    if (raw === null || raw === gd.criteria[criterion.id]) {
+      delete session.studentData[sid].overrides[criterion.id];
+    } else {
+      session.studentData[sid].overrides[criterion.id] = raw;
+    }
+    wrap.replaceWith(buildScorePill(sid, criterion, gd));
+    scheduleLiveSave();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = ''; input.blur(); } });
+  wrap.appendChild(input);
+  input.focus(); input.select();
+}
+
+/* When the group's score for a criterion changes, every member currently
+   showing the inherited (non-overridden) value needs to reflect it. */
+function refreshMemberScorePills(critId) {
+  const g = currentGroup();
+  const gd = session.groupData[g.id];
+  document.querySelectorAll(`.member-score-row[data-criterion-id="${critId}"]`).forEach(row => {
+    const card = row.closest('.member-card');
+    const sid = card.dataset.studentId;
+    const criterion = session.rubric.criteria.find(c => c.id === critId);
+    const existingPillWrap = row.querySelector('.member-score-pill-wrap');
+    if (existingPillWrap) existingPillWrap.replaceWith(buildScorePill(sid, criterion, gd));
+  });
+}
+
+function prevGroup() { if (session.currentIndex > 0) jumpToGroup(session.currentIndex - 1); }
+function nextGroup() {
+  const g = currentGroup();
+  session.groupData[g.id].done = true;
+  if (session.currentIndex === session.groups.length - 1) {
+    endSession();
+    return;
+  }
+  jumpToGroup(session.currentIndex + 1);
+}
+
+// ── TIMERS ──
+// The per-presentation timer never auto-starts. The teacher presses Start;
+// pressing Next/Previous or jumping to another group in the sidebar carries
+// the running/paused state forward onto whichever group becomes current, so
+// a teacher who's mid-flow doesn't have to re-press Start for every student.
+// There's no separate whole-session timer — "Total Time" in the sidebar is
+// just the live sum of every presentation's recorded time.
+function tickPresentTimer() {
+  const g = currentGroup();
+  if (!g) return;
+  session.groupData[g.id].elapsedSec++;
+  updatePresentTimerDisplay();
+  updateTotalTimeDisplay();
+  scheduleLiveSave();
+}
+function startPresentTimerInterval() {
+  clearInterval(presentTimerInterval);
+  presentTimerInterval = setInterval(tickPresentTimer, 1000);
+}
+function stopPresentTimerInterval() {
+  clearInterval(presentTimerInterval);
+  presentTimerInterval = null;
+}
+function togglePresentTimer() {
+  if (!currentGroup()) return;
+  presentTimerRunning = !presentTimerRunning;
+  if (presentTimerRunning) startPresentTimerInterval();
+  else stopPresentTimerInterval();
+  updatePresentTimerControls();
+  scheduleLiveSave();
+}
+function resetPresentTimer() {
+  const g = currentGroup();
+  if (!g) return;
+  session.groupData[g.id].elapsedSec = 0;
+  updatePresentTimerDisplay();
+  updateTotalTimeDisplay();
+  scheduleLiveSave();
+}
+// Called whenever the current group changes: reflects that group's own
+// elapsed time/controls, and keeps the interval running (or not) to match
+// presentTimerRunning rather than resetting it.
+function syncPresentTimerForCurrentGroup() {
+  updatePresentTimerDisplay();
+  updatePresentTimerControls();
+  if (presentTimerRunning) startPresentTimerInterval();
+  else stopPresentTimerInterval();
+}
+function updatePresentTimerControls() {
+  const btn = $('present-timer-toggle');
+  if (btn) btn.textContent = presentTimerRunning ? '⏸ Pause' : '▶ Start';
+}
+function updatePresentTimerDisplay() {
+  const g = currentGroup();
+  if (!g) return;
+  const sec = session.groupData[g.id].elapsedSec;
+  const el = $('present-timer');
+  el.textContent = fmtTime(sec);
+  el.className = 'present-timer';
+  const label = $('present-timer-label');
+  if (session.timeLimitSec) {
+    label.textContent = 'of ' + fmtTime(session.timeLimitSec) + ' limit';
+    if (sec >= session.timeLimitSec) el.classList.add('over');
+    else if (sec >= session.timeLimitSec * 0.8) el.classList.add('amber');
+  } else {
+    label.textContent = '';
+  }
+}
+function totalElapsedSec() {
+  if (!session) return 0;
+  return session.groups.reduce((sum, g) => sum + ((session.groupData[g.id] && session.groupData[g.id].elapsedSec) || 0), 0);
+}
+function updateTotalTimeDisplay() {
+  const el = $('total-timer');
+  if (el) el.textContent = fmtTime(totalElapsedSec());
+}
+
+// ── PERSISTENCE ──
+const LIVE_AUTOSAVE_ID = 'autosave-presentation';
+let liveTimer = null;
+function scheduleLiveSave() {
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => {
+    ToolshedStore.saveDoc({ id: LIVE_AUTOSAVE_ID, tool: '_autosave', name: 'presentation', data: session }).catch(() => {});
+  }, 400);
+}
+function clearLiveSave() { clearTimeout(liveTimer); ToolshedStore.deleteDoc(LIVE_AUTOSAVE_ID).catch(() => {}); }
+
+async function restoreLiveSession() {
+  const doc = await ToolshedStore.getDoc(LIVE_AUTOSAVE_ID);
+  if (!doc || !doc.data || !Array.isArray(doc.data.students) || !doc.data.students.length) return false;
+  session = doc.data;
+  savedSessionId = null;
+  presentTimerRunning = false; // always resume paused, never silently ticking
+  renderLiveScreen();
+  switchScreen('live');
+  $('header-end-btn').style.display = '';
+  showToast('Picked up where you left off', 3000);
+  return true;
+}
+
+async function persistSession() {
+  const label = session.className ? `${session.name} — ${session.className}` : session.name;
+  const saved = await ToolshedStore.saveDoc({
+    id: savedSessionId || undefined, tool: 'presentation', name: label, data: session
+  });
+  savedSessionId = saved.id;
+  return saved;
+}
+
+// ── END SESSION / SUMMARY ──
+function endSession() {
+  if (!confirm('End this session and go to the summary?')) return;
+  stopPresentTimerInterval();
+  presentTimerRunning = false;
+  session.groupData[currentGroup().id].done = true;
+  session.groupData[currentGroup().id].feedback = $('group-feedback-input').value;
+  buildSummary();
+  switchScreen('summary');
+  $('header-end-btn').style.display = 'none';
+  clearLiveSave();
+  persistSession().catch(() => {});
+}
+
+function totalFor(sid) {
+  if (!session.rubric) return null;
+  const g = session.groups.find(gr => gr.memberIds.includes(sid));
+  const gd = session.groupData[g.id];
+  let sum = 0, any = false;
+  session.rubric.criteria.filter(ToolshedRubric.isScored).forEach(c => {
+    const { value } = effectiveScore(sid, c.id, gd.criteria[c.id]);
+    if (value != null) { sum += value; any = true; }
+  });
+  return any ? sum : null;
+}
+
+function buildSummary() {
+  const s = session;
+  $('sum-title').textContent = s.name;
+  const groupCount = s.groups.length;
+  const totalSec = totalElapsedSec();
+  $('sum-meta').textContent =
+    `${s.className ? s.className + ' · ' : ''}${s.mode === 'groups' ? groupCount + ' groups' : 'Individual'} · ${s.students.length} student${s.students.length === 1 ? '' : 's'} · ${fmtTime(totalSec)} · ${new Date(s.date).toLocaleDateString()}`;
+
+  const totals = s.students.map(st => totalFor(st.id)).filter(t => t != null);
+  const avg = totals.length ? (totals.reduce((a,b) => a+b, 0) / totals.length).toFixed(1) : '—';
+  $('sum-stats').innerHTML = [
+    { num: fmtTime(totalSec), lbl: 'Total Time' },
+    { num: s.students.length, lbl: 'Students' },
+    { num: groupCount, lbl: s.mode === 'groups' ? 'Groups' : 'Presenters' },
+    { num: avg, lbl: 'Avg total score' }
+  ].map(x => `<div class="stat-box"><div class="stat-num">${x.num}</div><div class="stat-lbl">${x.lbl}</div></div>`).join('');
+
+  const wrap = $('sum-groups');
+  wrap.innerHTML = '';
+  s.groups.forEach(g => wrap.appendChild(renderGroupSummaryCard(g)));
+}
+
+function renderGroupSummaryCard(g) {
+  const gd = session.groupData[g.id];
+  const solo = g.memberIds.length === 1;
+  const card = document.createElement('div');
+  card.className = 'card group-summary-card';
+
+  const name = document.createElement('div');
+  name.className = 'group-summary-name';
+  name.textContent = g.name;
+  card.appendChild(name);
+
+  if (!solo) {
+    const members = document.createElement('div');
+    members.className = 'group-summary-members';
+    members.textContent = g.memberIds.map(memberName).join(', ');
+    card.appendChild(members);
+  }
+
+  if (gd.elapsedSec) {
+    const time = document.createElement('div');
+    time.className = 'group-summary-time';
+    time.textContent = 'Time: ' + fmtTime(gd.elapsedSec);
+    card.appendChild(time);
+  }
+
+  if (session.rubric && session.rubric.criteria.length) {
+    const critWrap = document.createElement('div');
+    critWrap.className = 'gs-criteria';
+    session.rubric.criteria.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'gs-crit-row';
+      const val = gd.criteria[c.id];
+      row.innerHTML = `<span class="gs-crit-name"></span><span class="gs-crit-val"></span>`;
+      row.querySelector('.gs-crit-name').textContent = c.name;
+      row.querySelector('.gs-crit-val').textContent = ToolshedRubric.isScored(c)
+        ? (val == null ? '—' : `${val} / ${c.max}`)
+        : (val || '—');
+      critWrap.appendChild(row);
+    });
+    card.appendChild(critWrap);
+  }
+
+  const fb = document.createElement('div');
+  fb.className = 'gs-feedback';
+  fb.textContent = gd.feedback || '';
+  card.appendChild(fb);
+
+  if (!solo) {
+    g.memberIds.forEach(sid => {
+      const m = document.createElement('div');
+      m.className = 'gs-member';
+      const mn = document.createElement('div');
+      mn.className = 'gs-member-name';
+      mn.textContent = memberName(sid);
+      m.appendChild(mn);
+
+      if (session.rubric) {
+        const scores = document.createElement('div');
+        scores.className = 'gs-member-scores';
+        const parts = session.rubric.criteria.filter(ToolshedRubric.isScored).map(c => {
+          const { value, overridden } = effectiveScore(sid, c.id, gd.criteria[c.id]);
+          const shown = value == null ? '—' : value;
+          return overridden ? `${esc(c.name)}: <span class="edited">${shown}</span>` : `${esc(c.name)}: ${shown}`;
+        });
+        scores.innerHTML = parts.join(' &middot; ');
+        m.appendChild(scores);
+      }
+
+      const mf = document.createElement('div');
+      mf.className = 'gs-member-feedback';
+      mf.textContent = session.studentData[sid].feedback || '';
+      m.appendChild(mf);
+
+      card.appendChild(m);
+    });
+  }
+
+  return card;
+}
+
+// ── CSV EXPORT ──
+function csvField(v) {
+  const str = String(v == null ? '' : v);
+  return /[",\r\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+}
+function exportCsv() {
+  const s = session;
+  if (!s || !s.students.length) { showToast('No session data to export'); return; }
+  const criteria = s.rubric ? s.rubric.criteria : [];
+  const header = ['Session Name', 'Class Name', 'Class Date', 'Group', 'Time', 'Student']
+    .concat(criteria.map(c => c.name || 'Criterion'))
+    .concat(['Total', 'Group Feedback', 'Individual Feedback']);
+  const rows = [header];
+
+  s.groups.forEach(g => {
+    const gd = s.groupData[g.id];
+    g.memberIds.forEach(sid => {
+      const row = [s.name, s.className, new Date(s.date).toLocaleDateString(), g.name, fmtTime(gd.elapsedSec), memberName(sid)];
+      criteria.forEach(c => {
+        if (ToolshedRubric.isScored(c)) {
+          row.push(effectiveScore(sid, c.id, gd.criteria[c.id]).value);
+        } else {
+          row.push(gd.criteria[c.id] || '');
+        }
+      });
+      row.push(totalFor(sid));
+      row.push(gd.feedback || '');
+      row.push(s.studentData[sid].feedback || '');
+      rows.push(row);
+    });
+  });
+
+  const csv = rows.map(r => r.map(csvField).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const safeName = (s.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `presentation-grader-${safeName || 'session'}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function newSession() {
+  if (!confirm('Start a new session? This will clear the current summary.')) return;
+  stopPresentTimerInterval();
+  presentTimerRunning = false;
+  session = null;
+  savedSessionId = null;
+  groupDefs = [];
+  assignment = {};
+  activeGroupId = null;
+  $('session-name').value = '';
+  $('class-name').value = '';
+  $('students-input').value = '';
+  $('rubric-select').value = '';
+  selectedRubric = null;
+  $('rubric-editor-wrap').style.display = 'none';
+  setMode('individual');
+  renderGroupDefs();
+  refreshAssignList();
+  switchScreen('setup');
+}
+
+// ── EVENT WIRING ──
+function wireSetupEvents() {
+  $('mode-tab-individual').addEventListener('click', () => setMode('individual'));
+  $('mode-tab-groups').addEventListener('click', () => setMode('groups'));
+  $('add-group-btn').addEventListener('click', () => addGroupDef());
+  $('auto-split-btn').addEventListener('click', autoSplit);
+  $('students-input').addEventListener('input', refreshAssignList);
+  $('rubric-select').addEventListener('change', onRubricSelectChange);
+  $('save-rubric-btn').addEventListener('click', saveRubricFromEditor);
+  $('start-session-btn').addEventListener('click', startSession);
+  $('clear-setup-btn').addEventListener('click', () => {
+    if (!confirm('Clear the session setup?')) return;
+    $('session-name').value = ''; $('class-name').value = ''; $('students-input').value = '';
+    groupDefs = []; assignment = {}; activeGroupId = null;
+    renderGroupDefs(); refreshAssignList();
+  });
+}
+function wireLiveEvents() {
+  $('prev-group-btn').addEventListener('click', prevGroup);
+  $('next-group-btn').addEventListener('click', nextGroup);
+  $('group-feedback-input').addEventListener('input', () => {
+    session.groupData[currentGroup().id].feedback = $('group-feedback-input').value;
+    scheduleLiveSave();
+  });
+  $('present-timer-toggle').addEventListener('click', togglePresentTimer);
+  $('present-timer-reset').addEventListener('click', resetPresentTimer);
+}
+function wireSummaryEvents() {
+  $('print-btn').addEventListener('click', () => window.print());
+  $('export-csv-btn').addEventListener('click', exportCsv);
+  $('new-session-btn').addEventListener('click', newSession);
+}
+</script>
+</body>
+</html>

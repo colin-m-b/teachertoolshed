@@ -62,17 +62,24 @@
 }
 
 .tools-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
 }
 
 .tool-card {
-  background: var(--bg);
+  display: block;
+  flex: 1 1 280px;
+  max-width: 300px;
+  background: var(--surface);
   border: 1px solid var(--rule);
   border-radius: 8px;
   padding: 1.5rem;
   border-top: 3px solid var(--bg3);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   transition: border-top-color 0.15s, box-shadow 0.15s;
 }
 
@@ -111,14 +118,6 @@
   border-radius: 50%;
 }
 
-.tool-status-soon {
-  font-size: 11px;
-  color: var(--mid);
-  background: var(--bg2);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
 .tool-name {
   font-size: 15px;
   font-weight: 500;
@@ -135,113 +134,17 @@
 
 .tool-link {
   font-size: 12px;
-  color: var(--forest2);
+  color: var(--forest);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
 }
 
-.tool-link:hover { text-decoration: underline; }
-.tool-link.muted { color: var(--mid); font-weight: 400; }
-.tool-link.muted:hover { text-decoration: none; cursor: default; }
-
-/* ── PRICING ── */
-.pricing {
-  padding: 4rem 2rem 5rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.pricing-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 1.5rem;
-}
-
-.pricing-note {
-  font-size: 13px;
-  color: var(--mid);
-}
-
-.plans {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.plan {
-  background: var(--bg);
-  border: 1px solid var(--rule);
-  border-radius: 8px;
-  padding: 1.75rem;
-}
-
-.plan.featured {
-  border: 2px solid var(--forest2);
-}
-
-.plan-tier {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--mid);
-  margin-bottom: 1.25rem;
-}
-
-.plan-tier.hi { color: var(--forest2); }
-
-.plan-price {
-  font-family: 'Lora', Georgia, serif;
-  font-size: 42px;
-  font-weight: 500;
-  color: var(--ink);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.plan-per {
-  font-size: 13px;
-  color: var(--mid);
-  margin-bottom: 1.5rem;
-}
-
-.plan-feat {
-  font-size: 13px;
-  color: var(--ink2);
-  padding: 8px 0;
-  border-top: 1px solid var(--rule);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.feat-mark {
-  color: var(--forest2);
-  font-weight: 600;
-}
-
-.plan-btn {
-  width: 100%;
-  margin-top: 1.5rem;
-  padding: 11px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.15s;
-}
-
-.plan-btn:hover { opacity: 0.85; }
-.plan-btn.lo { background: var(--bg2); color: var(--ink); border: 1px solid var(--rule); }
-.plan-btn.hi { background: var(--forest); color: #eaf3de; border: none; }
+.tool-card:hover .tool-link { text-decoration: underline; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .hero { padding: 4rem 1.25rem 3.5rem; }
-  .tools, .pricing { padding: 2.5rem 1.25rem; }
-  .tools-grid { grid-template-columns: 1fr; }
-  .plans { grid-template-columns: 1fr; }
-  .plan.featured { border: 2px solid var(--forest2); }
+  .tools { padding: 2.5rem 1.25rem; }
+  .tool-card { flex-basis: 100%; max-width: none; }
 }

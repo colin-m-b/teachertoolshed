@@ -1,5 +1,7 @@
 # Teacher Toolshed — Architecture Plan
 
+> **Status: aspirational / superseded.** This document sketches a possible future SaaS version. Current active work is defined in `PLAN.md`. Notably, the dark/lime design system in §11 has been rejected in favor of the cream/gold system, and the Next.js migration is not happening now.
+
 A comprehensive plan for building a teacher-facing SaaS product with Next.js, Supabase, Stripe, and Netlify.
 
 ---

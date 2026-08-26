@@ -7,7 +7,7 @@ nav {
   border-bottom: 1px solid var(--rule);
   position: sticky;
   top: 0;
-  background: var(--bg);
+  background: var(--surface);
   z-index: 100;
 }
 

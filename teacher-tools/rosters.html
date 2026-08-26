@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Lists — Teacher Toolshed</title>
+<meta name="description" content="Manage the class lists shared across every Teacher Toolshed tool. Saved in your browser only.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<style>
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column}
+
+  .app{flex:1;display:flex;overflow:hidden}
+
+  /* LIST PANE */
+  .list-pane{width:280px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .list-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .list-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light)}
+  .list-items{flex:1;overflow-y:auto;padding:8px}
+  .list-item{width:100%;text-align:left;background:none;border:1.5px solid transparent;border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s,border-color .12s;margin-bottom:2px}
+  .list-item:hover{background:var(--surface-2)}
+  .list-item.active{background:var(--accent-soft);border-color:#E4CFA0}
+  .list-item-name{font-size:13px;font-weight:600;color:var(--text);word-break:break-word}
+  .list-item-meta{font-size:11px;color:var(--text-light);margin-top:2px}
+  .list-empty{padding:22px 16px;text-align:center;color:var(--text-light);font-size:13px;line-height:1.6}
+
+  /* BACKUP */
+  .backup{padding:14px 16px;border-top:1px solid var(--border)}
+  .backup .row-2{gap:8px;margin-bottom:8px}
+
+  /* EDITOR */
+  .editor-wrap{flex:1;overflow-y:auto;padding:32px 28px 60px}
+  .editor{max-width:620px;margin:0 auto}
+  .page-title{font-family:var(--font-serif);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:24px;line-height:1.6}
+  #students-input{min-height:200px;line-height:1.7}
+  .editor-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+  .count-badge{display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--green-border);margin-left:6px}
+
+  .import-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .import-row .hint{margin:0}
+
+  .roster-preview{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+  .col-map-row{margin-bottom:14px}
+  .col-map-label{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text-mid);display:block;margin-bottom:6px}
+  .col-map-chips{display:flex;gap:8px;flex-wrap:wrap}
+  .col-chip{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 8px;min-width:96px}
+  .col-chip-sample{font-size:10.5px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;margin-bottom:4px}
+  .col-chip select{width:100%;padding:3px 4px;font-size:12px}
+
+  .header-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-mid);margin-bottom:14px;cursor:pointer;user-select:none}
+  .header-toggle input{margin:0;width:auto}
+
+  .preview-summary{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:8px}
+  table.preview{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.preview th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);font-weight:600;padding:0 10px 6px 0;border-bottom:1px solid var(--border)}
+  table.preview td{padding:6px 10px 6px 0;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+  table.preview td.preview-id{font-variant-numeric:tabular-nums;color:var(--text-mid);width:130px}
+  .preview-none{color:var(--text-light)}
+  .preview-flagged td{background:var(--red-soft)}
+  .preview-flags{font-size:10.5px;color:#9E3A31;font-weight:600;white-space:nowrap}
+  .preview-ellipsis td{color:var(--text-light);font-size:12px;text-align:center;padding:8px 0}
+
+  .blank-state{max-width:620px;margin:0 auto;text-align:center;padding-top:60px}
+  .blank-state .icon{font-size:44px;opacity:.2;margin-bottom:12px}
+  .blank-state h2{font-family:var(--font-serif);font-size:19px;font-weight:700;margin-bottom:8px}
+  .blank-state p{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:18px}
+
+  /* STORAGE NOTICE */
+  .storage-note{background:var(--accent-soft);border-bottom:1px solid #E4CFA0;padding:8px 20px;font-size:12.5px;color:var(--accent-hover);text-align:center;flex-shrink:0}
+  .storage-note.warn{background:var(--red-soft);border-bottom-color:#E8BDB7;color:var(--red)}
+
+  @media (max-width:768px){
+    .app{flex-direction:column}
+    .list-pane{width:100%;max-height:38%;border-right:none;border-bottom:1.5px solid var(--border)}
+    .editor-wrap{padding:20px 16px 40px}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast hidden" id="toast"></div>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <a class="header-tool" href="rosters.html">Class Lists</a>
+  </div>
+</header>
+
+<div class="storage-note" id="storage-note">
+  Class lists are saved only in this browser. Export a backup to keep a copy or move them to another device.
+</div>
+
+<div class="app">
+  <aside class="list-pane">
+    <div class="list-head">
+      <span class="list-label">Class Lists</span>
+      <button class="btn btn-primary btn-sm" onclick="newRoster()">+ New</button>
+    </div>
+    <div class="list-items" id="list-items"></div>
+    <div class="backup">
+      <div class="list-label" style="margin-bottom:8px">Backup</div>
+      <div class="row-2">
+        <button class="btn btn-outline btn-sm" onclick="exportBackup()">Export</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(event)"/>
+      <p class="hint">Exports every class list and everything saved in the other tools.</p>
+    </div>
+  </aside>
+
+  <main class="editor-wrap">
+    <div class="blank-state" id="blank-state">
+      <div class="icon">📋</div>
+      <h2>No class list selected</h2>
+      <p>Class lists are shared across every tool — build one here and it shows up<br>in the Seating Chart Maker and Talk Tracker.</p>
+      <button class="btn btn-primary" onclick="newRoster()">+ New class list</button>
+    </div>
+
+    <div class="editor" id="editor" style="display:none">
+      <h1 class="page-title" id="editor-title">New class list</h1>
+      <p class="page-sub">Give it a name, then paste or type one student per line.</p>
+
+      <div class="card">
+        <div class="field">
+          <label>Class name <span class="required-mark">*</span></label>
+          <input type="text" id="roster-name" placeholder="e.g. Period 3 English 10" maxlength="80"/>
+        </div>
+        <div class="field">
+          <label>Students <span class="count-badge" id="count-badge">0</span></label>
+          <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;&#10;— or with student ID numbers, in any shape —&#10;&#10;82984196, Ada Lovelace&#10;82984197, Grace Hopper"></textarea>
+          <div class="import-row">
+            <button type="button" class="btn btn-outline btn-sm" id="import-csv-btn">Import CSV…</button>
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none"/>
+            <p class="hint">or paste above — a spreadsheet, a markdown table, a numbered
+            list, anything with one student per line. ID numbers are optional, but keep
+            students with the same name apart, so add them if a class has repeats.</p>
+          </div>
+
+          <div class="roster-preview" id="roster-preview" style="display:none">
+            <div class="col-map-row" id="col-map-row" style="display:none">
+              <span class="col-map-label">That looks like more than one column — what's in each?</span>
+              <div class="col-map-chips" id="col-map-chips"></div>
+            </div>
+            <label class="header-toggle" id="header-toggle-row" style="display:none">
+              <input type="checkbox" id="header-toggle"/> First row is a header, not a student
+            </label>
+            <div id="roster-warnings"></div>
+            <div class="preview-summary" id="preview-summary"></div>
+            <div id="preview-table"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button class="btn-ghost" id="delete-btn" onclick="deleteCurrent()" style="visibility:hidden">Delete this list</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCurrent()">Save class list</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
+<script src="../js/toolshed-store.js"></script>
+<script src="rosters-import.js"></script>
+<script>
+let currentId = null;   // null = unsaved new list
+let summaries = [];
+
+// A teacher's explicit column-role / header choice, if they've made one.
+// null means "keep following auto-detection". Cleared whenever a fresh
+// list is loaded, and (for roles specifically) whenever the pasted text's
+// column count changes out from under a stale choice — see runParse().
+let manualRoles = null;
+let manualHeader = null;
+let lastParse = null;
+
+// ── BOOT ──
+(async function init() {
+  await ToolshedStore.ready();
+  if (ToolshedStore.ephemeral) {
+    const note = document.getElementById('storage-note');
+    note.className = 'storage-note warn';
+    note.textContent = 'This browser is blocking saved data (private mode?). Anything you enter here will be lost when you close the tab.';
+  }
+  document.getElementById('students-input').addEventListener('input', runParse);
+  document.getElementById('import-csv-btn').addEventListener('click', () => document.getElementById('csv-file-input').click());
+  document.getElementById('csv-file-input').addEventListener('change', importCsvFile);
+  document.getElementById('header-toggle').addEventListener('change', e => {
+    manualHeader = e.target.checked;
+    runParse();
+  });
+  await refreshList();
+})();
+
+async function refreshList(selectId) {
+  summaries = await ToolshedStore.listRosters();
+  const wrap = document.getElementById('list-items');
+  wrap.innerHTML = '';
+
+  if (!summaries.length) {
+    wrap.innerHTML = '<div class="list-empty">No class lists yet.<br>Create one to get started.</div>';
+    return;
+  }
+  summaries.forEach(r => {
+    const btn = document.createElement('button');
+    btn.className = 'list-item' + (r.id === selectId ? ' active' : '');
+    btn.innerHTML = `<div class="list-item-name"></div><div class="list-item-meta">${r.studentCount} student${r.studentCount === 1 ? '' : 's'}</div>`;
+    btn.querySelector('.list-item-name').textContent = r.name;
+    btn.onclick = () => openRoster(r.id);
+    wrap.appendChild(btn);
+  });
+}
+
+function markActive(id) {
+  document.querySelectorAll('.list-item').forEach((el, i) => {
+    el.classList.toggle('active', summaries[i] && summaries[i].id === id);
+  });
+}
+
+// ── EDITOR ──
+function showEditor(show) {
+  document.getElementById('editor').style.display = show ? '' : 'none';
+  document.getElementById('blank-state').style.display = show ? 'none' : '';
+}
+
+function newRoster() {
+  if (!confirmDiscard()) return;
+  currentId = null;
+  manualRoles = null;
+  manualHeader = null;
+  document.getElementById('editor-title').textContent = 'New class list';
+  document.getElementById('roster-name').value = '';
+  document.getElementById('students-input').value = '';
+  document.getElementById('delete-btn').style.visibility = 'hidden';
+  runParse();
+  showEditor(true);
+  markActive(null);
+  document.getElementById('roster-name').focus();
+}
+
+async function openRoster(id) {
+  if (!confirmDiscard()) return;
+  const r = await ToolshedStore.getRoster(id);
+  if (!r) { showToast('That class list could not be found'); await refreshList(); return; }
+  currentId = r.id;
+  manualRoles = null;
+  manualHeader = null;
+  document.getElementById('editor-title').textContent = r.name;
+  document.getElementById('roster-name').value = r.name;
+  document.getElementById('students-input').value =
+    r.students.map(s => s.sid ? `${s.sid}\t${s.name}` : s.name).join('\n');
+  document.getElementById('delete-btn').style.visibility = '';
+  runParse();
+  showEditor(true);
+  markActive(id);
+  snapshot();
+}
+
+// ── IMPORT / PARSE ──────────────────────────────────────
+async function importCsvFile(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const text = RosterImport.csvBytesToRosterText(bytes);
+    if (!text.trim()) { showToast('That CSV file looks empty'); return; }
+    document.getElementById('students-input').value = text;
+    manualRoles = null;
+    manualHeader = null;
+    runParse();
+    showToast('Imported ' + file.name);
+  } catch (err) {
+    showToast(err.message || 'Could not read that file', 5500);
+  }
+}
+
+function runParse() {
+  const text = document.getElementById('students-input').value;
+  const opts = {};
+  if (manualHeader !== null) opts.overrideHeader = manualHeader;
+  if (manualRoles) opts.overrideRoles = manualRoles;
+  const result = RosterImport.parseRoster(text, opts);
+  // A stale override from a previous, differently-shaped paste doesn't
+  // silently keep applying once the column count no longer matches it —
+  // parseRoster already ignores it internally when this happens, so just
+  // stop remembering it too.
+  if (manualRoles && manualRoles.length !== result.numCols) manualRoles = null;
+
+  lastParse = result;
+  document.getElementById('count-badge').textContent = result.students.length;
+  renderPreview(result);
+  return result;
+}
+
+function sampleValue(rows, hasHeader, col) {
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  for (const row of dataRows) {
+    const v = (row[col] || '').trim();
+    if (v) return v;
+  }
+  return '';
+}
+
+const ROLE_LABELS = { id: 'ID', name: 'Name', skip: 'Skip' };
+
+function renderPreview(result) {
+  const preview = document.getElementById('roster-preview');
+  if (!result.rows.length) { preview.style.display = 'none'; return; }
+  preview.style.display = '';
+
+  // Column mapping chips — only meaningful with a real second column.
+  const mapRow = document.getElementById('col-map-row');
+  const chips = document.getElementById('col-map-chips');
+  if (result.numCols >= 2) {
+    mapRow.style.display = '';
+    chips.innerHTML = result.roles.map((role, i) => {
+      const sample = sampleValue(result.rows, result.hasHeader, i) || '(empty)';
+      return `<div class="col-chip">
+        <div class="col-chip-sample" title="${escapeHtml(sample)}">${escapeHtml(sample)}</div>
+        <select data-col="${i}" class="col-role-select">
+          ${['id', 'name', 'skip'].map(r => `<option value="${r}"${r === role ? ' selected' : ''}>${ROLE_LABELS[r]}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('');
+    chips.querySelectorAll('.col-role-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const roles = result.roles.slice();
+        roles[+sel.dataset.col] = sel.value;
+        manualRoles = roles;
+        runParse();
+      });
+    });
+  } else {
+    mapRow.style.display = 'none';
+  }
+
+  // Header toggle — offered whenever there's more than one row to
+  // possibly be one, regardless of column count.
+  const headerRow = document.getElementById('header-toggle-row');
+  const headerBox = document.getElementById('header-toggle');
+  if (result.rows.length >= 2) {
+    headerRow.style.display = '';
+    headerBox.checked = result.hasHeader;
+  } else {
+    headerRow.style.display = 'none';
+  }
+
+  renderWarnings(result);
+  renderSummaryAndTable(result);
+}
+
+function renderWarnings(result) {
+  const box = document.getElementById('roster-warnings');
+  const students = result.students;
+  const dupSids = [...new Set(students.filter(s => s.warnDuplicateId).map(s => s.sid))];
+  const oddOnes = students.filter(s => s.warnOddId);
+  const raggedOnes = students.filter(s => s.warnRagged);
+
+  const lines = [];
+  if (dupSids.length) {
+    lines.push(`<strong>${dupSids.length === 1 ? 'This ID is' : 'These IDs are'} used by more than one student:</strong> ` +
+      dupSids.map(escapeHtml).join(', ') + '. Two students can\'t share an ID — check for a paste mistake below.');
+  }
+  if (oddOnes.length) {
+    lines.push(`<strong>${oddOnes.length} ID${oddOnes.length === 1 ? '' : 's'} ${oddOnes.length === 1 ? "doesn't" : "don't"} look like the others:</strong> ` +
+      oddOnes.map(s => escapeHtml(s.sid)).join(', ') + '.');
+  }
+  if (raggedOnes.length) {
+    lines.push(`<strong>${raggedOnes.length} row${raggedOnes.length === 1 ? '' : 's'} ${raggedOnes.length === 1 ? 'has' : 'have'} a different number of columns than the rest:</strong> ` +
+      raggedOnes.map(s => escapeHtml(s.name)).join(', ') + '.');
+  }
+
+  box.innerHTML = lines.length
+    ? `<div class="warn-box${dupSids.length ? ' bad' : ''}">${lines.map(l => `<p>${l}</p>`).join('')}</div>`
+    : '';
+}
+
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderSummaryAndTable(result) {
+  const students = result.students;
+  const withId = students.filter(s => s.sid).length;
+  document.getElementById('preview-summary').textContent = students.length
+    ? `${students.length} student${students.length === 1 ? '' : 's'}` +
+      (withId ? ` · ${withId} with an ID number` : ' · no ID numbers')
+    : '';
+
+  const rowHtml = (s) => {
+    const flags = [s.warnDuplicateId && 'duplicate ID', s.warnOddId && 'odd ID', s.warnRagged && 'extra column']
+      .filter(Boolean).join(', ');
+    const flagged = !!flags;
+    return `<tr class="${flagged ? 'preview-flagged' : ''}">
+      <td class="preview-id">${s.sid ? escapeHtml(s.sid) : '<span class="preview-none">—</span>'}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td>${flagged ? `<span class="preview-flags">⚠ ${escapeHtml(flags)}</span>` : ''}</td>
+    </tr>`;
+  };
+
+  const table = document.getElementById('preview-table');
+  if (!students.length) { table.innerHTML = ''; return; }
+
+  const EDGE = 5;
+  let bodyRows;
+  if (students.length <= EDGE * 2 + 1) {
+    bodyRows = students.map(rowHtml).join('');
+  } else {
+    // Paste errors concentrate at the edges — a truncated stray header
+    // or a spreadsheet's trailing footer row is invisible in a
+    // first-N-only preview but obvious once the tail is shown too.
+    const head = students.slice(0, EDGE).map(rowHtml).join('');
+    const tail = students.slice(-EDGE).map(rowHtml).join('');
+    const hidden = students.length - EDGE * 2;
+    bodyRows = head +
+      `<tr class="preview-ellipsis"><td colspan="3">… ${hidden} more …</td></tr>` +
+      tail;
+  }
+
+  table.innerHTML = `<table class="preview">
+    <thead><tr><th>ID</th><th>Name</th><th></th></tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>`;
+}
+
+async function saveCurrent() {
+  const name = document.getElementById('roster-name').value.trim();
+  if (!name) { showToast('Give the class list a name first'); document.getElementById('roster-name').focus(); return; }
+  const result = runParse();
+  const parsed = result.students;
+  if (!parsed.length) { showToast('Add at least one student'); return; }
+
+  const dupCount = new Set(parsed.filter(s => s.warnDuplicateId).map(s => s.sid)).size;
+  if (dupCount > 0) {
+    const proceed = confirm(
+      (dupCount === 1 ? 'One ID number is' : dupCount + ' ID numbers are') +
+      ' used by more than one student — see the warning above the save button.\n\n' +
+      'Save anyway?');
+    if (!proceed) return;
+  }
+
+  /* Keep existing student ids stable across edits, so other tools can rely on
+     them. Matching runs in two passes over a pool that each match removes an
+     entry from:
+
+       1. school ID — the only key that stays unique when names repeat
+       2. name — the fallback for lists that carry no IDs
+
+     Consuming the pool entry is the point. Keying a lookup on name alone (as
+     this did before) handed two students called "Nguyen Van An" the same
+     internal id, which silently merged their talk-tracker tallies and their
+     grades. Two passes rather than one so a name match cannot steal an entry
+     that a later ID match needs. */
+  let existing = currentId ? await ToolshedStore.getRoster(currentId) : null;
+  const pool = existing
+    ? existing.students.map(s => ({ id: s.id, sid: s.sid || '', key: s.name.toLowerCase() }))
+    : [];
+  const keptIds = new Array(parsed.length);
+
+  parsed.forEach((p, i) => {
+    if (!p.sid) return;
+    const j = pool.findIndex(e => e.sid && e.sid === p.sid);
+    if (j >= 0) keptIds[i] = pool.splice(j, 1)[0].id;
+  });
+  parsed.forEach((p, i) => {
+    if (keptIds[i]) return;
+    const j = pool.findIndex(e => e.key === p.name.toLowerCase());
+    if (j >= 0) keptIds[i] = pool.splice(j, 1)[0].id;
+  });
+
+  const saved = await ToolshedStore.saveRoster({
+    id: currentId || undefined,
+    createdAt: existing ? existing.createdAt : undefined,
+    name,
+    students: parsed.map((p, i) => ({ id: keptIds[i], sid: p.sid || undefined, name: p.name }))
+  });
+
+  currentId = saved.id;
+  document.getElementById('editor-title').textContent = saved.name;
+  document.getElementById('delete-btn').style.visibility = '';
+  await refreshList(saved.id);
+  snapshot();
+  showToast(`Saved ${saved.name} — ${saved.students.length} students`);
+}
+
+async function deleteCurrent() {
+  if (!currentId) return;
+  const name = document.getElementById('roster-name').value.trim() || 'this class list';
+  if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteRoster(currentId);
+  currentId = null;
+  clearDirty();
+  showEditor(false);
+  await refreshList();
+  showToast(`Deleted ${name}`);
+}
+
+function cancelEdit() {
+  if (!confirmDiscard()) return;
+  currentId = null;
+  clearDirty();
+  showEditor(false);
+  markActive(null);
+}
+
+// ── UNSAVED-CHANGES GUARD ──
+let saved = { name: '', students: '' };
+function snapshot() {
+  saved = {
+    name: document.getElementById('roster-name').value,
+    students: document.getElementById('students-input').value
+  };
+}
+function clearDirty() { snapshot(); }
+function isDirty() {
+  if (document.getElementById('editor').style.display === 'none') return false;
+  return document.getElementById('roster-name').value !== saved.name ||
+         document.getElementById('students-input').value !== saved.students;
+}
+function confirmDiscard() {
+  return !isDirty() || confirm('You have unsaved changes. Discard them?');
+}
+window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+
+// ── BACKUP ──
+async function exportBackup() {
+  const json = await ToolshedStore.exportAll();
+  const stamp = new Date().toISOString().slice(0, 10);
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `teacher-toolshed-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Backup downloaded');
+}
+
+function importBackup(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const merge = confirm(
+      'Merge this backup with what you already have?\n\n' +
+      'OK — merge (keeps existing work; newer versions win)\n' +
+      'Cancel — replace everything on this device'
+    );
+    try {
+      const counts = await ToolshedStore.importAll(reader.result, { merge });
+      currentId = null;
+      clearDirty();
+      showEditor(false);
+      await refreshList();
+      showToast(`Imported ${counts.rosters} class list${counts.rosters === 1 ? '' : 's'} and ${counts.docs} saved item${counts.docs === 1 ? '' : 's'}`, 3500);
+    } catch (err) {
+      showToast(err.message || 'Could not read that backup file', 3500);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── UTILS ──
+function showToast(msg, dur = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+}
+</script>
+</body>
+</html>

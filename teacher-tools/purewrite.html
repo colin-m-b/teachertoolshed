@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pure Writer — Teacher Toolshed</title>
+<meta name="description" content="Distraction-free in-class writing. No corrections, no paste, no accounts — just a student's own words, exported MLA-formatted.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<script src="vendor/jspdf.umd.min.js"></script>
+<style>
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;flex-direction:column}
+
+  .screen{display:none;flex:1;overflow:hidden;flex-direction:column}
+  .screen.active{display:flex}
+
+  /* ─── START ─── */
+  .start-body{flex:1;overflow-y:auto;padding:32px 24px 60px}
+  .start-body-inner{max-width:560px;margin:0 auto;width:100%}
+  .start-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .start-title{font-family:var(--font-serif);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+  .start-prompt{font-size:14.5px;line-height:1.7;color:var(--text);white-space:pre-wrap;margin-bottom:24px}
+  .start-error{max-width:480px;margin:60px auto;text-align:center}
+  .start-error .icon{font-size:40px;margin-bottom:14px}
+  .start-error h2{font-family:var(--font-serif);font-size:19px;margin-bottom:8px}
+  .start-error p{font-size:14px;color:var(--text-mid);line-height:1.6}
+  .draft-banner{background:var(--accent-soft);border:1px solid #E4CFA0;border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;font-size:13.5px;color:var(--accent-hover)}
+  .draft-banner-actions{display:flex;gap:8px;margin-top:10px}
+
+  /* ─── WRITE (the quiet screen) ─── */
+  .write-header{background:var(--surface);border-bottom:1.5px solid var(--border);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-shrink:0;flex-wrap:wrap}
+  .write-meta{font-size:12px;color:var(--text-mid)}
+  .write-stats{display:flex;align-items:center;gap:16px;font-size:12.5px;color:var(--text-mid)}
+  .write-timer{font-family:var(--font-serif);font-weight:700;font-size:15px;color:var(--text)}
+  .write-timer.amber{color:var(--accent)}
+  .write-timer.over{color:var(--red)}
+  .write-prefs{display:flex;align-items:center;gap:4px}
+  .pref-btn{background:none;border:1.5px solid var(--border);color:var(--text-mid);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .12s}
+  .pref-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .pref-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .write-body{flex:1;display:flex;overflow:hidden}
+  .write-main{flex:1;overflow-y:auto;padding:36px 24px 80px}
+  .write-measure{max-width:70ch;margin:0 auto}
+  #editor{width:100%;min-height:60vh;border:none;background:transparent;resize:none;padding:0;font-family:var(--pw-font, Georgia, 'Times New Roman', serif);font-size:var(--pw-size, 18px);line-height:var(--pw-line, 1.8);color:var(--text)}
+  #editor:focus{outline:none}
+  .paste-toast{position:fixed;background:rgba(40,37,30,.9);color:#fff;font-size:12.5px;padding:7px 14px;border-radius:20px;pointer-events:none;z-index:200;opacity:0;transition:opacity .2s;white-space:nowrap}
+  .paste-toast.show{opacity:1}
+
+  .stimulus-pane{width:320px;flex-shrink:0;background:var(--surface-2);border-left:1.5px solid var(--border);overflow-y:auto;padding:22px 20px}
+  .stimulus-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:10px}
+  .stimulus-text{font-size:13.5px;line-height:1.7;color:var(--text);white-space:pre-wrap}
+  .stimulus-toggle{display:none}
+
+  .write-footer{flex-shrink:0;padding:10px 20px;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end}
+
+  /* ─── FINISH ─── */
+  .finish-body{flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+  .finish-card{max-width:420px;width:100%;text-align:center}
+  .finish-icon{font-size:44px;margin-bottom:14px}
+  .finish-title{font-family:var(--font-serif);font-size:22px;font-weight:700;margin-bottom:8px}
+  .finish-sub{font-size:13.5px;color:var(--text-mid);margin-bottom:24px;line-height:1.6}
+  .finish-actions{display:flex;flex-direction:column;gap:10px}
+  .finish-filename{font-size:12px;color:var(--text-light);margin-top:16px;word-break:break-all}
+
+  @media (max-width: 900px) {
+    .stimulus-pane{display:none}
+    .stimulus-pane.open{display:block;position:fixed;inset:0;top:auto;height:70vh;width:100%;z-index:150;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+    .stimulus-toggle{display:inline-flex}
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .paste-toast, .pref-btn{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="toast hidden" id="toast"></div>
+<div class="paste-toast" id="paste-toast">Pasting is turned off for this task.</div>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <a class="header-tool" href="purewrite-setup.html">Pure Writer</a>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════ START SCREEN ═══════════════════════════════ -->
+<div class="screen active" id="screen-start">
+  <div class="start-body"><div class="start-body-inner" id="start-content">
+    <!-- filled by JS: either the normal start form, or an error state -->
+  </div></div>
+</div>
+
+<!-- ═══════════════════════════════ WRITE SCREEN ═══════════════════════════════ -->
+<div class="screen" id="screen-write">
+  <div class="write-header">
+    <div class="write-meta" id="write-meta"></div>
+    <div class="write-stats">
+      <span id="write-wordcount">0 words</span>
+      <span class="write-timer" id="write-timer" style="display:none"></span>
+      <button class="stimulus-toggle btn btn-outline btn-sm" id="stimulus-toggle-btn" style="display:none">📖 Passage</button>
+      <div class="write-prefs">
+        <button class="pref-btn" id="pref-size-down" title="Smaller text">A−</button>
+        <button class="pref-btn" id="pref-size-up" title="Larger text">A+</button>
+        <button class="pref-btn" id="pref-spacing" title="Line spacing">↕</button>
+        <button class="pref-btn" id="pref-font" title="High-legibility font">Aa</button>
+      </div>
+    </div>
+  </div>
+  <div class="write-body">
+    <main class="write-main">
+      <div class="write-measure">
+        <textarea id="editor" placeholder="Start writing…" aria-label="Writing area"></textarea>
+      </div>
+    </main>
+    <aside class="stimulus-pane" id="stimulus-pane" style="display:none">
+      <div class="stimulus-label">Passage</div>
+      <div class="stimulus-text" id="stimulus-text"></div>
+    </aside>
+  </div>
+  <div class="write-footer">
+    <button class="btn btn-primary" id="finish-btn">Finish and export →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ FINISH SCREEN ═══════════════════════════════ -->
+<div class="screen" id="screen-finish">
+  <div class="finish-body">
+    <div class="finish-card">
+      <div class="finish-icon">✓</div>
+      <div class="finish-title" id="finish-title">Ready to export</div>
+      <p class="finish-sub" id="finish-sub">Choose a format. Both are formatted to MLA style — Times New Roman, double-spaced, with a running header.</p>
+      <div class="finish-actions">
+        <button class="btn btn-primary btn-full" id="download-pdf-btn">Download PDF</button>
+        <button class="btn btn-outline btn-full" id="download-docx-btn">Download Word (.docx)</button>
+        <button class="btn-ghost" id="back-to-writing-btn">← Back to writing</button>
+      </div>
+      <div class="finish-filename" id="finish-filename"></div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   LZString — vendored verbatim from hexthinking.html. Same
+   compression used there for the same job: pack a small JSON
+   config into a URL-fragment-safe string.
+   ══════════════════════════════════════════════════════════ */
+var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},e={compressToEncodedURIComponent:function(o){return null==o?"":e._compress(o,6,function(o){return n.charAt(o)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),e._decompress(r.length,32,function(t){return o(n,r.charAt(t))}))},_compress:function(o,n,t){if(null==o)return"";var e,i,s,p={},u={},a="",c="",l="",f=2,d=3,g=2,h=[],v=0,w=0;for(s=0;s<o.length;s+=1)if(a=o.charAt(s),Object.prototype.hasOwnProperty.call(p,a)||(p[a]=d++,u[a]=!0),c=l+a,Object.prototype.hasOwnProperty.call(p,c))l=c;else{if(Object.prototype.hasOwnProperty.call(u,l)){if(l.charCodeAt(0)<256){for(e=0;e<g;e++)v<<=1,w==n-1?(w=0,h.push(t(v)),v=0):w++;for(i=l.charCodeAt(0),e=0;e<8;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}else{for(i=1,e=0;e<g;e++)v=v<<1|i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i=0;for(i=l.charCodeAt(0),e=0;e<16;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}0==--f&&(f=Math.pow(2,g),g++),delete u[l]}else for(i=p[l],e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;0==--f&&(f=Math.pow(2,g),g++),p[c]=d++,l=String(a)}if(""!==l){if(Object.prototype.hasOwnProperty.call(u,l)){if(l.charCodeAt(0)<256){for(e=0;e<g;e++)v<<=1,w==n-1?(w=0,h.push(t(v)),v=0):w++;for(i=l.charCodeAt(0),e=0;e<8;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}else{for(i=1,e=0;e<g;e++)v=v<<1|i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i=0;for(i=l.charCodeAt(0),e=0;e<16;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1}0==--f&&(f=Math.pow(2,g),g++),delete u[l]}else for(i=p[l],e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;0==--f&&(f=Math.pow(2,g),g++)}for(i=2,e=0;e<g;e++)v=v<<1|1&i,w==n-1?(w=0,h.push(t(v)),v=0):w++,i>>=1;for(;;){if(v<<=1,w==n-1){h.push(t(v));break}w++}return h.join("")},_decompress:function(o,n,t){var e,i,s,p,u,a,c,l=[],f=4,d=4,g=3,h="",v=[],w={val:t(0),position:n,index:1};for(e=0;e<3;e+=1)l[e]=e;for(s=0,u=Math.pow(2,2),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;switch(s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(w.index>o)return"";for(s=0,u=Math.pow(2,g),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;switch(c=s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;l[d++]=r(s),c=d-1,f--;break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=w.val&w.position,w.position>>=1,0==w.position&&(w.position=n,w.val=t(w.index++)),s|=(p>0?1:0)*a,a<<=1;l[d++]=r(s),c=d-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,g),g++),l[c])h=l[c];else{if(c!==d)return null;h=i+i.charAt(0)}v.push(h),l[d++]=i+h.charAt(0),i=h,0==--f&&(f=Math.pow(2,g),g++)}}};return e}();
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg, dur = 2400) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+}
+
+/* ── CONFIG DECODE ── */
+function decodeConfig(hash) {
+  if (!hash.startsWith('#c=')) return null;
+  const json = LZString.decompressFromEncodedURIComponent(hash.slice(3));
+  if (!json) return null;
+  const cfg = JSON.parse(json);
+  if (!cfg || typeof cfg !== 'object' || !cfg.task) return null;
+  return cfg;
+}
+
+let config = null;
+let student = null; // {id, name}
+let session = null; // {startedAt, elapsedFocusLossCount, pasteAttempts}
+let timerInterval = null;
+let timerRemaining = null; // seconds, null = no timer
+let lastCopiedText = '';
+let autosaveTimer = null;
+
+/* ── STORAGE KEYS ── */
+function draftKey() {
+  return 'purewrite:draft:' + strHash(location.hash + '|' + student.id);
+}
+function strHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+/* ══════════════════════════════════════════════════════════
+   START SCREEN
+   ══════════════════════════════════════════════════════════ */
+function initStart() {
+  config = decodeConfig(location.hash);
+  if (!config) { renderLinkError(); return; }
+  renderStartForm();
+}
+
+function renderLinkError() {
+  $('start-content').innerHTML = `
+    <div class="start-error">
+      <div class="icon">🔗</div>
+      <h2>This link isn't working</h2>
+      <p>The writing task couldn't be read from this link. Ask your teacher for a fresh link or QR-free copy — links can get cut off when shared through some apps.</p>
+    </div>`;
+}
+
+function renderStartForm() {
+  $('start-content').innerHTML = `
+    <p class="start-eyebrow">${esc(config.class || 'Writing task')}</p>
+    <h1 class="start-title">${esc(config.task)}</h1>
+    ${config.prompt ? `<p class="start-prompt">${esc(config.prompt)}</p>` : ''}
+    <div id="draft-check"></div>
+    <div class="card">
+      <div class="field">
+        <label>Student ID number <span class="required-mark">*</span></label>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="student-id-input" placeholder="e.g. 82984196" required/>
+      </div>
+      <div class="field">
+        <label>Full name <span class="required-mark">*</span></label>
+        <input type="text" id="student-name-input" placeholder="e.g. Nguyen Nhat Minh" required/>
+      </div>
+      <button class="btn btn-primary btn-full" id="start-writing-btn" style="margin-top:6px">Start writing →</button>
+    </div>`;
+
+  $('student-id-input').addEventListener('input', checkForDraft);
+  $('start-writing-btn').addEventListener('click', beginWriting);
+  [$('student-id-input'), $('student-name-input')].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') beginWriting(); });
+  });
+}
+
+function checkForDraft() {
+  const id = $('student-id-input').value.trim();
+  const box = $('draft-check');
+  if (!id) { box.innerHTML = ''; return; }
+  const key = 'purewrite:draft:' + strHash(location.hash + '|' + id);
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(key)); } catch (e) {}
+  if (saved && saved.text) {
+    const words = countWords(saved.text);
+    box.innerHTML = `<div class="draft-banner">A draft for this ID is already saved on this device (${words} word${words === 1 ? '' : 's'}). Continuing with this ID will pick it back up.</div>`;
+  } else {
+    box.innerHTML = '';
+  }
+}
+
+function beginWriting() {
+  const id = $('student-id-input').value.trim();
+  const name = $('student-name-input').value.trim();
+  if (!id) { showToast('Enter your student ID number'); $('student-id-input').focus(); return; }
+  if (!name) { showToast('Enter your full name'); $('student-name-input').focus(); return; }
+  student = { id, name };
+  try { localStorage.setItem('purewrite:lastStudent', JSON.stringify(student)); } catch (e) {}
+
+  let restoredText = '';
+  let restoredSession = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(draftKey()));
+    if (saved && typeof saved.text === 'string') {
+      restoredText = saved.text;
+      restoredSession = saved.session || null;
+    }
+  } catch (e) {}
+
+  session = restoredSession || { startedAt: Date.now(), focusLossCount: 0, pasteAttempts: 0 };
+  $('editor').value = restoredText;
+
+  setupWriteScreen();
+  switchScreen('write');
+  $('editor').focus();
+}
+
+/* ══════════════════════════════════════════════════════════
+   WRITE SCREEN
+   ══════════════════════════════════════════════════════════ */
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + id).classList.add('active');
+}
+
+function setupWriteScreen() {
+  $('write-meta').textContent = `${config.task} · ${student.name}`;
+
+  const editor = $('editor');
+  if (!config.showHints) {
+    editor.setAttribute('spellcheck', 'false');
+    editor.setAttribute('autocorrect', 'off');
+    editor.setAttribute('autocapitalize', 'off');
+    editor.setAttribute('autocomplete', 'off');
+    editor.setAttribute('data-gramm', 'false');
+    editor.setAttribute('data-gramm_editor', 'false');
+    editor.setAttribute('data-enable-grammarly', 'false');
+  } else {
+    editor.removeAttribute('spellcheck');
+    editor.removeAttribute('autocorrect');
+    editor.removeAttribute('autocapitalize');
+    editor.removeAttribute('data-gramm');
+    editor.removeAttribute('data-gramm_editor');
+    editor.removeAttribute('data-enable-grammarly');
+  }
+
+  // Stimulus pane
+  if (config.stimulus) {
+    $('stimulus-text').textContent = config.stimulus;
+    $('stimulus-pane').style.display = '';
+    $('stimulus-toggle-btn').style.display = '';
+  }
+
+  // Timer
+  if (config.minutes && config.minutes > 0) {
+    const elapsedSec = Math.floor((Date.now() - session.startedAt) / 1000);
+    timerRemaining = Math.max(0, config.minutes * 60 - elapsedSec);
+    $('write-timer').style.display = '';
+    updateTimerDisplay();
+    startTimerInterval();
+  } else {
+    timerRemaining = null;
+    $('write-timer').style.display = 'none';
+  }
+
+  updateWordCount();
+  loadPrefs();
+  wireEditorEvents();
+  scheduleAutosave(); // captures the restored/blank state immediately
+}
+
+let editorWired = false;
+function wireEditorEvents() {
+  if (editorWired) return; // listeners are added once; state (config/student) is read live
+  editorWired = true;
+  const editor = $('editor');
+
+  editor.addEventListener('input', () => { updateWordCount(); scheduleAutosave(); });
+
+  editor.addEventListener('copy', captureOwnText);
+  editor.addEventListener('cut', captureOwnText);
+
+  editor.addEventListener('paste', e => {
+    if (!config.blockPaste) return;
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    if (text && text === lastCopiedText) return; // student's own text, let it through
+    e.preventDefault();
+    flagBlockedPaste(e);
+  });
+  editor.addEventListener('drop', e => { if (config.blockPaste) e.preventDefault(); });
+  editor.addEventListener('dragover', e => { if (config.blockPaste) e.preventDefault(); });
+  // Catches right-click paste and middle-click paste (Linux/ChromeOS), which
+  // the 'paste' event alone does not reliably catch in every browser.
+  editor.addEventListener('beforeinput', e => {
+    if (!config.blockPaste) return;
+    const blockedTypes = ['insertFromPaste', 'insertFromPasteAsQuotation', 'insertFromDrop', 'insertReplacementText'];
+    if (blockedTypes.includes(e.inputType)) {
+      if (e.data && e.data === lastCopiedText) return;
+      e.preventDefault();
+      flagBlockedPaste(e);
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      session.focusLossCount = (session.focusLossCount || 0) + 1;
+      flushAutosave();
+    }
+  });
+  window.addEventListener('pagehide', flushAutosave);
+  window.addEventListener('beforeunload', e => {
+    flushAutosave();
+    if (editor.value.trim()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  $('finish-btn').addEventListener('click', goToFinish);
+  $('back-to-writing-btn').addEventListener('click', () => switchScreen('write'));
+  $('download-pdf-btn').addEventListener('click', () => exportAs('pdf'));
+  $('download-docx-btn').addEventListener('click', () => exportAs('docx'));
+  $('stimulus-toggle-btn').addEventListener('click', () => $('stimulus-pane').classList.toggle('open'));
+
+  $('pref-size-up').addEventListener('click', () => adjustPref('size', 1));
+  $('pref-size-down').addEventListener('click', () => adjustPref('size', -1));
+  $('pref-spacing').addEventListener('click', () => adjustPref('spacing', 1));
+  $('pref-font').addEventListener('click', () => adjustPref('font', 1));
+}
+
+function captureOwnText() {
+  const editor = $('editor');
+  const sel = editor.value.slice(editor.selectionStart, editor.selectionEnd);
+  if (sel) lastCopiedText = sel;
+}
+
+function flagBlockedPaste(e) {
+  session.pasteAttempts = (session.pasteAttempts || 0) + 1;
+  const toast = $('paste-toast');
+  const editor = $('editor');
+  const rect = editor.getBoundingClientRect();
+  toast.style.left = Math.min(rect.left + 40, window.innerWidth - 220) + 'px';
+  toast.style.top = (rect.top + 40) + 'px';
+  toast.classList.add('show');
+  clearTimeout(flagBlockedPaste._t);
+  flagBlockedPaste._t = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function countWords(text) {
+  const m = text.trim().match(/\S+/g);
+  return m ? m.length : 0;
+}
+function updateWordCount() {
+  const n = countWords($('editor').value);
+  $('write-wordcount').textContent = n + ' word' + (n === 1 ? '' : 's') + (config.wordTarget ? ` / ${config.wordTarget}` : '');
+}
+
+/* ── TIMER ── */
+function startTimerInterval() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (timerRemaining <= 0) return;
+    timerRemaining--;
+    updateTimerDisplay();
+    if (timerRemaining <= 0) onTimerExpired();
+  }, 1000);
+}
+function updateTimerDisplay() {
+  const el = $('write-timer');
+  const m = Math.floor(timerRemaining / 60), s = timerRemaining % 60;
+  el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  el.classList.toggle('amber', timerRemaining <= 300 && timerRemaining > 60);
+  el.classList.toggle('over', timerRemaining <= 60);
+}
+function onTimerExpired() {
+  clearInterval(timerInterval);
+  if (config.softLock) {
+    $('editor').readOnly = true;
+    showToast('Time is up. Writing is locked — you can still export.', 4000);
+  } else {
+    showToast('Time is up.', 3000);
+  }
+}
+
+/* ── ACCESSIBILITY PREFS (persisted across sessions, device-level) ── */
+const SIZE_STEPS = [16, 18, 20, 23];
+const LINE_STEPS = [1.6, 1.8, 2.1, 2.4];
+const FONT_STACKS = [
+  "Georgia, 'Times New Roman', serif",
+  "'Trebuchet MS', Verdana, Arial, sans-serif"
+];
+let prefs = { sizeIdx: 1, lineIdx: 1, fontIdx: 0 };
+
+function loadPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('purewrite:prefs'));
+    if (saved) prefs = Object.assign(prefs, saved);
+  } catch (e) {}
+  applyPrefs();
+}
+function savePrefs() {
+  try { localStorage.setItem('purewrite:prefs', JSON.stringify(prefs)); } catch (e) {}
+}
+function adjustPref(which, dir) {
+  if (which === 'size') prefs.sizeIdx = Math.max(0, Math.min(SIZE_STEPS.length - 1, prefs.sizeIdx + dir));
+  if (which === 'spacing') prefs.lineIdx = (prefs.lineIdx + 1) % LINE_STEPS.length;
+  if (which === 'font') prefs.fontIdx = (prefs.fontIdx + 1) % FONT_STACKS.length;
+  applyPrefs();
+  savePrefs();
+}
+function applyPrefs() {
+  const root = document.documentElement.style;
+  root.setProperty('--pw-size', SIZE_STEPS[prefs.sizeIdx] + 'px');
+  root.setProperty('--pw-line', LINE_STEPS[prefs.lineIdx]);
+  root.setProperty('--pw-font', FONT_STACKS[prefs.fontIdx]);
+  $('pref-font').classList.toggle('active', prefs.fontIdx !== 0);
+}
+
+/* ── AUTOSAVE ── */
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(flushAutosave, 2000);
+}
+function flushAutosave() {
+  if (!student) return;
+  try {
+    localStorage.setItem(draftKey(), JSON.stringify({ text: $('editor').value, session, savedAt: Date.now() }));
+  } catch (e) {
+    // Storage full or unavailable — surface once, don't spam.
+    if (!flushAutosave._warned) { flushAutosave._warned = true; showToast('Could not save a local backup — export often.', 4000); }
+  }
+}
+function clearDraft() {
+  try { localStorage.removeItem(draftKey()); } catch (e) {}
+}
+
+/* ══════════════════════════════════════════════════════════
+   FINISH SCREEN
+   ══════════════════════════════════════════════════════════ */
+function goToFinish() {
+  flushAutosave();
+  const filename = buildFilename();
+  $('finish-filename').textContent = '';
+  $('finish-title').textContent = 'Ready to export';
+  $('finish-sub').textContent = 'Choose a format. Both are formatted to MLA style — Times New Roman, double-spaced, with a running header.';
+  switchScreen('finish');
+}
+
+function safeFilePart(s) {
+  return String(s || '').replace(/[^A-Za-z0-9]+/g, '');
+}
+function buildFilename(ext) {
+  const base = `${safeFilePart(config.class)}_${safeFilePart(student.id)}_${safeFilePart(config.task)}`;
+  return ext ? `${base}.${ext}` : base;
+}
+
+/* Splits raw textarea text into paragraphs. Used identically by both the PDF
+   and docx generators so the two formats can never disagree about where one
+   paragraph ends and the next begins. Blank/whitespace-only lines are
+   dropped rather than becoming empty double-spaced paragraphs. */
+function paragraphsFrom(text) {
+  return text.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+}
+
+function mlaDate(d) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function buildEssayModel() {
+  const nameParts = student.name.trim().split(/\s+/);
+  return {
+    studentName: student.name,
+    lastName: nameParts[nameParts.length - 1] || student.name,
+    teacherName: config.teacherName || '',
+    className: config.class || '',
+    dateStr: mlaDate(new Date()),
+    title: config.title || config.task,
+    paragraphs: paragraphsFrom($('editor').value)
+  };
+}
+
+async function exportAs(format) {
+  const model = buildEssayModel();
+  if (!model.paragraphs.length) { showToast('Nothing written yet'); return; }
+  try {
+    if (format === 'pdf') downloadPdf(model);
+    else downloadDocx(model);
+    $('finish-filename').textContent = 'Downloaded ' + buildFilename(format);
+  } catch (e) {
+    showToast('Export failed: ' + e.message, 5000);
+  }
+}
+</script>
+<script src="../js/toolshed-zip.js"></script>
+<script src="purewrite-export.js"></script>
+<script>
+/* ── BOOT ── */
+initStart();
+
+// Register the service worker so the tool keeps working offline once a
+// student has loaded it. Scoped to /teacher-tools/ since there is no server
+// config here to widen a worker's default scope.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

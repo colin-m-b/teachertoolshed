@@ -5,21 +5,22 @@
   padding: 0;
 }
 
-/* ── VARIABLES ── */
+/* ── VARIABLES ──
+   Aliases onto the shared Teacher Toolshed palette (see the tools'
+   cream/gold system). Kept as separate names so the landing page's
+   existing selectors don't need renaming, but the values now match. */
 :root {
-  --bg:            #ffffff;
-  --bg2:           #f7f5f1;
-  --bg3:           #efecea;
-  --ink:           #1a1814;
-  --ink2:          #3d3a34;
-  --mid:           #7a7060;
-  --rule:          rgba(26,24,20,0.1);
-  --forest:        #2d5a1b;
-  --forest2:       #3b6d11;
-  --forest-bg:     #eaf3de;
-  --forest-border: #c0dd97;
-  --amber:         #96580a;
-  --amber-bg:      #faeeda;
+  --bg:            #F7F5F0;   /* page background (was white) */
+  --bg2:           #F0EDE6;   /* secondary fill */
+  --bg3:           #E0DDD4;   /* borders / inactive accents */
+  --ink:           #28251E;
+  --ink2:          #28251E;
+  --mid:           #6B6457;
+  --rule:          #E0DDD4;
+  --forest:        #B5843A;   /* primary accent (gold) */
+  --forest2:       #4A7C59;   /* brand mark / live status (green) */
+  --forest-bg:     #EBF4EE;
+  --forest-border: #B8D9C2;
 }
 
 /* ── BASE ── */
@@ -30,25 +31,16 @@ html {
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── SHARED LABELS ── */
-.section-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--mid);
-  margin-bottom: 1.5rem;
-}
-
 /* ── SHARED BUTTONS ── */
 .btn-primary {
   background: var(--forest);
-  color: #eaf3de;
+  color: #fff;
   border: none;
   border-radius: 4px;
   padding: 12px 24px;
@@ -84,7 +76,7 @@ body {
 
 .btn-forest {
   background: var(--forest);
-  color: #eaf3de;
+  color: #fff;
   border: none;
   border-radius: 4px;
   padding: 8px 18px;

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack Splitter — Teacher Toolshed</title>
+<meta name="description" content="Print QR coversheets for handwritten work, then split one big scan back into a separate PDF per student. Runs entirely in your browser — nothing is uploaded.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<style>
+  body{display:flex;flex-direction:column;min-height:100vh}
+  .wrap{flex:1;max-width:940px;width:100%;margin:0 auto;padding:26px 22px 60px}
+  .page-title{font-family:var(--font-serif);font-size:25px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .page-sub{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:22px}
+  .screen{display:none}
+  .screen.active{display:block}
+  .mode-tabs{max-width:420px;margin-bottom:22px}
+
+  .privacy-note{background:var(--green-soft);border:1px solid var(--green-border);border-radius:var(--radius);
+    padding:11px 14px;font-size:12.5px;color:#3A6147;line-height:1.55;margin-bottom:20px}
+
+  /* .warn-box lives in css/toolshed.css now — rosters.html needed the
+     same banner for its import warnings, so it was promoted there. */
+
+  /* ── drop zone ── */
+  .drop{border:2px dashed var(--border);border-radius:var(--radius);padding:44px 24px;text-align:center;
+    background:var(--surface);transition:all .15s;cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop-icon{font-size:38px;margin-bottom:10px}
+  .drop-title{font-size:15px;font-weight:600;margin-bottom:5px}
+  .drop-sub{font-size:13px;color:var(--text-mid)}
+
+  /* ── progress ── */
+  .prog-outer{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin:14px 0 8px}
+  .prog-bar{height:100%;background:var(--accent);width:0;transition:width .15s}
+  .prog-label{font-size:13px;color:var(--text-mid);text-align:center}
+
+  /* ── review ── */
+  .group{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);
+    margin-bottom:10px;overflow:hidden}
+  .group.unassigned{border-color:#E4CFA0;background:var(--accent-soft)}
+  .group.spare{border-style:dashed}
+  .group-head{display:flex;align-items:center;gap:12px;padding:11px 14px;flex-wrap:wrap}
+  .group-who{flex:1;min-width:180px}
+  .group-name{font-size:14px;font-weight:600;color:var(--text)}
+  .group-sid{font-size:12px;color:var(--text-mid);font-family:var(--font-sans)}
+  .group-pages{font-size:12px;color:var(--text-mid);white-space:nowrap}
+  .group-src{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--text-mid)}
+  .group-src.qr{background:var(--green-soft);color:#3A6147}
+  .group-src.manual{background:var(--accent-soft);color:var(--accent-hover)}
+  .thumbs{display:flex;gap:7px;padding:0 14px 12px;overflow-x:auto}
+  .thumb{position:relative;flex-shrink:0;cursor:pointer;border:2px solid transparent;border-radius:4px;
+    background:var(--surface-2);line-height:0}
+  .thumb img{width:74px;height:96px;object-fit:contain;display:block}
+  .thumb.boundary{border-color:var(--green)}
+  .thumb-num{position:absolute;bottom:2px;right:3px;font-size:9px;background:rgba(40,37,30,.72);
+    color:#fff;padding:1px 4px;border-radius:3px;line-height:1.4}
+  .thumb-flag{position:absolute;top:2px;left:3px;font-size:11px}
+
+  .review-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+  .export-success{background:var(--green-soft);border:1px solid var(--green-border);border-radius:var(--radius);
+    padding:12px 15px;font-size:13px;color:#2F5C3D;margin-top:14px;display:none;align-items:center;gap:8px}
+  .export-success.show{display:flex}
+  .export-success .icon{font-size:16px;flex-shrink:0}
+
+  /* ── page inspector modal ── */
+  .insp-body{display:flex;gap:16px;flex-wrap:wrap}
+  .insp-body img{max-width:230px;border:1px solid var(--border);border-radius:6px}
+  .insp-side{flex:1;min-width:220px}
+
+  @media print { body{display:none} }
+</style>
+</head>
+<body>
+
+<div class="toast hidden" id="toast"></div>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="../">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <span class="header-tool">Stack Splitter</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1 class="page-title">Stack Splitter</h1>
+  <p class="page-sub">Print a QR coversheet for each student, collect the handwritten work as one
+    stack, scan it in one pass — then drop the scan here to get a separate PDF per student.</p>
+
+  <div class="privacy-note">
+    <strong>Scans never leave this computer.</strong> The PDF is read in your browser and the split
+    files are written straight back to your machine. Nothing is uploaded, and there is no account.
+  </div>
+
+  <div class="template-tabs mode-tabs">
+    <button class="tab active" id="tab-covers">1 · Coversheets</button>
+    <button class="tab" id="tab-split">2 · Split a scan</button>
+  </div>
+
+  <!-- ══════════════ COVERSHEETS ══════════════ -->
+  <div class="screen active" id="screen-covers">
+    <div class="card">
+      <div class="field">
+        <label>Class list <span class="required-mark">*</span></label>
+        <select id="cov-roster"><option value="">Loading…</option></select>
+        <p class="hint">Class lists are shared across every tool — edit them in
+          <a class="link" href="rosters.html">My class lists</a>.</p>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Assignment <span class="required-mark">*</span></label>
+          <input type="text" id="cov-assignment" placeholder="e.g. Narrative Task" maxlength="60"/>
+        </div>
+        <div class="field">
+          <label>Spare sheets</label>
+          <input type="number" id="cov-spares" value="3" min="0" max="20"/>
+          <p class="hint">Blank-name coversheets for anyone not on the list yet.</p>
+        </div>
+      </div>
+      <div id="cov-warnings"></div>
+      <button class="btn btn-primary btn-full" id="cov-generate">Generate coversheet PDF</button>
+    </div>
+    <p class="hint" style="margin-top:14px">Print single-sided, hand one to each student, and have
+      them put it on top of their work. Any number of pages per student is fine — the next coversheet
+      is what marks the end.</p>
+  </div>
+
+  <!-- ══════════════ SPLIT ══════════════ -->
+  <div class="screen" id="screen-split">
+
+    <div id="split-upload">
+      <div class="drop" id="drop">
+        <div class="drop-icon">📄</div>
+        <div class="drop-title">Drop the scanned PDF here</div>
+        <div class="drop-sub">or click to choose a file</div>
+      </div>
+      <input type="file" id="file-input" accept="application/pdf" style="display:none"/>
+      <p class="hint" style="margin-top:14px">One PDF containing the whole stack. Greyscale at
+        200–300 DPI reads well and keeps the file small.</p>
+    </div>
+
+    <div id="split-progress" style="display:none">
+      <div class="card">
+        <div class="prog-outer"><div class="prog-bar" id="prog-bar"></div></div>
+        <div class="prog-label" id="prog-label">Opening…</div>
+        <div style="text-align:center;margin-top:14px">
+          <button class="btn btn-outline btn-sm" id="cancel-scan">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="split-review" style="display:none">
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num" id="stat-found">0</div><div class="stat-lbl">students found</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-pages">0</div><div class="stat-lbl">pages</div></div>
+        <div class="stat-box"><div class="stat-num" id="stat-missing">0</div><div class="stat-lbl">not found</div></div>
+      </div>
+      <div id="review-warnings"></div>
+      <p class="hint" style="margin-bottom:12px">Check the groups below before exporting. Click any
+        page to move a boundary or reassign it. A green border marks the page a student's work starts on.</p>
+      <div id="groups"></div>
+      <div class="review-actions">
+        <button class="btn btn-ghost" id="start-over">Start over</button>
+        <button class="btn btn-outline" id="export-zip-btn">Download as .zip</button>
+        <button class="btn btn-primary" id="export-btn">Save to a folder…</button>
+      </div>
+      <div class="export-success" id="export-success"><span class="icon">✓</span><span id="export-success-text"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- page inspector -->
+<div class="modal-bd" id="insp">
+  <div class="modal">
+    <div class="modal-title" id="insp-title">Page</div>
+    <div class="insp-body">
+      <img id="insp-img" alt=""/>
+      <div class="insp-side">
+        <div class="field">
+          <label>This page</label>
+          <select id="insp-role">
+            <option value="continue">Continues the student above</option>
+            <option value="boundary">Starts a new student</option>
+          </select>
+        </div>
+        <div class="field" id="insp-who-field">
+          <label>Whose work?</label>
+          <select id="insp-who"></select>
+        </div>
+        <div class="field" id="insp-other-field" style="display:none">
+          <label>Name</label>
+          <input type="text" id="insp-other" placeholder="e.g. Nguyen Van An"/>
+        </div>
+        <p class="hint" id="insp-detected"></p>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" id="insp-cancel">Cancel</button>
+      <button class="btn btn-primary" id="insp-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
+<script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-zip.js"></script>
+<script src="../js/toolshed-pdf-font.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="stack-splitter.js"></script>
+</body>
+</html>

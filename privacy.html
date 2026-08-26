@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy — Teacher Toolshed</title>
+<meta name="description" content="How Teacher Toolshed handles your data: everything stays in your browser, nothing is sent to a server, and there is no analytics.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/toolshed.css">
+<style>
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  .privacy-body { flex: 1; max-width: 640px; margin: 0 auto; width: 100%; padding: 40px 24px 70px; }
+  .page-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .page-title { font-family: var(--font-serif); font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
+  .page-sub { font-size: 14px; color: var(--text-mid); margin-bottom: 32px; line-height: 1.6; }
+  .privacy-body h2 { font-family: var(--font-serif); font-size: 18px; font-weight: 700; margin: 32px 0 10px; }
+  .privacy-body h2:first-of-type { margin-top: 0; }
+  .privacy-body p { font-size: 14.5px; line-height: 1.7; color: var(--text); margin-bottom: 12px; }
+  .privacy-body ul { margin: 0 0 12px 20px; }
+  .privacy-body li { font-size: 14.5px; line-height: 1.7; color: var(--text); margin-bottom: 4px; }
+  .callout { background: var(--accent-soft); border: 1px solid #E4CFA0; border-radius: var(--radius); padding: 14px 16px; font-size: 13.5px; color: var(--accent-hover); line-height: 1.6; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <a class="header-tool" href="privacy.html">Privacy</a>
+  </div>
+</header>
+
+<div class="privacy-body">
+  <p class="page-eyebrow">Privacy</p>
+  <h1 class="page-title">Your data stays with you</h1>
+  <p class="page-sub">Plain language, no fine print: here's exactly what happens (and doesn't happen) to what you type into these tools.</p>
+
+  <div class="callout">The short version: everything is saved only in your browser, on your device. Nothing you enter — student names, rosters, scores, notes — is ever sent to us. We don't run a server that could receive it, and we don't use analytics.</div>
+
+  <h2>Where your data lives</h2>
+  <p>Class lists, rosters, rubrics, and saved sessions are stored in your browser's local database (IndexedDB). That storage belongs to your browser, on the device you're using — it isn't uploaded anywhere, and it isn't shared between devices or browsers automatically.</p>
+
+  <h2>What we don't do</h2>
+  <ul>
+    <li>No accounts, no sign-in, no server-side database.</li>
+    <li>No analytics, no tracking scripts, no advertising, no embedded third-party widgets.</li>
+    <li>No network request ever carries student names, rosters, scores, or notes anywhere.</li>
+  </ul>
+  <p>Pages do make two kinds of outside request, and neither one carries anything you've typed:</p>
+  <ul>
+    <li><strong>Google Fonts</strong>, on every page, for the typefaces used to render text.</li>
+    <li><strong>A PDF library</strong> (jsPDF, from the cdnjs.com public code archive) — fetched by the Seating Chart Maker only at the moment you click <em>Download PDF</em>, and not at all otherwise. It's the code that builds the file; your chart is assembled into a PDF inside your browser and saved straight to your device. The chart itself is never uploaded.</li>
+  </ul>
+  <p>Both requests ask for a file and receive it. No page content — no names, no rosters, no scores — is attached to either one.</p>
+
+  <h2>Backing up your data</h2>
+  <p>Because everything lives only in one browser, it can be lost if you clear your browser's site data, switch devices, or reinstall your browser. Use <a class="link" href="teacher-tools/rosters.html">Export backup</a> on the class lists page regularly — it downloads a single file with everything saved across every tool, which you can re-import on this or any other device with Import backup.</p>
+
+  <div class="callout">Safari note: Safari can clear storage for sites you haven't visited in about a week. If you use Safari, export a backup after major changes — don't rely on it as the only copy.</div>
+
+  <h2>Sharing a hexagonal thinking activity</h2>
+  <p>When you create a link to share with students, the activity itself is encoded directly in the link (after the <code>#</code>) — not stored on a server. That's why the links are long. It also means we never see, receive, or store the activities you create.</p>
+
+  <h2>For FERPA-minded readers</h2>
+  <p>Because no student data is ever transmitted to or held by Teacher Toolshed — there is no server to receive it — we don't create, maintain, or have access to education records in any legal sense. If your school's policies require that student data tools be reviewed, this is the strongest privacy posture available: the data never leaves your browser in the first place.</p>
+
+  <h2>Questions</h2>
+  <p>This is a small, independent project built by a teacher. There's no support team or contact form yet — for now, what's on this page is the whole policy.</p>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="/">Home</a></div>
+
+</body>
+</html>
