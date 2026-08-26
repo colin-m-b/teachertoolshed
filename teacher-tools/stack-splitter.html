@@ -59,6 +59,16 @@
     color:#fff;padding:1px 4px;border-radius:3px;line-height:1.4}
   .thumb-flag{position:absolute;top:2px;left:3px;font-size:11px}
 
+  .filename-settings{border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);
+    padding:13px 15px;margin-top:16px}
+  .filename-settings-label{font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:9px}
+  .filename-opts{display:flex;gap:16px;flex-wrap:wrap}
+  .filename-opt{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text);cursor:pointer}
+  .filename-opt input{margin:0}
+  .filename-preview{margin-top:10px;font-size:12px;font-family:var(--font-sans);color:var(--text-light);
+    word-break:break-all}
+  .filename-preview strong{color:var(--text-mid);font-weight:600}
+
   .review-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
   .export-success{background:var(--green-soft);border:1px solid var(--green-border);border-radius:var(--radius);
     padding:12px 15px;font-size:13px;color:#2F5C3D;margin-top:14px;display:none;align-items:center;gap:8px}
@@ -172,6 +182,16 @@
       <p class="hint" style="margin-bottom:12px">Check the groups below before exporting. Click any
         page to move a boundary or reassign it. A green border marks the page a student's work starts on.</p>
       <div id="groups"></div>
+      <div class="filename-settings">
+        <div class="filename-settings-label">File names include</div>
+        <div class="filename-opts">
+          <label class="filename-opt"><input type="checkbox" id="fn-class"> Class name</label>
+          <label class="filename-opt"><input type="checkbox" id="fn-name"> Student name</label>
+          <label class="filename-opt"><input type="checkbox" id="fn-sid"> Student ID</label>
+          <label class="filename-opt"><input type="checkbox" id="fn-assignment"> Assignment</label>
+        </div>
+        <div class="filename-preview" id="filename-preview"></div>
+      </div>
       <div class="review-actions">
         <button class="btn btn-ghost" id="start-over">Start over</button>
         <button class="btn btn-outline" id="export-zip-btn">Download as .zip</button>
