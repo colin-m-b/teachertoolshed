@@ -3,121 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Toolshed — Tools for teaching, made by a real teacher.</title>
-  <meta name="description" content="Free classroom tools for teachers — hexagonal thinking, seating charts, talk tracking, presentation grading, distraction-free in-class writing, and splitting scanned paper by QR coversheet. No account needed, everything saved in your browser.">
+  <title>Teacher Toolshed — Six small tools for the ELA classroom</title>
+  <meta name="description" content="Six free tools I built for my own middle and high school English classes: hexagonal thinking, seating charts, talk tracking, presentation grading, distraction-free writing, and stack splitting. No account, nothing leaves your browser.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/toolshed.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/nav.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <a href="#" class="nav-wordmark">
-      <div class="nav-dot"></div>
-      Teacher Toolshed
-    </a>
-    <div class="nav-links">
-      <a href="#tools">Tools</a>
-      <a href="teacher-tools/rosters.html">My class lists</a>
-      <a href="#about">About</a>
-      <a href="#tools" class="btn-forest">Get started</a>
+  <!-- UTILITY BAR -->
+  <div class="utility-bar">
+    <div class="column utility-bar__inner">
+      <span class="utility-bar__tagline">Free · No account · Nothing leaves your browser</span>
+      <nav class="utility-bar__nav">
+        <a href="#tools">The six</a>
+        <a href="teacher-tools/rosters.html">Class lists</a>
+        <a href="#about">About</a>
+      </nav>
     </div>
-  </nav>
+  </div>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-eyebrow">
-      <div class="hero-eyebrow-dot"></div>
-      Six tools live
+  <!-- MASTHEAD -->
+  <header class="masthead column">
+    <div class="masthead__inner">
+      <h1 class="t-display">Teacher Toolshed</h1>
+      <p class="masthead__sub">Six small tools I built for my own middle and high school classes.</p>
     </div>
-    <h1>Tools for teaching,<br>made by a real teacher.</h1>
-    <p class="hero-sub">I made these to help my teaching and planning.<br>Maybe they'll help yours, too.</p>
-    <div class="hero-cta">
-      <a href="#tools" class="btn-primary">Free to use — no account needed</a>
-      <a href="#tools" class="btn-outline">See the tools</a>
+  </header>
+
+  <!-- TOOL GRID -->
+  <section class="tool-grid-wrap column" id="tools" aria-label="The six tools">
+    <div class="tool-grid">
+
+      <a class="tool-card" href="teacher-tools/purewrite-setup.html">
+        <div class="tool-card__eyebrow t-meta">No. 01</div>
+        <div class="tool-card__name t-display">Pure Writer</div>
+        <p class="tool-card__desc t-body">Writing with no spellcheck, grammar fixes, or pasting from outside. In-class writing, warts and all, so you can see what needs to improve.</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">Exports MLA PDF or Word</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="teacher-tools/presentation-grader.html">
+        <div class="tool-card__eyebrow t-meta">No. 02</div>
+        <div class="tool-card__name t-display">Presentation Tracker</div>
+        <p class="tool-card__desc t-body">Make notes, time the talking, and score against your rubric while they present, with per-student overrides so group grades stay honest.</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">Paste in your rubric</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="teacher-tools/stack-splitter.html">
+        <div class="tool-card__eyebrow t-meta">No. 03</div>
+        <div class="tool-card__name t-display">Stack Splitter</div>
+        <p class="tool-card__desc t-body">QR coversheets on handwritten work, one pass through the copier, and then split the pile by student. Digitize and itemize paperwork faster.</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">One named PDF per student</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="teacher-tools/talk-tracker.html">
+        <div class="tool-card__eyebrow t-meta">No. 04</div>
+        <div class="tool-card__name t-display">Talk Tracker</div>
+        <p class="tool-card__desc t-body">Tap a name during a Socratic seminar or a debate and track speaking contributions. Leave with a record and notes as evidence, instead of a vague sense of who carried it.</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">No setup — load a roster</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="teacher-tools/seating-chart-maker.html">
+        <div class="tool-card__eyebrow t-meta">No. 05</div>
+        <div class="tool-card__name t-display">Seating Chart Maker</div>
+        <p class="tool-card__desc t-body">Put students where you want them in your room. Randomize, swap names, and set up islands.</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">Prints to PDF</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
+      <a class="tool-card" href="teacher-tools/hexthinking.html">
+        <div class="tool-card__eyebrow t-meta">No. 06</div>
+        <div class="tool-card__name t-display">Hexagonal Activity Creator</div>
+        <p class="tool-card__desc t-body">Students connect concepts, terms, characters, etc., their own way</p>
+        <div class="tool-card__footer t-meta">
+          <span class="tool-card__fact">Type in your own terms</span>
+          <span class="tool-card__open">Open →</span>
+        </div>
+      </a>
+
     </div>
   </section>
 
-  <!-- TOOLS -->
-  <section class="tools" id="tools">
-    <div class="section-label">The tools</div>
-    <div class="tools-grid">
-
-      <a href="teacher-tools/purewrite-setup.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">01</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Pure Writer</div>
-        <p class="tool-desc">Distraction-free in-class writing — no corrections, no paste, no accounts. Exports MLA-formatted PDF or Word.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
-      <a href="teacher-tools/presentation-grader.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">02</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Presentation Tracker</div>
-        <p class="tool-desc">Grade individual or group presentations against a rubric, with per-student overrides and a printable report.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
-      <a href="teacher-tools/stack-splitter.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">03</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Stack Splitter</div>
-        <p class="tool-desc">Print QR coversheets for handwritten work, then split one big scan back into a separate PDF per student.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
-      <a href="teacher-tools/talk-tracker.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">04</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Talk Tracker</div>
-        <p class="tool-desc">Track participation in seminars, debates, and discussions — tap to tally, tag by talking point.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
-      <a href="teacher-tools/seating-chart-maker.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">05</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Seating Chart Maker</div>
-        <p class="tool-desc">Drag-and-drop classroom layouts. Export to PDF or share a live link with a sub.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
-      <a href="teacher-tools/hexthinking.html" class="tool-card live">
-        <div class="tool-card-top">
-          <span class="tool-num">06</span>
-          <span class="tool-status-live"><div class="live-dot"></div>Live</span>
-        </div>
-        <div class="tool-name">Hexagonal Activity Creator</div>
-        <p class="tool-desc">Visual concept mapping with hexagons. Students connect ideas and justify relationships spatially.</p>
-        <span class="tool-link">Try it free →</span>
-      </a>
-
+  <!-- AUTHOR'S NOTE -->
+  <section class="note" id="about">
+    <div class="note__inner">
+      <div class="note__kicker t-meta">A note from me</div>
+      <p>I teach middle and high school English. I couldn't find the tools that I wanted, so I made them myself. I build them for my own classes first — which is why they're small, fast, and simple.</p>
+      <p>Nothing leaves your browser, and there's no account to make. The data and student info stays with. you <a href="teacher-tools/rosters.html">Start by building your class lists</a> — every tool reuses them.</p>
     </div>
   </section>
 
   <!-- FOOTER -->
-  <footer id="about">
-    <div class="footer-wm">
-      <div class="nav-dot"></div>
-      Teacher Toolshed
+  <footer class="site-footer">
+    <div class="column site-footer__inner">
+      <span>Teacher Toolshed · Made for teachers, by a teacher</span>
+      <div class="site-footer__links">
+        <a href="privacy.html">Privacy</a>
+        <span class="site-footer__copyright">© 2026</span>
+      </div>
     </div>
-    <span class="footer-note">Made for teachers, by a teacher &nbsp;·&nbsp; © 2026 &nbsp;·&nbsp; <a href="privacy.html" class="link">Privacy</a></span>
   </footer>
 
 </body>
