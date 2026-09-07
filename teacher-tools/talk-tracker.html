@@ -6,8 +6,11 @@
 <title>Talk Tracker — Teacher Toolshed</title>
 <meta name="description" content="Track participation in seminars, debates, and discussions — tap to tally, tag by talking point.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/toolshed.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
 <style>
   html,body{height:100%;overflow:hidden}
   body{display:flex;flex-direction:column}
@@ -17,176 +20,158 @@
   .screen.active{display:flex}
 
   /* ─── SETUP SCREEN ─── */
-  .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px;max-width:760px;margin:0 auto;width:100%}
-  .page-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
-  .page-title{font-family:var(--font-serif);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
+  .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px}
+  .setup-body-inner{max-width:760px;margin:0 auto;width:100%}
+  .card + .card{margin-top:16px}
 
-  .card{margin-bottom:16px}
-
-  /* TALKING POINTS */
+  /* TALKING POINTS (setup) */
   .tp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
   .tp-row{display:flex;align-items:center;gap:8px}
   .tp-row input{flex:1}
-  .tp-row .btn-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
-  .tp-row .btn-remove:hover{color:var(--red)}
+  .tp-row .btn-remove{background:none;border:none;color:var(--meta);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
+  .tp-row .btn-remove:hover{color:var(--flag)}
 
-  .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
+  /* PAST SESSIONS */
+  .row-actions{display:flex;gap:8px;flex-shrink:0}
 
   /* ─── LIVE SCREEN ─── */
   .live-layout{flex:1;display:flex;overflow:hidden}
 
-  /* STUDENT GRID */
+  /* STUDENT GRID — the tap-a-name tally, the core interaction of this tool */
   .student-panel{flex:1;overflow-y:auto;padding:18px}
-  .student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .student-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
 
-  .student-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:12px 10px;text-align:center;cursor:pointer;user-select:none;transition:all .12s;position:relative}
-  .student-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(181,132,58,.12)}
-  .student-card:active{transform:scale(.96)}
-  .student-card.tapped{border-color:var(--accent);background:var(--accent-soft)}
-  .student-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;word-break:break-word}
-  .student-count{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-size:16px;font-weight:700;border:2px solid;margin-bottom:4px}
-  .count-0{background:#F7F5F0;border-color:var(--border);color:var(--text-light)}
-  .count-low{background:#FBF4E8;border-color:#E4CFA0;color:var(--accent)}
-  .count-mid{background:#EBF4EE;border-color:var(--green-border);color:var(--green)}
-  .count-high{background:#E6F2EC;border-color:#7CC495;color:#2E6347}
+  .student-card{background:var(--paper);border:var(--hairline);min-height:44px;padding:14px 10px;text-align:center;cursor:pointer;user-select:none;transition:border-color .12s,background .12s;position:relative}
+  .student-card:hover{border-color:var(--accent)}
+  .student-card.tapped{border-color:var(--accent);background:var(--accent-wash)}
+  .student-name{font-family:var(--font-display);font-weight:500;font-size:16px;color:var(--ink);margin-bottom:8px;word-break:break-word}
+  .student-count{display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px;font-family:var(--font-display);font-weight:500;font-size:19px;border:1px solid var(--rule);margin-bottom:6px;color:var(--accent)}
+  .count-0{background:var(--paper);border-color:var(--rule);color:var(--meta)}
+  .count-low{background:var(--paper);border-color:var(--accent);color:var(--accent)}
+  .count-mid{background:var(--ok-wash);border-color:var(--ok);color:var(--ok)}
+  .count-high{background:var(--ok);border-color:var(--ok);color:var(--paper)}
   .student-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:4px}
-  .s-tag{font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text-mid)}
+  .s-tag{font-family:var(--font-meta);font-size:10px;font-weight:600;letter-spacing:.06em;background:var(--paper);border:1px solid var(--rule);padding:1px 6px;color:var(--meta)}
 
   /* RIGHT SIDEBAR */
-  .live-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-left:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-  .ls-section{padding:14px 16px;border-bottom:1px solid var(--border)}
-  .ls-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px}
+  .live-sidebar{width:260px;flex-shrink:0;background:var(--paper);border-left:var(--hairline);display:flex;flex-direction:column;overflow:hidden}
+  .ls-section{padding:14px 16px;border-bottom:var(--hairline)}
+  .ls-label{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--meta);margin-bottom:8px}
 
   /* TIMER */
-  .timer-display{font-family:var(--font-serif);font-size:32px;font-weight:700;text-align:center;color:var(--text);letter-spacing:.02em;margin-bottom:8px}
-  .timer-display.running{color:var(--green)}
-  .timer-display.warning{color:var(--accent)}
+  .timer-display{font-family:var(--font-display);font-weight:500;font-size:30px;text-align:center;color:var(--ink);margin-bottom:8px}
+  .timer-display.running{color:var(--ok)}
+  .timer-display.warning{color:var(--note)}
   .timer-btns{display:flex;gap:6px;justify-content:center}
 
-  /* TALKING POINTS */
-  .tp-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-sm);cursor:pointer;transition:background .12s}
-  .tp-item:hover{background:var(--surface-2)}
-  .tp-item.covered{opacity:.5;text-decoration:line-through}
-  .tp-check{width:16px;height:16px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
-  .tp-item.covered .tp-check{background:var(--green);border-color:var(--green);color:#fff}
-  .tp-text{font-size:13px;color:var(--text);flex:1}
+  /* TALKING POINTS (live sidebar) */
+  .tp-item{display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;transition:background .12s}
+  .tp-item:hover{background:var(--paper-hover)}
+  .tp-item.covered{opacity:.55;text-decoration:line-through}
+  .tp-check{width:14px;height:14px;border:1px solid var(--rule);flex-shrink:0}
+  .tp-item.covered .tp-check{background:var(--ok);border-color:var(--ok)}
+  .tp-text{font-family:var(--font-body);font-size:15px;color:var(--ink);flex:1}
 
   /* NOTES */
   .notes-area{flex:1;overflow-y:auto;padding:14px 16px}
-  .notes-area textarea{min-height:80px;font-size:13px;width:100%}
+  .notes-area textarea{min-height:80px;width:100%}
 
   /* LIVE HEADER */
-  .live-header{background:var(--surface);border-bottom:1.5px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .live-session-name{font-family:var(--font-serif);font-size:15px;font-weight:600}
-  .live-stats{font-size:12px;color:var(--text-mid)}
+  .live-header{background:var(--paper);border-bottom:var(--hairline);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .live-session-name{font-family:var(--font-display);font-weight:500;font-size:17px}
+  .live-stats{font-family:var(--font-body);font-size:14px;color:var(--body-muted)}
 
-  /* TAG POPUP */
-  .tag-popup{display:none;position:fixed;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 4px 16px rgba(40,37,30,.14);z-index:100;min-width:160px}
+  /* TAG POPUP — square, no shadow (that's reserved for .modal); an ink border carries the elevation instead */
+  .tag-popup{display:none;position:fixed;background:var(--paper);border:1px solid var(--ink);padding:8px;z-index:100;min-width:160px}
   .tag-popup.open{display:block}
-  .tag-popup-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);padding:2px 6px;margin-bottom:6px}
-  .tag-btn{display:block;width:100%;background:none;border:none;text-align:left;font-family:var(--font-sans);font-size:13px;color:var(--text);padding:7px 10px;cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
-  .tag-btn:hover{background:var(--surface-2)}
+  .tag-popup-title{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);padding:2px 6px;margin-bottom:6px}
+  .tag-btn{display:block;width:100%;background:none;border:none;text-align:left;font-family:var(--font-body);font-size:15px;color:var(--ink);padding:7px 10px;cursor:pointer;transition:background .12s}
+  .tag-btn:hover{background:var(--paper-hover)}
 
   /* NOTE BUTTON + POPUP */
-  .note-btn{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;color:var(--text-light);cursor:pointer;transition:all .15s}
-  .note-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-  .note-btn.has-note{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-  .note-popup{display:none;position:fixed;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px;box-shadow:0 4px 16px rgba(40,37,30,.14);z-index:110;width:220px}
+  .note-btn{position:absolute;top:6px;right:6px;width:22px;height:22px;background:var(--paper);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;color:var(--meta);cursor:pointer;transition:border-color .15s,color .15s}
+  .note-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .note-btn.has-note{border-color:var(--accent);color:var(--accent);background:var(--accent-wash)}
+  .note-popup{display:none;position:fixed;background:var(--paper);border:1px solid var(--ink);padding:10px;z-index:110;width:220px}
   .note-popup.open{display:block}
-  .note-popup-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);margin-bottom:6px}
-  .note-popup textarea{width:100%;min-height:70px;font-size:13px;margin-bottom:8px}
+  .note-popup-title{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);margin-bottom:6px}
+  .note-popup textarea{width:100%;min-height:70px;margin-bottom:8px}
 
   /* ─── SUMMARY SCREEN ─── */
-  .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px;max-width:760px;margin:0 auto;width:100%}
+  .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px}
+  .summary-body-inner{max-width:760px;margin:0 auto;width:100%}
   .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
-  .summary-title{font-family:var(--font-serif);font-size:24px;font-weight:700;margin-bottom:4px}
-  .summary-meta{font-size:13px;color:var(--text-mid)}
-
+  .summary-title{font-family:var(--font-display);font-weight:500;font-size:24px;margin-bottom:4px}
+  .summary-meta{font-family:var(--font-body);font-size:15px;color:var(--body-muted)}
 
   /* BAR CHART */
   .bar-section{margin-bottom:20px}
   .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
-  .bar-name{font-size:13px;font-weight:500;width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-  .bar-track{flex:1;background:var(--surface-2);border-radius:4px;height:20px;overflow:hidden}
-  .bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease;display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
-  .bar-val{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
-  .bar-fill.zero{background:var(--border)}
-
-  /* NOTES REVIEW */
-  .notes-review{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-  .notes-review h3{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:10px}
-  .notes-review textarea{font-size:13px}
-
-  /* PAST SESSIONS */
-  .past-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--surface-2)}
-  .past-row:last-child{border-bottom:none}
-  .past-name{font-size:13px;font-weight:600;color:var(--text)}
-  .past-meta{font-size:11.5px;color:var(--text-light);margin-top:2px}
-  .past-actions{display:flex;gap:6px;flex-shrink:0}
+  .bar-name{font-family:var(--font-body);font-size:14px;font-weight:500;width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .bar-track{flex:1;background:var(--paper-hover);height:20px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent);transition:width .4s ease;display:flex;align-items:center;padding-right:6px;justify-content:flex-end}
+  .bar-val{font-family:var(--font-meta);font-size:11px;font-weight:700;color:var(--paper);white-space:nowrap}
+  .bar-fill.zero{background:var(--rule)}
 
   /* SPEAKER NOTES */
   .speaker-notes-row{margin-bottom:12px}
   .speaker-notes-row:last-child{margin-bottom:0}
-  .speaker-notes-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
-  .speaker-notes-row textarea{width:100%;min-height:56px;font-size:13px}
+  .speaker-notes-name{font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px}
+  .speaker-notes-row textarea{width:100%;min-height:56px}
 
   /* RUBRIC SCORES (summary) */
-  .rubric-score-row{margin-bottom:16px;padding-bottom:16px;border-bottom:1.5px dashed var(--border)}
+  .rubric-score-row{margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--rule)}
   .rubric-score-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
-  .rubric-score-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .rubric-score-name{font-family:var(--font-body);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px}
   .criterion-live-row{margin-bottom:14px}
   .criterion-live-row:last-child{margin-bottom:0}
-  .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-  .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+  .criterion-live-name{font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink);margin-bottom:2px}
+  .criterion-live-desc{font-family:var(--font-body);font-size:14px;color:var(--meta);margin-bottom:6px;line-height:1.5}
   input.criterion-live-score{width:90px}
-  .criterion-live-note{min-height:56px;font-size:13px}
+  .criterion-live-note{min-height:56px}
+
+  @media print {
+    .tool-header, .live-sidebar, .live-header, .tool-footer, .toast, button { display: none !important; }
+    .speaker-notes-row:has(textarea:placeholder-shown) { display: none; }
+  }
 
   @media (max-width: 768px) {
     .live-layout { flex-direction: column; }
-    .live-sidebar { width: 100%; max-height: 32vh; border-left: none; border-top: 1.5px solid var(--border); }
+    .live-sidebar { width: 100%; max-height: 32vh; border-left: none; border-top: var(--hairline); }
   }
 </style>
 </head>
-<body>
+<body class="app">
 
-<div class="toast hidden" id="toast"></div>
+<div class="toast is-hidden" id="toast"></div>
 
-<header class="header">
-  <div class="header-left">
-    <a class="brand" href="/">
-      <div class="brand-icon">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-        </svg>
-      </div>
-      <span class="brand-name">Teacher<span>Toolshed</span></span>
-    </a>
-    <span class="header-sep">/</span>
-    <a class="header-tool" href="talk-tracker.html">Talk Tracker</a>
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Talk Tracker</span>
   </div>
 </header>
 
 <!-- ═══════════════════════════════ SETUP SCREEN ═══════════════════════════════ -->
 <div class="screen active" id="screen-setup">
-  <div class="setup-body">
-    <p class="page-eyebrow">Talk Tracker</p>
-    <h1 class="page-title">Set Up Your Session</h1>
-    <p class="page-sub">Add your students, name the session, and optionally set up talking points before you begin.</p>
+  <div class="setup-body"><div class="setup-body-inner">
+    <div class="page-head">
+      <p class="page-eyebrow">No. 04</p>
+      <h1 class="page-title">Set Up Your Session</h1>
+      <p class="page-sub">Add your students, name the session, and optionally set up talking points before you begin.</p>
+    </div>
 
     <!-- Session Details -->
     <div class="card">
-      <div class="card-title">📋 Session Details</div>
+      <div class="card__title">Session Details</div>
       <div class="row-2">
         <div class="field">
           <label>Session name <span class="required-mark">*</span></label>
           <input type="text" id="session-name" placeholder="e.g. Macbeth Act 3 — Socratic Seminar" required/>
         </div>
         <div class="field">
-          <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <label>Class name <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></label>
           <input type="text" id="class-name" placeholder="e.g. Period 3 English 10"/>
         </div>
       </div>
@@ -219,7 +204,7 @@
 
     <!-- Students -->
     <div class="card">
-      <div class="card-title">👥 Students</div>
+      <div class="card__title">Students</div>
       <div class="field">
         <label>Use a saved class list</label>
         <select id="roster-select" onchange="loadRoster()">
@@ -236,21 +221,21 @@
 
     <!-- Past sessions -->
     <div class="card" id="past-card" style="display:none">
-      <div class="card-title">🗂 Past Sessions</div>
-      <div id="past-list"></div>
+      <div class="card__title">Past Sessions</div>
+      <div class="rows" id="past-list"></div>
     </div>
 
     <!-- Talking Points -->
     <div class="card">
-      <div class="card-title">💬 Talking Points <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="card__title">Talking Points <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></div>
       <div class="tp-list" id="tp-list"></div>
-      <button class="btn-add-tp" onclick="addTalkingPoint()">+ Add talking point</button>
+      <button class="btn btn--add" onclick="addTalkingPoint()">+ Add talking point</button>
       <p class="hint" style="margin-top:8px">Track which topics get covered during the session.</p>
     </div>
 
     <!-- Rubric -->
     <div class="card">
-      <div class="card-title">📊 Rubric <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="card__title">Rubric <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></div>
       <div class="field">
         <label>Use a saved rubric</label>
         <select id="rubric-select" onchange="onRubricSelectChange()">
@@ -264,16 +249,17 @@
           <input type="text" id="rubric-name-input" placeholder="e.g. Socratic Seminar Participation" maxlength="80"/>
         </div>
         <div id="rubric-criteria-container"></div>
-        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="saveRubricFromEditor()">Save rubric</button>
+        <button class="btn btn--secondary btn--sm" style="margin-top:12px" onclick="saveRubricFromEditor()">Save rubric</button>
         <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool. Scored after the session, alongside the tally — not live during discussion.</p>
       </div>
     </div>
 
-    <div class="setup-actions">
-      <button class="btn-ghost" onclick="clearSetup()">Clear</button>
-      <button class="btn btn-primary" onclick="startSession()" style="padding:11px 28px">Start Session →</button>
+    <div class="actions">
+      <span class="actions__spacer"></span>
+      <button class="btn btn--ghost" onclick="clearSetup()">Clear</button>
+      <button class="btn btn--primary" onclick="startSession()">Start Session →</button>
     </div>
-  </div>
+  </div></div>
 </div>
 
 <!-- ═══════════════════════════════ LIVE SCREEN ═══════════════════════════════ -->
@@ -284,7 +270,7 @@
       <div class="live-stats" id="live-stats">0 contributions · 0 students at target</div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-outline btn-sm" onclick="endSession()">End Session →</button>
+      <button class="btn btn--secondary btn--sm" onclick="endSession()">End Session →</button>
     </div>
   </div>
 
@@ -301,8 +287,8 @@
         <div class="ls-label">Session Timer</div>
         <div class="timer-display" id="session-timer">00:00</div>
         <div class="timer-btns">
-          <button class="btn btn-outline btn-sm" onclick="toggleTimer()" id="timer-btn">▶ Start</button>
-          <button class="btn btn-outline btn-sm" onclick="resetTimer()">↺</button>
+          <button class="btn btn--secondary btn--sm" onclick="toggleTimer()" id="timer-btn">Start</button>
+          <button class="btn btn--secondary btn--sm" onclick="resetTimer()">Reset</button>
         </div>
       </div>
 
@@ -315,7 +301,7 @@
       <!-- Notes -->
       <div class="notes-area">
         <div class="ls-label">Session Notes</div>
-        <textarea id="session-notes" placeholder="Running notes, observations…" style="min-height:100px;font-size:13px"></textarea>
+        <textarea id="session-notes" placeholder="Running notes, observations…" style="min-height:100px"></textarea>
       </div>
     </aside>
   </div>
@@ -323,16 +309,16 @@
 
 <!-- ═══════════════════════════════ SUMMARY SCREEN ═══════════════════════════════ -->
 <div class="screen" id="screen-summary">
-  <div class="summary-body">
+  <div class="summary-body"><div class="summary-body-inner">
     <div class="summary-header">
       <div>
         <div class="summary-title" id="sum-title">Session Summary</div>
         <div class="summary-meta" id="sum-meta"></div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
-        <button class="btn btn-outline btn-sm" onclick="printSummary()">🖨 Print</button>
-        <button class="btn btn-outline btn-sm" onclick="exportCsv()">📥 Export CSV</button>
-        <button class="btn btn-outline btn-sm" onclick="newSession()">+ New Session</button>
+        <button class="btn btn--secondary btn--sm" onclick="printSummary()">Print</button>
+        <button class="btn btn--secondary btn--sm" onclick="exportCsv()">Export CSV</button>
+        <button class="btn btn--secondary btn--sm" onclick="newSession()">+ New Session</button>
       </div>
     </div>
 
@@ -341,34 +327,34 @@
 
     <!-- Participation Chart -->
     <div class="card">
-      <div class="card-title">📊 Participation</div>
+      <div class="card__title">Participation</div>
       <div id="sum-bars"></div>
     </div>
 
     <!-- Talking Points Coverage -->
     <div class="card" id="sum-tp-card" style="display:none">
-      <div class="card-title">💬 Talking Points Coverage</div>
+      <div class="card__title">Talking Points Coverage</div>
       <div id="sum-tp"></div>
     </div>
 
     <!-- Rubric Scores -->
     <div class="card" id="sum-rubric-card" style="display:none">
-      <div class="card-title">📊 Rubric Scores</div>
+      <div class="card__title">Rubric Scores</div>
       <div id="sum-rubric-scores"></div>
     </div>
 
     <!-- Speaker Notes -->
     <div class="card" id="sum-speaker-notes-card" style="display:none">
-      <div class="card-title">🗒 Speaker Notes</div>
+      <div class="card__title">Speaker Notes</div>
       <div id="sum-speaker-notes"></div>
     </div>
 
     <!-- Notes Review -->
-    <div class="notes-review">
-      <h3>Session Notes</h3>
-      <textarea id="sum-notes" placeholder="Add post-session reflections…" style="width:100%;min-height:100px;font-size:13px"></textarea>
+    <div class="card">
+      <div class="card__title">Session Notes</div>
+      <textarea id="sum-notes" placeholder="Add post-session reflections…" style="width:100%;min-height:100px"></textarea>
     </div>
-  </div>
+  </div></div>
 </div>
 
 <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
@@ -592,7 +578,7 @@ function renderStudentGrid() {
 
     const noteBtn = document.createElement('button');
     noteBtn.className = 'note-btn' + (s.notes ? ' has-note' : '');
-    noteBtn.textContent = '✎';
+    noteBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M11 2l3 3-8 8-3.5.5.5-3.5 8-8z"/></svg>';
     noteBtn.title = 'Add note';
     noteBtn.addEventListener('click', e => openNotePopup(s.id, e));
 
@@ -678,7 +664,7 @@ function openTagPopup(studentId, e) {
   // Add "Just a count" option
   const plain = document.createElement('button');
   plain.className = 'tag-btn';
-  plain.textContent = '✓ Count only';
+  plain.textContent = 'Count only';
   plain.onclick = () => { incrementStudent(studentId, null); closeTagPopup(); };
   popup.appendChild(plain);
 
@@ -717,7 +703,7 @@ function openNotePopup(studentId, e) {
   const popup = document.getElementById('note-popup');
   popup.innerHTML = `<div class="note-popup-title">Note — ${esc(s.name)}</div>
     <textarea id="note-popup-input" placeholder="Observation about this student…"></textarea>
-    <button class="btn btn-primary btn-sm btn-full" id="note-popup-done">Done</button>`;
+    <button class="btn btn--primary btn--sm btn--full" id="note-popup-done">Done</button>`;
   const ta = popup.querySelector('#note-popup-input');
   ta.value = s.notes || '';
   ta.addEventListener('input', () => { s.notes = ta.value; updateStudentCard(s); scheduleLiveSave(); });
@@ -746,11 +732,10 @@ function renderLiveTalkingPoints() {
     const item = document.createElement('div');
     item.className = 'tp-item' + (tp.covered ? ' covered' : '');
     item.id = 'tp-live-' + tp.id;
-    item.innerHTML = `<div class="tp-check">${tp.covered ? '✓' : ''}</div><div class="tp-text">${esc(tp.text)}</div>`;
+    item.innerHTML = `<div class="tp-check"></div><div class="tp-text">${esc(tp.text)}</div>`;
     item.onclick = () => {
       tp.covered = !tp.covered;
       item.className = 'tp-item' + (tp.covered ? ' covered' : '');
-      item.querySelector('.tp-check').textContent = tp.covered ? '✓' : '';
     };
     list.appendChild(item);
   });
@@ -761,10 +746,10 @@ function toggleTimer() {
   if (timerRunning) {
     clearInterval(timerInterval);
     timerRunning = false;
-    document.getElementById('timer-btn').textContent = '▶ Resume';
+    document.getElementById('timer-btn').textContent = 'Resume';
   } else {
     timerRunning = true;
-    document.getElementById('timer-btn').textContent = '⏸ Pause';
+    document.getElementById('timer-btn').textContent = 'Pause';
     timerInterval = setInterval(() => {
       session.elapsed++;
       updateTimerDisplay();
@@ -775,7 +760,7 @@ function resetTimer() {
   clearInterval(timerInterval);
   timerRunning = false;
   session.elapsed = 0;
-  document.getElementById('timer-btn').textContent = '▶ Start';
+  document.getElementById('timer-btn').textContent = 'Start';
   updateTimerDisplay();
 }
 function updateTimerDisplay() {
@@ -791,7 +776,7 @@ function endSession() {
   if (!confirm('End this session and go to the summary?')) return;
   clearInterval(timerInterval);
   timerRunning = false;
-  document.getElementById('timer-btn').textContent = '▶ Start';
+  document.getElementById('timer-btn').textContent = 'Start';
   session.notes = document.getElementById('session-notes').value;
   buildSummary();
   switchScreen('summary');
@@ -832,7 +817,7 @@ function buildSummary() {
     {num: `${atTarget}/${s.students.length}`, lbl: 'Met target'},
     {num: avg, lbl: 'Avg per student'},
     {num: tps.length ? `${covered}/${tps.length}` : '—', lbl: 'Topics covered'},
-  ].map(x=>`<div class="stat-box"><div class="stat-num">${x.num}</div><div class="stat-lbl">${x.lbl}</div></div>`).join('');
+  ].map(x=>`<div class="stat"><div class="stat__num">${x.num}</div><div class="stat__lbl">${x.lbl}</div></div>`).join('');
 
   // Bars — sorted descending
   const sorted = [...s.students].sort((a,b)=>b.count-a.count);
@@ -854,10 +839,7 @@ function buildSummary() {
   if (tps.length) {
     tpCard.style.display = '';
     document.getElementById('sum-tp').innerHTML = tps.map(tp =>
-      `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--surface-2)">
-        <div style="width:16px;height:16px;border-radius:3px;background:${tp.covered?'var(--green)':'var(--border)'};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">${tp.covered?'✓':''}</div>
-        <span style="font-size:13px;color:${tp.covered?'var(--text)':'var(--text-light)'}">${esc(tp.text)}</span>
-      </div>`
+      `<div class="tp-item${tp.covered ? ' covered' : ''}"><div class="tp-check"></div><div class="tp-text">${esc(tp.text)}</div></div>`
     ).join('');
   } else {
     tpCard.style.display = 'none';
@@ -962,7 +944,7 @@ function newSession() {
   selectedRubric = null;
   document.getElementById('rubric-editor-wrap').style.display = 'none';
   timerRunning = false; clearInterval(timerInterval);
-  document.getElementById('timer-btn').textContent = '▶ Start';
+  document.getElementById('timer-btn').textContent = 'Start';
   updateTimerDisplay();
   savedSessionId = null;   // the next session becomes its own saved record
   clearLiveSave();
@@ -1018,14 +1000,14 @@ async function renderPastSessions() {
 
   docs.forEach(d => {
     const row = document.createElement('div');
-    row.className = 'past-row';
+    row.className = 'row';
     const when = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
-    row.innerHTML = `<div><div class="past-name"></div><div class="past-meta">${when}</div></div>
-      <div class="past-actions">
-        <button class="btn btn-outline btn-sm">Open</button>
-        <button class="btn-ghost" style="font-size:12px">Delete</button>
+    row.innerHTML = `<div class="row__main"><div class="row__name"></div><div class="row__meta">${when}</div></div>
+      <div class="row-actions">
+        <button class="btn btn--secondary btn--sm">Open</button>
+        <button class="btn btn--ghost btn--sm">Delete</button>
       </div>`;
-    row.querySelector('.past-name').textContent = d.name;
+    row.querySelector('.row__name').textContent = d.name;
     const btns = row.querySelectorAll('button');
     btns[0].onclick = () => openPastSession(d.id);
     btns[1].onclick = () => deletePastSession(d.id, d.name);
@@ -1133,16 +1115,10 @@ function switchScreen(id) {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 function showToast(msg, dur=2200) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.remove('hidden');
+  t.textContent = msg; t.classList.remove('is-hidden');
   clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(()=>t.classList.add('hidden'), dur);
+  showToast._timer = setTimeout(()=>t.classList.add('is-hidden'), dur);
 }
-
-// Print styles
-const ps = document.createElement('style');
-ps.media = 'print';
-ps.textContent = `.header,.tool-footer,button{display:none!important}.summary-body{padding:0}.speaker-notes-row:has(textarea:placeholder-shown){display:none}`;
-document.head.appendChild(ps);
 </script>
 </body>
 </html>
