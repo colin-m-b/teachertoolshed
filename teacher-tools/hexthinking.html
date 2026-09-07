@@ -6,319 +6,201 @@
 <title>Hexagonal Activity Creator — Teacher Toolshed</title>
 <meta name="description" content="Visual concept mapping with hexagons. Students connect ideas and justify relationships spatially — share a link, no account needed.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-:root {
-  --bg: #F7F5F0;
-  --bg-warm: #F0EDE6;
-  --surface: #ffffff;
-  --border: #E0DDD4;
-  --border-light: #EAE6DE;
-  --text: #28251E;
-  --text-mid: #6B6457;
-  --text-dim: #A8A098;
-  --accent: #B5843A;
-  --accent-hover: #9A6E2F;
-  --accent-light: rgba(181,132,58,0.08);
-  --canvas-bg: #faf8f5;
-  --canvas-dot: #ddd7ce;
-  --shadow-sm: 0 1px 3px rgba(44,41,36,0.06);
-  --shadow-md: 0 4px 16px rgba(44,41,36,0.08);
-  --shadow-lg: 0 8px 32px rgba(44,41,36,0.12);
-  --radius: 10px;
-  --radius-lg: 16px;
-  --red: #C44A3F;
-  --font-serif: "Lora", Georgia, serif;
-  --font-sans: "DM Sans", "Helvetica Neue", sans-serif;
-  --green: #4A7C59;
-  --green-soft: #EBF4EE;
-  --green-border: #B8D9C2;
-}
-
-body {
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
+html,body{height:100%;overflow:hidden}
+body{display:flex;flex-direction:column}
 
 .view { display: none; }
 .view.active { display: flex; }
 
-/* ===== SHARED ===== */
-.header {
-  padding: 0 24px; height: 54px;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1.5px solid var(--border);
-  background: var(--surface); flex-shrink: 0; z-index: 10;
-}
-.header-left { display: flex; align-items: center; gap: 12px; }
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
-.brand-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px;
-  background: var(--green-soft); border: 1.5px solid var(--green-border); border-radius: 6px;
-}
-.brand-name { font-family: var(--font-serif); font-size: 17px; font-weight: 700; }
-.brand-name span { color: var(--green); }
-.header-tool { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--text-mid); text-decoration: none; transition: color .15s; }
-.header-tool:hover { color: var(--text); }
-.header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
-
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 20px; font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
-  border: none; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
-}
-.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(181,132,58,0.25); }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(181,132,58,0.3); }
-.btn-primary:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
-
-.tool-btn {
-  padding: 7px 14px; font-family: var(--font-sans); font-size: 0.78rem; font-weight: 600;
-  border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-mid);
-  cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px;
-}
-.tool-btn:hover { border-color: var(--text-mid); color: var(--text); }
-.tool-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-
 /* ===== TEACHER ===== */
-#teacherView { flex-direction: column; min-height: 100vh; }
-.teacher-body { flex: 1; display: flex; justify-content: center; padding: 40px 32px 80px; }
+#teacherView { flex-direction: column; height: 100%; overflow: hidden; }
+.teacher-body { flex: 1; overflow-y: auto; display: flex; justify-content: center; padding: 34px 32px 72px; }
 .teacher-content { width: 100%; max-width: 680px; }
-.teacher-content > h2 { font-family: var(--font-serif); font-weight: 700; font-size: 1.8rem; letter-spacing: -0.02em; margin-bottom: 6px; }
-.teacher-content > .subtitle { color: var(--text-mid); font-size: 0.95rem; margin-bottom: 36px; line-height: 1.55; }
+.teacher-content > h1 { font-family: var(--font-display); font-weight: 500; font-size: 32px; line-height: 1.1; margin-bottom: 6px; }
+.teacher-content > .subtitle { font-family: var(--font-body); color: var(--body-muted); font-size: 16px; margin-bottom: 32px; line-height: 1.5; text-wrap: pretty; }
 
-.card {
-  background: var(--surface); border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
-  box-shadow: var(--shadow-sm); animation: fadeUp 0.35s ease both;
-}
-.card:nth-child(2) { animation-delay: 0.04s; }
-.card:nth-child(3) { animation-delay: 0.08s; }
-.card h3 { font-family: var(--font-serif); font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
-.card .desc { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+.card .desc { font-family: var(--font-body); font-size: 15px; color: var(--meta); margin-bottom: 16px; line-height: 1.5; }
 .step-num {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; background: var(--accent); color: #fff;
-  font-size: 0.7rem; font-weight: 700; border-radius: 50%; margin-right: 8px; vertical-align: middle;
+  width: 20px; height: 20px; background: var(--accent); color: var(--paper);
+  font-family: var(--font-meta); font-size: 10.5px; font-weight: 700; margin-right: 8px; vertical-align: middle;
 }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Group blocks */
 .groups-list { display: flex; flex-direction: column; gap: 14px; }
-.group-block { border: 1.5px solid var(--border-light); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+.group-block { border: var(--hairline); transition: border-color .12s; }
 .group-block:focus-within { border-color: var(--accent); }
-.group-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg); border-bottom: 1px solid var(--border-light); }
+.group-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper-hover); border-bottom: var(--hairline); }
 .color-cycle-btn {
-  width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--surface);
-  box-shadow: 0 0 0 1.5px var(--border); cursor: pointer; transition: transform 0.15s; flex-shrink: 0;
+  width: 22px; height: 22px; border: 1px solid var(--rule); cursor: pointer; flex-shrink: 0; padding: 0;
 }
-.color-cycle-btn:hover { transform: scale(1.12); }
+.color-cycle-btn:hover { border-color: var(--ink); }
 .group-name-input {
-  flex: 1; padding: 6px 10px; font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600;
-  color: var(--text); background: transparent; border: none;
+  flex: 1; min-height: auto; padding: 6px 8px; font-family: var(--font-body); font-size: 15px; font-weight: 500;
+  color: var(--ink); background: transparent; border: none;
 }
-.group-name-input:focus { outline: none; }
-.group-name-input::placeholder { color: var(--text-dim); font-weight: 500; }
+.group-name-input:hover { border: none; }
+.group-name-input:focus { outline: none; border: none; background: transparent; }
+.group-name-input::placeholder { color: var(--meta); font-weight: 400; }
 .group-remove {
-  width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent;
-  color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s; flex-shrink: 0;
+  width: 24px; height: 24px; border: none; background: transparent;
+  color: var(--meta); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: color .12s; flex-shrink: 0;
 }
-.group-remove:hover { color: var(--red); background: rgba(196,74,63,0.08); }
+.group-remove:hover { color: var(--flag); }
 .group-terms-area { position: relative; }
 .group-terms-input {
-  width: 100%; padding: 12px 14px; font-family: var(--font-sans); font-size: 0.85rem;
-  color: var(--text); background: var(--surface); border: none; resize: vertical; min-height: 80px; line-height: 1.65;
+  width: 100%; min-height: 80px; padding: 12px; font-family: var(--font-body); font-size: 16px;
+  color: var(--ink); background: var(--paper); border: none; resize: vertical; line-height: 1.6;
 }
-.group-terms-input:focus { outline: none; }
-.group-terms-input::placeholder { color: var(--text-dim); }
+.group-terms-input:hover { border: none; }
+.group-terms-input:focus { outline: none; border: none; background: var(--paper); }
+.group-terms-input::placeholder { color: var(--meta); }
 .char-warning {
   position: absolute; bottom: 6px; right: 10px;
-  font-size: 0.68rem; color: var(--red); font-weight: 600;
+  font-family: var(--font-body); font-size: 13px; color: var(--flag); font-weight: 500;
   display: none;
 }
 .char-warning.visible { display: block; }
 
-.add-group-btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; margin-top: 4px;
-  background: transparent; border: 1.5px dashed var(--border); border-radius: 8px; color: var(--text-mid);
-  font-family: var(--font-sans); font-size: 0.82rem; font-weight: 500;
-  cursor: pointer; transition: all 0.15s; align-self: flex-start;
-}
-.add-group-btn:hover { border-color: var(--accent); color: var(--accent); }
-
 /* Preview */
 .preview-area {
   display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 14px;
-  background: var(--bg); border-radius: var(--radius); border: 1.5px solid var(--border-light);
+  background: var(--paper-hover); border: var(--hairline);
 }
-.preview-chip { display: inline-flex; align-items: center; padding: 5px 13px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; color: #fff; }
-.preview-empty { width: 100%; text-align: center; color: var(--text-dim); font-size: 0.84rem; padding: 8px; }
-.preview-stats { font-size: 0.78rem; color: var(--text-dim); margin-top: 10px; }
-.preview-error { font-size: 0.78rem; color: var(--red); margin-top: 6px; display: none; }
+.preview-chip { display: inline-flex; align-items: center; padding: 5px 12px; font-family: var(--font-meta); font-size: 11px; font-weight: 600; color: var(--paper); }
+.preview-empty { width: 100%; text-align: center; color: var(--meta); font-family: var(--font-body); font-size: 15px; padding: 8px; }
+.preview-stats { font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--meta); margin-top: 10px; }
+.preview-error { font-family: var(--font-body); font-size: 14px; color: var(--flag); margin-top: 6px; display: none; }
 .preview-error.visible { display: block; }
 
-.create-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; }
+.activity-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.activity-row select { flex: 1; min-width: 180px; }
+
+.create-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
 
 /* ===== STUDENT ===== */
-#studentView { flex-direction: column; height: 100vh; overflow: hidden; }
-.header-tools { display: flex; gap: 6px; align-items: center; }
-.student-body { flex: 1; display: flex; overflow: hidden; }
+#studentView { flex-direction: column; height: 100%; overflow: hidden; }
+.student-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 
 .back-link {
-  font-size: 0.75rem; color: var(--text-dim); text-decoration: none;
-  margin-left: 12px; transition: color 0.15s;
+  font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--on-dark-muted); text-decoration: none; margin-left: 4px; transition: color .12s;
 }
-.back-link:hover { color: var(--accent); }
+.back-link:hover { color: var(--accent-on-dark); }
+
+.tool-header__action[aria-pressed=true] { border-color: var(--accent-on-dark); color: var(--accent-on-dark); }
 
 /* Instructions banner */
 .instructions-banner {
-  display: flex; align-items: center; justify-content: center; gap: 24px;
-  padding: 10px 20px; background: #FBF4E8; border-bottom: 1px solid #E4CFA0;
-  font-size: 0.8rem; color: var(--text-mid); flex-shrink: 0; animation: fadeUp 0.3s ease;
+  display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap;
+  padding: 10px 20px; background: var(--note-wash); border-bottom: 1px solid var(--note);
+  font-family: var(--font-body); font-size: 14.5px; color: var(--body-muted); flex-shrink: 0;
 }
-.instructions-banner .step { display: flex; align-items: center; gap: 6px; }
+.instructions-banner .step { display: flex; align-items: center; gap: 8px; }
 .instructions-banner .step-icon {
-  width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%;
-  font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 20px; height: 20px; background: var(--note); color: var(--paper);
+  font-family: var(--font-meta); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .instructions-banner .dismiss {
-  background: none; border: none; color: var(--text-dim); cursor: pointer;
-  padding: 4px; margin-left: 8px; display: flex; align-items: center; transition: color 0.15s;
+  background: none; border: none; color: var(--meta); cursor: pointer;
+  padding: 4px; margin-left: 8px; display: flex; align-items: center; transition: color .12s;
 }
-.instructions-banner .dismiss:hover { color: var(--text); }
+.instructions-banner .dismiss:hover { color: var(--ink); }
 
 /* Tray */
 .hex-tray {
-  width: 230px; background: var(--surface); border-right: 1px solid var(--border-light);
+  width: 220px; background: var(--paper); border-right: var(--hairline);
   display: flex; flex-direction: column; flex-shrink: 0; z-index: 50;
-  transition: width 0.25s; overflow: hidden;
+  transition: width .2s; overflow: hidden;
 }
 .hex-tray.collapsed { width: 0; }
-.tray-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-.tray-header h3 { font-family: var(--font-serif); font-size: 0.85rem; font-weight: 600; }
-.tray-count { font-size: 0.72rem; color: var(--text-dim); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+.tray-header { padding: 14px 16px 10px; border-bottom: var(--hairline); display: flex; align-items: center; justify-content: space-between; }
+.tray-header h3 { font-family: var(--font-meta); font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--meta); }
+.tray-count { font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; color: var(--meta); background: var(--paper-hover); border: var(--hairline); padding: 2px 7px; }
 .tray-items { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
-.tray-items::-webkit-scrollbar { width: 4px; }
-.tray-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.tray-group-label { font-size: 0.68rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 8px 3px; }
+.tray-group-label { font-family: var(--font-meta); font-size: 10px; font-weight: 700; color: var(--meta); text-transform: uppercase; letter-spacing: .1em; padding: 8px 8px 3px; }
 .tray-group-label:first-child { padding-top: 4px; }
 .tray-item {
-  padding: 7px 11px; border-radius: 7px; font-size: 0.82rem; font-weight: 500;
-  cursor: grab; border-left: 3.5px solid; background: var(--bg); transition: all 0.15s; user-select: none;
+  padding: 8px 10px; font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--ink);
+  cursor: grab; border-left: 3px solid; background: var(--paper-hover); transition: background .12s; user-select: none;
+  min-height: 44px; display: flex; align-items: center;
 }
-.tray-item:hover { background: var(--bg-warm); }
-.tray-item.on-canvas { opacity: 0.3; text-decoration: line-through; cursor: default; pointer-events: none; }
-.tray-done { text-align: center; padding: 20px 10px; color: var(--text-dim); font-size: 0.8rem; line-height: 1.5; }
+.tray-item:hover { background: var(--accent-wash); }
+.tray-item.on-canvas { opacity: 0.4; text-decoration: line-through; cursor: default; pointer-events: none; }
+.tray-done { text-align: center; padding: 20px 10px; color: var(--meta); font-family: var(--font-body); font-size: 14.5px; line-height: 1.5; }
 
 /* Canvas */
-.canvas-area { flex: 1; position: relative; overflow: hidden; background: var(--canvas-bg); touch-action: none; }
+.canvas-area { flex: 1; position: relative; overflow: hidden; background: var(--paper-hover); touch-action: none; }
 .canvas-area::before {
   content: ''; position: absolute; inset: 0;
-  background-image: radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px);
-  background-size: 32px 32px; opacity: 0.45; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, var(--rule) 1px, transparent 1px);
+  background-size: 32px 32px; opacity: 0.6; pointer-events: none; z-index: 0;
 }
 #svgCanvas { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; cursor: grab; }
 #svgCanvas.grabbing { cursor: grabbing; }
-.canvas-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 2; }
-.canvas-empty-hint p { color: var(--text-dim); font-size: 0.9rem; opacity: 0.55; }
-.canvas-empty-hint .hint-icon { width: 56px; height: 56px; margin: 0 auto 10px; opacity: 0.18; }
+.canvas-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 2; color: var(--meta); }
+.canvas-empty-hint p { font-family: var(--font-body); font-size: 15px; opacity: 0.7; }
+.canvas-empty-hint .hint-icon { width: 56px; height: 56px; margin: 0 auto 10px; opacity: 0.3; }
 
 .canvas-controls {
   position: absolute; bottom: 16px; right: 16px; display: flex; gap: 3px;
-  background: var(--surface); border: 1px solid var(--border-light); border-radius: var(--radius);
-  padding: 3px; z-index: 30; box-shadow: var(--shadow-sm);
+  background: var(--paper); border: var(--hairline);
+  padding: 3px; z-index: 30;
 }
 .canvas-controls button {
-  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none; border-radius: 6px; color: var(--text-mid);
-  cursor: pointer; transition: all 0.15s;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--meta);
+  cursor: pointer; transition: background .12s, color .12s;
 }
-.canvas-controls button:hover { background: var(--bg); color: var(--text); }
-.zoom-label { display: flex; align-items: center; justify-content: center; min-width: 40px; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); }
+.canvas-controls button:hover { background: var(--paper-hover); color: var(--ink); }
+.zoom-label { display: flex; align-items: center; justify-content: center; min-width: 40px; font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; color: var(--meta); }
 .snap-btn { position: absolute; bottom: 16px; left: 16px; z-index: 30; }
+#snapToggle[aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: var(--accent-wash); }
 
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(44,41,36,0.4); backdrop-filter: blur(4px);
-  z-index: 500; display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none; transition: opacity 0.2s;
-}
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal {
-  background: var(--surface); border-radius: var(--radius-lg); padding: 32px;
-  width: 500px; max-width: 90vw; box-shadow: var(--shadow-lg);
-  transform: translateY(8px) scale(0.98); transition: transform 0.2s;
-}
-.modal-overlay.open .modal { transform: translateY(0) scale(1); }
-.modal h3 { font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem; margin-bottom: 8px; }
-.modal p { color: var(--text-mid); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.5; }
 .link-box { display: flex; gap: 8px; }
-.link-box input { flex: 1; padding: 10px 14px; font-family: var(--font-sans); font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
-.link-box input:focus { outline: none; }
-.copy-btn { padding: 10px 18px; font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; border: none; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
-.copy-btn:hover { background: var(--accent-hover); }
-.modal-close { display: block; margin: 16px auto 0; padding: 8px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text-mid); font-family: var(--font-sans); font-size: 0.82rem; cursor: pointer; }
-.modal-close:hover { border-color: var(--text-mid); }
-
-.small-screen-notice { display: none; background: var(--accent-soft); border-bottom: 1px solid #E4CFA0; padding: 8px 20px; font-size: 12.5px; color: var(--accent-hover); text-align: center; flex-shrink: 0; }
-.tool-footer { flex-shrink: 0; text-align: center; padding: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); background: var(--surface); }
-.tool-footer a { color: var(--text-mid); font-weight: 600; text-decoration: none; }
-.tool-footer a:hover { color: var(--accent); }
+.link-box input { flex: 1; }
 
 @media (max-width: 768px) {
   .teacher-body { padding: 20px 16px 40px; }
-  .header { padding: 8px 16px; height: auto; min-height: 54px; flex-wrap: wrap; row-gap: 6px; }
-  .hex-tray { width: 190px; }
-  .instructions-banner { flex-wrap: wrap; gap: 10px; font-size: 0.75rem; padding: 8px 14px; }
-  .header-tools .tool-btn span.label { display: none; }
-  .small-screen-notice { display: block; }
+  .hex-tray { width: 180px; }
+  .instructions-banner { gap: 10px; font-size: 13.5px; padding: 8px 14px; }
+  .tool-header__action .label { display: none; }
 }
+
 </style>
 </head>
-<body>
+<body class="app">
 
 <!-- ===== TEACHER VIEW ===== -->
 <div class="view" id="teacherView">
-  <header class="header">
-    <div class="header-left">
-      <a class="brand" href="/">
-        <div class="brand-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-            <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-            <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-            <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          </svg>
-        </div>
-        <span class="brand-name">Teacher<span>Toolshed</span></span>
-      </a>
-      <span class="header-sep">/</span>
-      <a class="header-tool" href="hexthinking.html">Hexagonal Activity Creator</a>
+  <header class="tool-header">
+    <div class="tool-header__left">
+      <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+      <span class="tool-header__rule"></span>
+      <span class="tool-header__name">Hexagonal Activity Creator</span>
     </div>
   </header>
   <div class="teacher-body">
     <div class="teacher-content">
-      <h2>Create an Activity</h2>
+      <h1>Create an Activity</h1>
       <p class="subtitle">Build your hexagon set below. Students will get a link to arrange them on their own canvas.</p>
 
       <div class="card">
-        <h3><span class="step-num">1</span>Add Your Terms</h3>
+        <div class="card__title"><span class="step-num">1</span>Add Your Terms</div>
         <p class="desc">Create groups of related terms. Each group gets its own color. Click the color dot to cycle through colors. Max 40 characters per term.</p>
         <div class="groups-list" id="groupsList"></div>
-        <button class="add-group-btn" id="addGroupBtn">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Add another group
-        </button>
+        <button class="btn btn--add" id="addGroupBtn">Add another group</button>
       </div>
 
       <div class="card">
-        <h3><span class="step-num">2</span>Preview</h3>
+        <div class="card__title"><span class="step-num">2</span>Preview</div>
         <p class="desc">These hexagons will appear on the student canvas.</p>
         <div class="preview-area" id="previewArea">
           <div class="preview-empty">Your terms will appear here as you type</div>
@@ -328,22 +210,19 @@ body {
       </div>
 
       <div class="card">
-        <h3><span class="step-num">3</span>Saved Activities</h3>
+        <div class="card__title"><span class="step-num">3</span>Saved Activities</div>
         <p class="desc">Keep an activity to reuse or edit later. Saved in this browser only.</p>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="activitySelect" style="flex:1;min-width:180px;padding:8px 12px;font-family:var(--font-sans);font-size:0.85rem;color:var(--text);background:var(--bg);border:1.5px solid var(--border);border-radius:8px">
+        <div class="activity-row">
+          <select id="activitySelect">
             <option value="">— Saved activities —</option>
           </select>
-          <button class="tool-btn" id="saveActivityBtn">Save</button>
-          <button class="tool-btn" id="deleteActivityBtn">Delete</button>
+          <button class="btn btn--secondary btn--sm" id="saveActivityBtn">Save</button>
+          <button class="btn btn--secondary btn--sm" id="deleteActivityBtn">Delete</button>
         </div>
       </div>
 
       <div class="create-actions">
-        <button class="btn btn-primary" id="createBtn" disabled>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4.5 7L8 10l3.5-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Create &amp; Get Link
-        </button>
+        <button class="btn btn--primary" id="createBtn" disabled>Create &amp; Get Link</button>
       </div>
     </div>
   </div>
@@ -352,36 +231,17 @@ body {
 
 <!-- ===== STUDENT VIEW ===== -->
 <div class="view" id="studentView">
-  <header class="header">
-    <div class="header-left">
-      <a class="brand" href="/">
-        <div class="brand-icon">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-            <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-            <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-            <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          </svg>
-        </div>
-        <span class="brand-name">Teacher<span>Toolshed</span></span>
-      </a>
-      <span class="header-sep">/</span>
-      <a class="header-tool" href="hexthinking.html">Hexagonal Activity Creator</a>
-      <a class="back-link" id="backToSetup" href="#">← New activity</a>
+  <header class="tool-header">
+    <div class="tool-header__left">
+      <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+      <span class="tool-header__rule"></span>
+      <span class="tool-header__name">Hexagonal Activity Creator</span>
+      <a class="back-link" id="backToSetup" href="#">New activity</a>
     </div>
-    <div class="header-tools">
-      <button class="tool-btn active" id="trayToggle">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8.5" y="1" width="4.5" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
-        <span class="label">Tray</span>
-      </button>
-      <button class="tool-btn" id="resetBtn">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7a4.5 4.5 0 018.5-1.5M11.5 7a4.5 4.5 0 01-8.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10.5 2.5v3h-3M3.5 11.5v-3h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="label">Reset</span>
-      </button>
-      <button class="tool-btn" id="exportBtn">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3M2 11.5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="label">Export</span>
-      </button>
+    <div class="tool-header__right">
+      <button class="tool-header__action" id="trayToggle" aria-pressed="true"><span class="label">Tray</span></button>
+      <button class="tool-header__action" id="resetBtn"><span class="label">Reset</span></button>
+      <button class="tool-header__action" id="exportBtn"><span class="label">Export</span></button>
     </div>
   </header>
 
@@ -411,31 +271,30 @@ body {
       </div>
       <svg id="svgCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="snap-btn">
-        <button class="tool-btn active" id="snapToggle">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 4h3V1M10 1v3h3M13 10h-3v3M4 13v-3H1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Snap
-        </button>
+        <button class="btn btn--secondary btn--sm" id="snapToggle" aria-pressed="true">Snap</button>
       </div>
       <div class="canvas-controls">
-        <button id="zoomOutBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+        <button id="zoomOutBtn" title="Zoom out"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         <span class="zoom-label" id="zoomLabel">100%</span>
-        <button id="zoomInBtn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-        <button id="fitBtn" title="Fit all"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="2.5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button id="zoomInBtn" title="Zoom in"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+        <button id="fitBtn" title="Fit all"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="2.5" width="9" height="9" stroke="currentColor" stroke-width="1.2"/></svg></button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== SHARE MODAL ===== -->
-<div class="modal-overlay" id="shareModal">
+<div class="modal-bd" id="shareModal">
   <div class="modal">
-    <h3>Your activity is ready!</h3>
-    <p>Share this link with students. Each person gets their own canvas to arrange the hexagons.</p>
+    <h3 class="modal__title">Your activity is ready!</h3>
+    <p class="hint">Share this link with students. Each person gets their own canvas to arrange the hexagons.</p>
     <div class="link-box">
-      <input type="text" id="shareLink" readonly />
-      <button class="copy-btn" id="copyBtn">Copy</button>
+      <input type="text" class="mono" id="shareLink" readonly />
+      <button class="btn btn--primary" id="copyBtn">Copy</button>
     </div>
-    <button class="modal-close" id="closeModal">Done</button>
+    <div class="modal__btns">
+      <button class="btn btn--secondary" id="closeModal">Done</button>
+    </div>
   </div>
 </div>
 
@@ -644,7 +503,7 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     const encoded = encodeActivity({ terms });
     const url = location.origin + location.pathname + '#a=' + encoded;
     $('shareLink').value = url;
-    $('shareModal').classList.add('open');
+    $('shareModal').classList.add('is-open');
   }
 
   // ====== STUDENT: TRAY ======
@@ -742,15 +601,14 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
 
     placed.forEach(h => {
       const t=activity.terms[h.id];
-      g.appendChild(svgE('polygon',{points:hexPts(h.x+2,h.y+3,HEX_R),fill:'rgba(44,41,36,0.05)','pointer-events':'none'}));
-      const poly=svgE('polygon',{points:hexPts(h.x,h.y,HEX_R),fill:'#ffffff',stroke:t.color,'stroke-width':2.5,cursor:'grab','data-id':h.id});
+      const poly=svgE('polygon',{points:hexPts(h.x,h.y,HEX_R),fill:'#FFFFFF',stroke:t.color,'stroke-width':2.5,cursor:'grab','data-id':h.id});
       poly.addEventListener('mousedown',e=>startDrag(e,h));
       poly.addEventListener('touchstart',e=>startDrag(e,h),{passive:false});
       g.appendChild(poly);
       g.appendChild(svgE('polygon',{points:hexPts(h.x,h.y,HEX_R-4),fill:t.color,opacity:'0.07','pointer-events':'none'}));
 
       const fs = hexFontSize(t.text);
-      const text=svgE('text',{x:h.x,y:h.y,'text-anchor':'middle','dominant-baseline':'central','font-family':"'DM Sans',sans-serif",'font-size':fs,'font-weight':'600',fill:'#28251E','pointer-events':'none'});
+      const text=svgE('text',{x:h.x,y:h.y,'text-anchor':'middle','dominant-baseline':'central','font-family':"Newsreader, Georgia, serif",'font-size':fs,'font-weight':'500',fill:'#0D1116','pointer-events':'none'});
       const words=t.text.split(' ');
       if(words.length>1&&t.text.length>12){
         const half=Math.ceil(words.length/2);
@@ -846,9 +704,9 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     const w=maxX-minX,h=maxY-minY;
     const sp={x:panX,y:panY},sz=zoom;panX=-minX;panY=-minY;zoom=1;renderCanvas();
     const clone=$('svgCanvas').cloneNode(true);clone.setAttribute('width',w);clone.setAttribute('height',h);clone.setAttribute('viewBox',`0 0 ${w} ${h}`);
-    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');bg.setAttribute('width',w);bg.setAttribute('height',h);bg.setAttribute('fill','#faf8f5');clone.insertBefore(bg,clone.firstChild);
+    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');bg.setAttribute('width',w);bg.setAttribute('height',h);bg.setAttribute('fill','#FFFFFF');clone.insertBefore(bg,clone.firstChild);
     const svgStr=new XMLSerializer().serializeToString(clone);const blob=new Blob([svgStr],{type:'image/svg+xml'});const url=URL.createObjectURL(blob);
-    const img=new Image();img.onload=()=>{const sc=2;const c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;const ctx=c.getContext('2d');ctx.scale(sc,sc);ctx.fillStyle='#faf8f5';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);c.toBlob(pb=>{const a=document.createElement('a');a.href=URL.createObjectURL(pb);a.download='hexthinking.png';a.click();URL.revokeObjectURL(url);});};
+    const img=new Image();img.onload=()=>{const sc=2;const c=document.createElement('canvas');c.width=w*sc;c.height=h*sc;const ctx=c.getContext('2d');ctx.scale(sc,sc);ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);c.toBlob(pb=>{const a=document.createElement('a');a.href=URL.createObjectURL(pb);a.download='hexthinking.png';a.click();URL.revokeObjectURL(url);});};
     img.src=url;panX=sp.x;panY=sp.y;zoom=sz;renderCanvas();
   }
 
@@ -928,12 +786,12 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText($('shareLink').value).then(done,fallback);}
     else fallback();
   });
-  $('closeModal').addEventListener('click',()=>$('shareModal').classList.remove('open'));
-  $('shareModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
-  $('trayToggle').addEventListener('click',function(){$('hexTray').classList.toggle('collapsed');this.classList.toggle('active');});
+  $('closeModal').addEventListener('click',()=>$('shareModal').classList.remove('is-open'));
+  $('shareModal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('is-open');});
+  $('trayToggle').addEventListener('click',function(){$('hexTray').classList.toggle('collapsed');this.setAttribute('aria-pressed', $('hexTray').classList.contains('collapsed') ? 'false' : 'true');});
   $('resetBtn').addEventListener('click',()=>{if(!placed.length)return;if(confirm('Reset? All hexagons will return to the tray.')){placed=[];zoom=1;panX=0;panY=0;clearSavedState();buildTray();renderCanvas();}});
   $('exportBtn').addEventListener('click',exportImage);
-  $('snapToggle').addEventListener('click',function(){snap=!snap;this.classList.toggle('active',snap);});
+  $('snapToggle').addEventListener('click',function(){snap=!snap;this.setAttribute('aria-pressed', String(snap));});
   function zoomAtCenter(nz){nz=Math.max(0.3,Math.min(3,nz));const r=canvasArea.getBoundingClientRect();const cx=r.width/2,cy=r.height/2;panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;renderCanvas();}
   $('zoomInBtn').addEventListener('click',()=>zoomAtCenter(zoom+0.15));
   $('zoomOutBtn').addEventListener('click',()=>zoomAtCenter(zoom-0.15));
