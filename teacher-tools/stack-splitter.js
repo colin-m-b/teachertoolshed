@@ -20,9 +20,9 @@ function esc(s) {
 function showToast(msg, dur) {
   const t = $('toast');
   t.textContent = msg;
-  t.classList.remove('hidden');
+  t.classList.remove('is-hidden');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => t.classList.add('hidden'), dur || 2600);
+  showToast._t = setTimeout(() => t.classList.add('is-hidden'), dur || 2600);
 }
 
 /* ── lazy library loading ─────────────────────────────────
@@ -125,8 +125,8 @@ async function initCovers() {
   if (!rosters.length) {
     sel.innerHTML = '<option value="">No class lists yet</option>';
     $('cov-warnings').innerHTML =
-      '<div class="warn-box">You have no class lists yet. Make one in ' +
-      '<a class="link" href="rosters.html">My class lists</a> first.</div>';
+      '<div class="notice notice--caution">You have no class lists yet. Make one in ' +
+      '<a href="rosters.html">My class lists</a> first.</div>';
     return;
   }
   sel.innerHTML = '<option value="">Choose a class…</option>' +
@@ -155,15 +155,15 @@ async function checkRosterWarnings() {
      QR payloads, and two output files would want the same filename. */
   if (dupeNames.length && noId.length) {
     box.innerHTML =
-      '<div class="warn-box bad"><strong>These students share a name and have no ID number:</strong>' +
+      '<div class="notice notice--error"><strong>These students share a name and have no ID number:</strong>' +
       '<ul>' + dupeNames.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>' +
       'Their coversheets would be identical and their files would overwrite each other. ' +
-      'Add ID numbers in <a class="link" href="rosters.html">My class lists</a> first.</div>';
+      'Add ID numbers in <a href="rosters.html">My class lists</a> first.</div>';
   } else if (noId.length) {
     box.innerHTML =
-      '<div class="warn-box">' + noId.length + ' of ' + roster.students.length +
+      '<div class="notice notice--caution">' + noId.length + ' of ' + roster.students.length +
       ' students have no ID number. That works — names alone are enough here — but adding IDs ' +
-      'in <a class="link" href="rosters.html">My class lists</a> makes the split safer if a class ' +
+      'in <a href="rosters.html">My class lists</a> makes the split safer if a class ' +
       'ever gains two students with the same name.</div>';
   }
 }
@@ -307,7 +307,7 @@ function resetSplit() {
   $('split-upload').style.display = '';
   $('split-progress').style.display = 'none';
   $('split-review').style.display = 'none';
-  $('export-success').classList.remove('show');
+  $('export-success').classList.remove('is-visible');
   $('file-input').value = '';
 }
 
@@ -492,19 +492,19 @@ function renderReview() {
       'or it will be left out of the export.');
   }
   $('review-warnings').innerHTML = warn.length
-    ? '<div class="warn-box' + (missing > 0 || orphan ? ' bad' : '') + '">' +
+    ? '<div class="notice ' + (missing > 0 || orphan ? 'notice--error' : 'notice--caution') + '">' +
       warn.map(w => '<p style="margin:0 0 6px">' + w + '</p>').join('') + '</div>'
     : '';
 
   $('groups').innerHTML = groups.map(g => {
     const count = g.end - g.start + 1;
-    const isSpare = g.owner && g.owner.spare;
+    const isFlagged = g.orphan || !g.owner || !g.owner.name;
     const nameHtml = g.orphan
-      ? '<span class="group-name" style="color:var(--accent-hover)">Not assigned</span>'
+      ? '<span class="row__name" style="color:var(--flag)">Not assigned</span>'
       : (g.owner && g.owner.name
-          ? '<span class="group-name">' + esc(g.owner.name) + '</span>'
-          : '<span class="group-name" style="color:var(--accent-hover)">Spare — needs a name</span>');
-    const sid = g.owner && g.owner.sid ? '<div class="group-sid">ID ' + esc(g.owner.sid) + '</div>' : '';
+          ? '<span class="row__name">' + esc(g.owner.name) + '</span>'
+          : '<span class="row__name" style="color:var(--flag)">Spare — needs a name</span>');
+    const sid = g.owner && g.owner.sid ? '<div class="row__meta">ID ' + esc(g.owner.sid) + '</div>' : '';
     const stray = !g.orphan && g.source === 'qr' && scan.pages[g.start].qr.batch !== mb;
 
     const thumbs = [];
@@ -513,16 +513,15 @@ function renderReview() {
       thumbs.push(
         '<div class="thumb' + (p.boundary ? ' boundary' : '') + '" data-page="' + i + '">' +
         '<img src="' + p.thumb + '" alt="Page ' + (i + 1) + '"/>' +
-        (p.boundary ? '<span class="thumb-flag">' + (p.qr ? '🟩' : '✋') + '</span>' : '') +
-        '<span class="thumb-num">' + (i + 1) + '</span></div>');
+        (p.boundary ? '<span class="tag tag--ok thumb-flag">' + (p.qr ? 'QR' : 'SET') + '</span>' : '') +
+        '<span class="thumb-num t-meta">' + (i + 1) + '</span></div>');
     }
-    return '<div class="group' + (g.orphan || !g.owner || !g.owner.name ? ' unassigned' : '') +
-      (isSpare ? ' spare' : '') + '">' +
-      '<div class="group-head"><div class="group-who">' + nameHtml + sid + '</div>' +
-      (stray ? '<span class="group-src manual">other assignment</span>' : '') +
-      '<span class="group-src ' + g.source + '">' +
-        (g.source === 'qr' ? 'QR' : g.source === 'manual' ? 'by hand' : 'unassigned') + '</span>' +
-      '<span class="group-pages">' + count + ' page' + (count === 1 ? '' : 's') + '</span></div>' +
+    return '<div class="row' + (isFlagged ? ' row--flagged' : '') + '">' +
+      '<div class="row__main">' + nameHtml + sid + '</div>' +
+      (stray ? '<span class="tag tag--flag">other assignment</span>' : '') +
+      '<span class="tag' + (g.source === 'qr' ? ' tag--ok' : g.source === 'manual' ? ' tag--accent' : ' tag--flag') + '">' +
+        (g.source === 'qr' ? 'QR' : g.source === 'manual' ? 'BY HAND' : 'UNASSIGNED') + '</span>' +
+      '<span class="tag">' + count + ' page' + (count === 1 ? '' : 's') + '</span>' +
       '<div class="thumbs">' + thumbs.join('') + '</div></div>';
   }).join('');
 
@@ -588,7 +587,7 @@ function openInspector(i) {
     : 'No QR was found on this page.';
 
   syncInspector();
-  $('insp').classList.add('open');
+  $('insp').classList.add('is-open');
 }
 function syncInspector() {
   const isBoundary = $('insp-role').value === 'boundary';
@@ -616,7 +615,7 @@ function applyInspector() {
     p.boundary = false;
     p.owner = null;
   }
-  $('insp').classList.remove('open');
+  $('insp').classList.remove('is-open');
   renderReview();
 }
 
@@ -666,10 +665,10 @@ function buildNames(groups) {
    folder picker. A persistent, named confirmation is the fix. */
 function showExportSuccess(text) {
   $('export-success-text').textContent = text;
-  $('export-success').classList.add('show');
+  $('export-success').classList.add('is-visible');
 }
 function hideExportSuccess() {
-  $('export-success').classList.remove('show');
+  $('export-success').classList.remove('is-visible');
 }
 
 async function exportSplit(forceZip) {
@@ -758,8 +757,8 @@ async function exportSplit(forceZip) {
    WIRING
    ══════════════════════════════════════════════════════════ */
 function switchTab(which) {
-  $('tab-covers').classList.toggle('active', which === 'covers');
-  $('tab-split').classList.toggle('active', which === 'split');
+  $('tab-covers').setAttribute('aria-selected', which === 'covers');
+  $('tab-split').setAttribute('aria-selected', which === 'split');
   $('screen-covers').classList.toggle('active', which === 'covers');
   $('screen-split').classList.toggle('active', which === 'split');
 }
@@ -771,10 +770,10 @@ $('cov-generate').addEventListener('click', generateCovers);
 $('drop').addEventListener('click', () => $('file-input').click());
 $('file-input').addEventListener('change', e => handleFile(e.target.files[0]));
 ['dragenter', 'dragover'].forEach(t => $('drop').addEventListener(t, e => {
-  e.preventDefault(); $('drop').classList.add('over');
+  e.preventDefault(); $('drop').classList.add('is-over');
 }));
 ['dragleave', 'drop'].forEach(t => $('drop').addEventListener(t, e => {
-  e.preventDefault(); $('drop').classList.remove('over');
+  e.preventDefault(); $('drop').classList.remove('is-over');
 }));
 $('drop').addEventListener('drop', e => {
   if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
@@ -787,16 +786,16 @@ $('insp-role').addEventListener('change', syncInspector);
 $('insp-who').addEventListener('change', syncInspector);
 $('insp-cancel').addEventListener('click', () => $('insp').classList.add('hidden'));
 $('insp-apply').addEventListener('click', applyInspector);
-$('insp').addEventListener('click', e => { if (e.target === $('insp')) $('insp').classList.remove('open'); });
+$('insp').addEventListener('click', e => { if (e.target === $('insp')) $('insp').classList.remove('is-open'); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') $('insp').classList.remove('open');
+  if (e.key === 'Escape') $('insp').classList.remove('is-open');
 });
 
 if (!window.showDirectoryPicker) {
   // Without the picker there is only one export route, so don't show two.
   $('export-btn').style.display = 'none';
-  $('export-zip-btn').classList.remove('btn-outline');
-  $('export-zip-btn').classList.add('btn-primary');
+  $('export-zip-btn').classList.remove('btn--secondary');
+  $('export-zip-btn').classList.add('btn--primary');
 }
 
 initCovers();
