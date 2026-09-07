@@ -67,7 +67,7 @@
     }
 
     container.innerHTML = '';
-    container.className = (container.className + ' rubric-criteria').trim();
+    container.className = (container.className + ' rows').trim();
 
     rubric.criteria.forEach(function (criterion) {
       container.appendChild(renderRow(criterion, rubric, onChange, readOnly));
@@ -76,14 +76,14 @@
     if (!readOnly) {
       var addBtn = document.createElement('button');
       addBtn.type = 'button';
-      addBtn.className = 'rubric-add-criterion';
+      addBtn.className = 'btn btn--add';
       addBtn.textContent = '+ Add criterion';
       addBtn.addEventListener('click', function () {
         rubric.criteria.push(blankCriterion());
         render(container, rubric, opts);
         onChange(rubric);
-        var lastInput = container.querySelectorAll('.rubric-criterion-top input')[
-          container.querySelectorAll('.rubric-criterion-top input').length - 1
+        var lastInput = container.querySelectorAll('.rubric-row__head input')[
+          container.querySelectorAll('.rubric-row__head input').length - 1
         ];
         if (lastInput) lastInput.focus();
       });
@@ -95,10 +95,10 @@
 
   function renderRow(criterion, rubric, onChange, readOnly) {
     var row = document.createElement('div');
-    row.className = 'rubric-criterion-row';
+    row.className = 'row rubric-row';
 
-    var top = document.createElement('div');
-    top.className = 'rubric-criterion-top';
+    var head = document.createElement('div');
+    head.className = 'rubric-row__head';
 
     var nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -109,12 +109,12 @@
       criterion.name = nameInput.value;
       onChange(rubric);
     });
-    top.appendChild(nameInput);
+    head.appendChild(nameInput);
 
     if (!readOnly) {
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'rubric-criterion-remove';
+      removeBtn.className = 'btn btn--ghost';
       removeBtn.textContent = '\u00D7'; // multiplication sign, escaped so it
                                          // survives regardless of the server's
                                          // charset header for standalone .js files
@@ -125,11 +125,12 @@
         render(container, rubric, { onChange: onChange, readOnly: readOnly });
         onChange(rubric);
       });
-      top.appendChild(removeBtn);
+      head.appendChild(removeBtn);
     }
-    row.appendChild(top);
+    row.appendChild(head);
 
     var descInput = document.createElement('textarea');
+    descInput.className = 'rubric-row__desc';
     descInput.placeholder = 'Description (optional) - what this criterion is looking for';
     descInput.value = (criterion.descriptions && criterion.descriptions[0]) || '';
     descInput.disabled = readOnly;
@@ -140,15 +141,15 @@
     row.appendChild(descInput);
 
     var rangeRow = document.createElement('div');
-    rangeRow.className = 'rubric-range-row';
+    rangeRow.className = 'rubric-range';
 
     var rangeTitle = document.createElement('span');
-    rangeTitle.className = 'rubric-range-title';
+    rangeTitle.className = 'row__meta';
     rangeTitle.textContent = 'Scoring range:';
     rangeRow.appendChild(rangeTitle);
 
     var minField = document.createElement('div');
-    minField.className = 'rubric-range-field';
+    minField.className = 'rubric-range__field';
     var minLabel = document.createElement('label');
     minLabel.textContent = 'Min';
     var minInput = document.createElement('input');
@@ -164,7 +165,7 @@
     minField.appendChild(minInput);
 
     var maxField = document.createElement('div');
-    maxField.className = 'rubric-range-field';
+    maxField.className = 'rubric-range__field';
     var maxLabel = document.createElement('label');
     maxLabel.textContent = 'Max';
     var maxInput = document.createElement('input');
@@ -180,7 +181,7 @@
     maxField.appendChild(maxInput);
 
     var hint = document.createElement('span');
-    hint.className = 'rubric-range-hint';
+    hint.className = 'hint rubric-range__hint';
     hint.textContent = 'Leave both blank for a comment-only criterion (no score, just notes)';
 
     rangeRow.appendChild(minField);

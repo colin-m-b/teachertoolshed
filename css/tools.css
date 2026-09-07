@@ -583,6 +583,19 @@ table.data tbody tr:hover { background: var(--paper-hover); }
   table.data th { border-bottom: 1px solid #000; }
 }
 
+/* ══ 19b. RUBRIC (shared component, js/toolshed-rubric.js) ══
+   Each criterion is a .row inside a .rows list; multi-line content
+   just overrides align-items and forces its inner parts to full width. */
+
+.rubric-row { align-items: flex-start; }
+.rubric-row__head { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; }
+.rubric-row__desc { flex-basis: 100%; }
+.rubric-range { flex-basis: 100%; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.rubric-range__field { display: flex; align-items: center; gap: 6px; }
+.rubric-range__field label { display: inline; margin: 0; }
+.rubric-range__field input { width: 64px; }
+.rubric-range__hint { margin: 0; }
+
 /* ══ 20. LEGACY ALIASES (delete once all tools are migrated) ═
    Lets a half-migrated page render correctly. Do not write new
    markup against these. */

@@ -202,22 +202,10 @@ textarea { resize: vertical; min-height: 90px; }
 .btn-add-tp { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: none; border: 1.5px dashed var(--border); color: var(--text-mid); font-family: var(--font-sans); font-size: 13px; font-weight: 600; padding: 9px; border-radius: var(--radius-sm); cursor: pointer; transition: all .15s; }
 .btn-add-tp:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
-/* ── RUBRIC BUILDER (js/toolshed-rubric.js) ── */
-.rubric-criteria { display: flex; flex-direction: column; gap: 10px; }
-.rubric-criterion-row { background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
-.rubric-criterion-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.rubric-criterion-top input[type=text] { flex: 1; }
-.rubric-criterion-remove { background: none; border: none; color: var(--text-light); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; flex-shrink: 0; transition: color .15s; }
-.rubric-criterion-remove:hover { color: var(--red); }
-.rubric-criterion-row textarea { min-height: 54px; font-size: 13px; margin-bottom: 8px; }
-.rubric-range-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.rubric-range-title { font-size: 12px; font-weight: 600; color: var(--text); }
-.rubric-range-row .rubric-range-field { display: flex; align-items: center; gap: 6px; }
-.rubric-range-row .rubric-range-field label { margin: 0; font-size: 12px; color: var(--text-mid); font-weight: 500; }
-.rubric-range-row .rubric-range-field input { width: 60px; }
-.rubric-range-hint { font-size: 11.5px; color: var(--text-light); }
-.rubric-add-criterion { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: none; border: 1.5px dashed var(--border); color: var(--text-mid); font-family: var(--font-sans); font-size: 13px; font-weight: 600; padding: 9px; border-radius: var(--radius-sm); cursor: pointer; transition: all .15s; margin-top: 10px; }
-.rubric-add-criterion:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+/* Rubric builder (js/toolshed-rubric.js) now emits editorial-system
+   markup (.rows/.row/.btn--add from css/tools.css) — see that file.
+   Any tool still on this stylesheet will show it unstyled until it
+   migrates; that's expected mid-restyle, per TOOLS-REBUILD-PLAN.md. */
 
 /* ── TOOL FOOTER (brand + privacy link) ── */
 .tool-footer { flex-shrink: 0; text-align: center; padding: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-light); background: var(--surface); }
