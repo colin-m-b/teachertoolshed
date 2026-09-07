@@ -6,8 +6,11 @@
 <title>Presentation Tracker — Teacher Toolshed</title>
 <meta name="description" content="Grade individual or group presentations against a rubric, with per-student overrides and a printable report.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/toolshed.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
 <style>
   html,body{height:100%;overflow:hidden}
   body{display:flex;flex-direction:column}
@@ -18,86 +21,82 @@
   /* ─── SETUP ─── */
   .setup-body{flex:1;overflow-y:auto;padding:32px 24px 60px}
   .setup-body-inner{max-width:760px;margin:0 auto;width:100%}
-  .page-eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
-  .page-title{font-family:var(--font-serif);font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:28px;line-height:1.6}
-  .card{margin-bottom:16px}
-  .setup-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:8px}
+  .card + .card{margin-top:16px}
 
   /* group-def rows in setup — click to make the "active" tap-assign target */
-  .group-def-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:background .12s,border-color .12s}
-  .group-def-row:hover{border-color:#E4CFA0}
-  .group-def-row.active{background:var(--accent-soft);border-color:var(--accent)}
-  .group-def-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
+  .group-def-row{display:flex;align-items:center;gap:8px;min-height:44px;padding:7px 9px;border:1px solid var(--rule);cursor:pointer;transition:background .12s,border-color .12s}
+  .group-def-row:hover{border-color:var(--meta)}
+  .group-def-row.active{background:var(--accent-wash);border-color:var(--accent)}
+  .group-def-dot{width:8px;height:8px;flex-shrink:0;background:var(--rule)}
   .group-def-row.active .group-def-dot{background:var(--accent)}
-  .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text);border-radius:4px}
-  .group-def-row input:focus{outline:none;background:var(--surface)}
-  .group-def-count{font-size:11px;color:var(--text-light);flex-shrink:0;white-space:nowrap}
-  .group-def-solo-label{flex:1;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--text)}
-  .group-def-remove{background:none;border:none;color:var(--text-light);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
-  .group-def-remove:hover{color:var(--red)}
+  .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
+  .group-def-row input:focus{outline:none;background:var(--paper)}
+  .group-def-count{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--meta);flex-shrink:0;white-space:nowrap}
+  .group-def-solo-label{flex:1;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
+  .group-def-remove{background:none;border:none;color:var(--meta);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
+  .group-def-remove:hover{color:var(--flag)}
 
   /* per-student assignment rows — click to assign to the active group */
-  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 6px;border-bottom:1px solid var(--surface-2);cursor:pointer;border-radius:var(--radius-sm);transition:background .12s}
-  .assign-row:hover{background:var(--surface-2)}
+  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:9px 6px;border-bottom:var(--hairline);cursor:pointer;transition:background .12s}
+  .assign-row:hover{background:var(--paper-hover)}
   .assign-row:last-child{border-bottom:none}
-  .assign-name{font-size:13px;font-weight:600;color:var(--text)}
-  .assign-badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface);white-space:nowrap;flex-shrink:0}
-  .assign-badge.assigned{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover)}
-  .unassigned-note{font-size:12.5px;color:var(--text-mid);margin-top:8px;font-weight:600}
-  .unassigned-ok{font-size:12.5px;color:var(--green);margin-top:8px;font-weight:600}
+  .assign-name{font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
+  .assign-badge{display:inline-flex;align-items:center;font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border:1px dashed var(--rule);color:var(--meta);background:var(--paper);white-space:nowrap;flex-shrink:0}
+  .assign-badge.assigned{border:1px solid var(--accent);background:var(--accent-wash);color:var(--accent)}
+  .unassigned-note{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-top:8px;font-weight:600}
+  .unassigned-ok{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);margin-top:8px;font-weight:600}
 
   /* ─── LIVE ─── */
   .live-layout{flex:1;display:flex;overflow:hidden}
 
-  .order-sidebar{width:250px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .order-sidebar{width:250px;flex-shrink:0;background:var(--paper);border-right:var(--hairline);display:flex;flex-direction:column;overflow:hidden}
   .order-list{flex:1;overflow-y:auto;padding:8px}
-  .order-item{width:100%;text-align:left;background:none;border:1.5px solid transparent;border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;font-family:var(--font-sans);margin-bottom:2px;display:flex;align-items:center;gap:8px;transition:background .12s,border-color .12s}
-  .order-item:hover{background:var(--surface-2)}
-  .order-item.current{background:var(--accent-soft);border-color:#E4CFA0}
-  .order-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--border)}
-  .order-item.done .order-dot{background:var(--green)}
+  .order-item{width:100%;min-height:44px;text-align:left;background:none;border:1px solid transparent;padding:9px 11px;cursor:pointer;font-family:var(--font-body);margin-bottom:2px;display:flex;align-items:center;gap:8px;transition:background .12s,border-color .12s}
+  .order-item:hover{background:var(--paper-hover)}
+  .order-item.current{background:var(--accent-wash);border-color:var(--accent)}
+  .order-dot{width:8px;height:8px;flex-shrink:0;background:var(--rule)}
+  .order-item.done .order-dot{background:var(--ok)}
   .order-item.current .order-dot{background:var(--accent)}
-  .order-name{font-size:13px;font-weight:600;color:var(--text)}
-  .order-meta{font-size:11px;color:var(--text-light)}
-  .order-footer{padding:14px 16px;border-top:1px solid var(--border)}
-  .order-footer .ls-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px}
-  .order-footer .timer-display{font-family:var(--font-serif);font-size:22px;font-weight:700;text-align:center;color:var(--text)}
-  .order-footer .timer-hint{font-size:11px;color:var(--text-light);text-align:center;margin-top:4px}
+  .order-name{font-size:15px;font-weight:600;color:var(--ink)}
+  .order-meta{font-family:var(--font-meta);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--meta)}
+  .order-footer{padding:14px 16px;border-top:var(--hairline)}
+  .order-footer .ls-label{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--meta);margin-bottom:8px}
+  .order-footer .timer-display{font-family:var(--font-display);font-weight:500;font-size:22px;text-align:center;color:var(--ink)}
+  .order-footer .timer-hint{font-family:var(--font-meta);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--meta);text-align:center;margin-top:4px}
 
   .present-main{flex:1;overflow-y:auto;padding:24px 24px 60px}
   .present-inner{max-width:640px;margin:0 auto}
   .present-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
-  .present-group-name{font-family:var(--font-serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
-  .present-members{font-size:13px;color:var(--text-mid);margin-top:2px}
+  .present-group-name{font-family:var(--font-display);font-weight:500;font-size:22px}
+  .present-members{font-family:var(--font-body);font-size:15px;color:var(--body-muted);margin-top:2px}
   .present-timer-wrap{text-align:center;flex-shrink:0}
-  .present-timer{font-family:var(--font-serif);font-size:30px;font-weight:700;color:var(--text)}
-  .present-timer.amber{color:var(--accent)}
-  .present-timer.over{color:var(--red)}
-  .present-timer-label{font-size:11px;color:var(--text-light);margin-top:2px}
+  .present-timer{font-family:var(--font-display);font-weight:500;font-size:30px;color:var(--ink)}
+  .present-timer.amber{color:var(--note)}
+  .present-timer.over{color:var(--flag)}
+  .present-timer-label{font-family:var(--font-meta);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--meta);margin-top:2px}
   .present-timer-btns{display:flex;gap:6px;justify-content:center;margin-top:8px}
-  .group-summary-time{font-size:12px;color:var(--text-light);margin-bottom:12px}
+  .group-summary-time{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--meta);margin-bottom:12px}
 
   .criterion-live-row{margin-bottom:14px}
   .criterion-live-row:last-child{margin-bottom:0}
-  .criterion-live-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-  .criterion-live-desc{font-size:12px;color:var(--text-light);margin-bottom:6px;line-height:1.5}
+  .criterion-live-name{font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink);margin-bottom:2px}
+  .criterion-live-desc{font-family:var(--font-body);font-size:14px;color:var(--meta);margin-bottom:6px;line-height:1.5}
   input.criterion-live-score{width:90px}
-  .criterion-live-note{min-height:56px;font-size:13px}
+  .criterion-live-note{min-height:56px;font-size:15px}
 
-  .member-card{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+  .member-card{background:var(--paper-hover);border:var(--hairline);padding:12px 14px;margin-bottom:10px}
   .member-card:last-child{margin-bottom:0}
-  .member-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:8px}
-  .member-score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12.5px}
+  .member-name{font-family:var(--font-display);font-weight:500;font-size:16px;color:var(--ink);margin-bottom:8px}
+  .member-score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
   .member-score-row:last-of-type{margin-bottom:8px}
-  .member-score-label{flex:1;color:var(--text-mid)}
-  .score-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px dashed var(--border);color:var(--text-light);background:var(--surface)}
+  .member-score-label{flex:1;font-family:var(--font-body);color:var(--body-muted)}
+  .score-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;min-height:44px;padding:3px 10px;font-family:var(--font-meta);font-size:11px;font-weight:600;letter-spacing:.05em;cursor:pointer;border:1px dashed var(--rule);color:var(--meta);background:var(--paper)}
   .score-pill:hover{border-color:var(--accent);color:var(--accent)}
-  .score-pill.overridden{border:1.5px solid #E4CFA0;background:var(--accent-soft);color:var(--accent-hover);font-weight:700}
-  .score-pill-input{width:60px;padding:3px 6px;font-size:12px}
-  .score-revert{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:14px;padding:2px 4px}
+  .score-pill.overridden{border:1px solid var(--accent);background:var(--accent-wash);color:var(--accent);font-weight:700}
+  .score-pill-input{width:60px;padding:3px 6px;font-size:13px}
+  .score-revert{background:none;border:none;color:var(--meta);cursor:pointer;font-size:14px;padding:2px 4px;min-height:44px}
   .score-revert:hover{color:var(--accent)}
-  .member-feedback{font-size:12.5px;min-height:48px}
+  .member-feedback{font-size:14px;min-height:48px}
 
   .present-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
 
@@ -105,77 +104,69 @@
   .summary-body{flex:1;overflow-y:auto;padding:28px 24px 60px}
   .summary-body-inner{max-width:760px;margin:0 auto;width:100%}
   .summary-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px}
-  .summary-title{font-family:var(--font-serif);font-size:24px;font-weight:700;margin-bottom:4px}
-  .summary-meta{font-size:13px;color:var(--text-mid)}
+  .summary-title{font-family:var(--font-display);font-weight:500;font-size:24px;margin-bottom:4px}
+  .summary-meta{font-family:var(--font-body);font-size:15px;color:var(--body-muted)}
   .group-summary-card{margin-bottom:16px}
-  .group-summary-name{font-family:var(--font-serif);font-size:16px;font-weight:700;margin-bottom:2px}
-  .group-summary-members{font-size:12px;color:var(--text-light);margin-bottom:12px}
+  .group-summary-name{font-family:var(--font-display);font-weight:500;font-size:18px;margin-bottom:2px}
+  .group-summary-members{font-family:var(--font-body);font-size:14px;color:var(--meta);margin-bottom:12px}
   .gs-criteria{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-  .gs-crit-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--surface-2)}
+  .gs-crit-row{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:6px 0;border-bottom:var(--hairline)}
   .gs-crit-row:last-child{border-bottom:none}
-  .gs-crit-name{color:var(--text-mid)}
-  .gs-crit-val{font-weight:700;color:var(--text);text-align:right;max-width:60%}
-  .gs-feedback{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);margin-bottom:12px;white-space:pre-wrap}
+  .gs-crit-name{font-family:var(--font-body);color:var(--body-muted)}
+  .gs-crit-val{font-family:var(--font-body);font-weight:700;color:var(--ink);text-align:right;max-width:60%}
+  .gs-feedback{background:var(--paper-hover);border:var(--hairline);padding:10px 12px;font-family:var(--font-body);font-size:15px;color:var(--ink);margin-bottom:12px;white-space:pre-wrap}
   .gs-feedback:empty{display:none}
-  .gs-member{border-top:1.5px dashed var(--border);padding-top:10px;margin-top:10px}
-  .gs-member-name{font-size:13px;font-weight:700;margin-bottom:4px}
-  .gs-member-scores{font-size:12px;color:var(--text-mid);margin-bottom:4px}
-  .gs-member-scores .edited{color:var(--accent-hover);font-weight:700}
-  .gs-member-feedback{font-size:12.5px;color:var(--text-mid);white-space:pre-wrap}
+  .gs-member{border-top:1px dashed var(--rule);padding-top:10px;margin-top:10px}
+  .gs-member-name{font-family:var(--font-body);font-size:15px;font-weight:700;margin-bottom:4px}
+  .gs-member-scores{font-family:var(--font-body);font-size:14px;color:var(--body-muted);margin-bottom:4px}
+  .gs-member-scores .edited{color:var(--accent);font-weight:700}
+  .gs-member-feedback{font-family:var(--font-body);font-size:14px;color:var(--body-muted);white-space:pre-wrap}
 
   @media print {
-    .header, .order-sidebar, .present-timer-wrap, .tool-footer, button { display: none !important; }
+    .tool-header, .order-sidebar, .present-timer-wrap, .tool-footer, button { display: none !important; }
   }
 
   @media (max-width: 768px) {
     .live-layout { flex-direction: column; }
-    .order-sidebar { width: 100%; max-height: 32vh; border-right: none; border-bottom: 1.5px solid var(--border); }
+    .order-sidebar { width: 100%; max-height: 32vh; border-right: none; border-bottom: var(--hairline); }
     .present-header { flex-wrap: wrap; }
   }
 </style>
 </head>
-<body>
+<body class="app">
 
-<div class="toast hidden" id="toast"></div>
+<div class="toast is-hidden" id="toast"></div>
 
-<header class="header">
-  <div class="header-left">
-    <a class="brand" href="/">
-      <div class="brand-icon">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-        </svg>
-      </div>
-      <span class="brand-name">Teacher<span>Toolshed</span></span>
-    </a>
-    <span class="header-sep">/</span>
-    <a class="header-tool" href="presentation-grader.html">Presentation Tracker</a>
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Presentation Tracker</span>
   </div>
-  <div class="header-right">
-    <button class="btn btn-outline btn-sm" id="header-end-btn" style="display:none" onclick="endSession()">End Session →</button>
+  <div class="tool-header__right">
+    <button class="tool-header__action" id="header-end-btn" style="display:none" onclick="endSession()">End Session</button>
   </div>
 </header>
 
 <!-- ═══════════════════════════════ SETUP SCREEN ═══════════════════════════════ -->
 <div class="screen active" id="screen-setup">
   <div class="setup-body"><div class="setup-body-inner">
-    <p class="page-eyebrow">Presentation Tracker</p>
-    <h1 class="page-title">Set Up Your Session</h1>
-    <p class="page-sub">Add your students, group them if this is group work, and optionally attach a rubric.</p>
+    <div class="page-head">
+      <p class="page-eyebrow">No. 02</p>
+      <h1 class="page-title">Set Up Your Session</h1>
+      <p class="page-sub">Add your students, group them if this is group work, and optionally attach a rubric.</p>
+    </div>
 
     <!-- Session Details -->
     <div class="card">
-      <div class="card-title">📋 Session Details</div>
+      <div class="card__title">Session Details</div>
       <div class="row-2">
         <div class="field">
           <label>Session name <span class="required-mark">*</span></label>
           <input type="text" id="session-name" placeholder="e.g. Romeo &amp; Juliet Book Talks"/>
         </div>
         <div class="field">
-          <label>Class name <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></label>
+          <label>Class name <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></label>
           <input type="text" id="class-name" placeholder="e.g. Period 3 English 10"/>
         </div>
       </div>
@@ -183,7 +174,7 @@
 
     <!-- Students -->
     <div class="card">
-      <div class="card-title">👥 Students</div>
+      <div class="card__title">Students</div>
       <div class="field">
         <label>Use a saved class list</label>
         <select id="roster-select" onchange="loadRoster()">
@@ -200,10 +191,10 @@
 
     <!-- Grouping -->
     <div class="card">
-      <div class="card-title">🧑‍🤝‍🧑 Grouping</div>
-      <div class="template-tabs" style="margin-bottom:6px">
-        <div class="tab active" id="mode-tab-individual">Individual</div>
-        <div class="tab" id="mode-tab-groups">Groups</div>
+      <div class="card__title">Grouping</div>
+      <div class="tabs" style="margin-bottom:6px" role="tablist">
+        <button class="tab" id="mode-tab-individual" role="tab" aria-selected="true">Individual</button>
+        <button class="tab" id="mode-tab-groups" role="tab" aria-selected="false">Groups</button>
       </div>
       <p class="hint" style="margin-bottom:14px" id="mode-hint">Each student presents on their own — one entry per student, no grouping needed.</p>
 
@@ -211,7 +202,7 @@
         <div class="field">
           <label>Groups</label>
           <div id="group-defs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-          <button class="btn-add-tp" id="add-group-btn">+ Add group</button>
+          <button class="btn btn--add" id="add-group-btn">+ Add group</button>
           <p class="hint" style="margin-top:8px">Click a group — or "Presenting solo" below, for students going on their own today — to make it the active target, then click students below to assign them.</p>
         </div>
         <div class="row-2">
@@ -227,7 +218,7 @@
           </div>
           <div class="field">
             <label style="visibility:hidden">Auto-split</label>
-            <button class="btn btn-outline btn-full" id="auto-split-btn">Auto-split</button>
+            <button class="btn btn--secondary btn--full" id="auto-split-btn">Auto-split</button>
           </div>
         </div>
         <div class="field">
@@ -241,7 +232,7 @@
 
     <!-- Rubric -->
     <div class="card">
-      <div class="card-title">📊 Rubric <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="card__title">Rubric <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></div>
       <div class="field">
         <label>Use a saved rubric</label>
         <select id="rubric-select">
@@ -255,14 +246,14 @@
           <input type="text" id="rubric-name-input" placeholder="e.g. MYP Oral Presentation" maxlength="80"/>
         </div>
         <div id="rubric-criteria-container"></div>
-        <button class="btn btn-outline btn-sm" style="margin-top:12px" id="save-rubric-btn">Save rubric</button>
+        <button class="btn btn--secondary btn--sm" style="margin-top:12px" id="save-rubric-btn">Save rubric</button>
         <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool.</p>
       </div>
     </div>
 
     <!-- Time limit -->
     <div class="card">
-      <div class="card-title">⏱ Time Limit <span style="font-size:12px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+      <div class="card__title">Time Limit <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></div>
       <div class="field">
         <label>How many minutes?</label>
         <input type="number" id="time-limit-input" min="1" max="20" step="1" placeholder="No limit" value="3" style="max-width:140px"/>
@@ -270,9 +261,10 @@
       </div>
     </div>
 
-    <div class="setup-actions">
-      <button class="btn-ghost" id="clear-setup-btn">Clear</button>
-      <button class="btn btn-primary" id="start-session-btn" style="padding:11px 28px">Start Session →</button>
+    <div class="actions">
+      <span class="actions__spacer"></span>
+      <button class="btn btn--ghost" id="clear-setup-btn">Clear</button>
+      <button class="btn btn--primary" id="start-session-btn">Start Session →</button>
     </div>
   </div></div>
 </div>
@@ -300,27 +292,27 @@
             <div class="present-timer" id="present-timer">00:00</div>
             <div class="present-timer-label" id="present-timer-label"></div>
             <div class="present-timer-btns">
-              <button class="btn btn-outline btn-sm" id="present-timer-toggle">▶ Start</button>
-              <button class="btn btn-outline btn-sm" id="present-timer-reset">↺</button>
+              <button class="btn btn--secondary btn--sm" id="present-timer-toggle">Start</button>
+              <button class="btn btn--secondary btn--sm" id="present-timer-reset">Reset</button>
             </div>
           </div>
         </div>
 
         <div class="card" id="live-rubric-card" style="display:none">
-          <div class="card-title">📊 Rubric</div>
+          <div class="card__title">Rubric</div>
           <div id="live-rubric-criteria"></div>
         </div>
 
         <div class="card">
-          <div class="card-title" id="group-feedback-title">💬 Group Feedback</div>
+          <div class="card__title" id="group-feedback-title">Group Feedback</div>
           <textarea id="group-feedback-input" placeholder="Overall feedback for the group…"></textarea>
         </div>
 
         <div id="members-feedback-list"></div>
 
         <div class="present-nav">
-          <button class="btn btn-outline" id="prev-group-btn">← Previous</button>
-          <button class="btn btn-primary" id="next-group-btn">Next →</button>
+          <button class="btn btn--secondary" id="prev-group-btn">← Previous</button>
+          <button class="btn btn--primary" id="next-group-btn">Next →</button>
         </div>
       </div>
     </main>
@@ -336,9 +328,9 @@
         <div class="summary-meta" id="sum-meta"></div>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0">
-        <button class="btn btn-outline btn-sm" id="print-btn">🖨 Print</button>
-        <button class="btn btn-outline btn-sm" id="export-csv-btn">📥 Export CSV</button>
-        <button class="btn btn-outline btn-sm" id="new-session-btn">+ New Session</button>
+        <button class="btn btn--secondary btn--sm" id="print-btn">Print</button>
+        <button class="btn btn--secondary btn--sm" id="export-csv-btn">Export CSV</button>
+        <button class="btn btn--secondary btn--sm" id="new-session-btn">+ New Session</button>
       </div>
     </div>
 
@@ -377,9 +369,9 @@ function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replac
 function showToast(msg, dur = 2400) {
   const t = $('toast');
   t.textContent = msg;
-  t.classList.remove('hidden');
+  t.classList.remove('is-hidden');
   clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+  showToast._timer = setTimeout(() => t.classList.add('is-hidden'), dur);
 }
 function parseNames(raw) {
   const byLine = raw.split('\n').map(s => s.trim()).filter(Boolean);
@@ -445,8 +437,8 @@ async function loadRoster() {
 // ── GROUPING (setup screen) ──
 function setMode(m) {
   mode = m;
-  $('mode-tab-individual').classList.toggle('active', m === 'individual');
-  $('mode-tab-groups').classList.toggle('active', m === 'groups');
+  $('mode-tab-individual').setAttribute('aria-selected', m === 'individual' ? 'true' : 'false');
+  $('mode-tab-groups').setAttribute('aria-selected', m === 'groups' ? 'true' : 'false');
   $('groups-builder').style.display = m === 'groups' ? '' : 'none';
   $('mode-hint').textContent = m === 'individual'
     ? 'Each student presents on their own — one entry per student, no grouping needed.'
@@ -535,7 +527,7 @@ function renderGroupDefs() {
 
   const soloLabel = document.createElement('span');
   soloLabel.className = 'group-def-solo-label';
-  soloLabel.textContent = '🎤 Presenting solo';
+  soloLabel.textContent = 'Presenting solo';
 
   const soloCountEl = document.createElement('span');
   soloCountEl.className = 'group-def-count';
@@ -585,7 +577,7 @@ function renderAssignList() {
     let badgeText = '— Not presenting —';
     let isAssigned = false;
     if (groupId === SOLO_ID) {
-      badgeText = '🎤 Solo';
+      badgeText = 'Solo';
       isAssigned = true;
     } else {
       const group = groupDefs.find(g => g.id === groupId);
@@ -809,7 +801,7 @@ function renderCurrentGroup() {
 
   $('present-group-name').textContent = g.name;
   $('present-members').textContent = solo ? '' : g.memberIds.map(memberName).join(', ');
-  $('group-feedback-title').textContent = solo ? '💬 Feedback' : '💬 Group Feedback';
+  $('group-feedback-title').textContent = solo ? 'Feedback' : 'Group Feedback';
   $('group-feedback-input').value = gd.feedback || '';
   $('group-feedback-input').placeholder = solo ? 'Feedback for this student…' : 'Overall feedback for the group…';
 
@@ -934,7 +926,7 @@ function buildScorePill(sid, criterion, gd) {
   if (overridden) {
     const revert = document.createElement('button');
     revert.className = 'score-revert';
-    revert.textContent = '↺';
+    revert.textContent = 'Revert';
     revert.title = 'Revert to the group score';
     revert.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1046,7 +1038,7 @@ function syncPresentTimerForCurrentGroup() {
 }
 function updatePresentTimerControls() {
   const btn = $('present-timer-toggle');
-  if (btn) btn.textContent = presentTimerRunning ? '⏸ Pause' : '▶ Start';
+  if (btn) btn.textContent = presentTimerRunning ? 'Pause' : 'Start';
 }
 function updatePresentTimerDisplay() {
   const g = currentGroup();
@@ -1147,7 +1139,7 @@ function buildSummary() {
     { num: s.students.length, lbl: 'Students' },
     { num: groupCount, lbl: s.mode === 'groups' ? 'Groups' : 'Presenters' },
     { num: avg, lbl: 'Avg total score' }
-  ].map(x => `<div class="stat-box"><div class="stat-num">${x.num}</div><div class="stat-lbl">${x.lbl}</div></div>`).join('');
+  ].map(x => `<div class="stat"><div class="stat__num">${x.num}</div><div class="stat__lbl">${x.lbl}</div></div>`).join('');
 
   const wrap = $('sum-groups');
   wrap.innerHTML = '';
