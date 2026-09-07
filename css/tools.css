@@ -1,0 +1,597 @@
+/* ══════════════════════════════════════════════════════════
+   Teacher Toolshed — shared TOOL stylesheet, v2 (editorial)
+   Replaces css/toolshed.css.
+
+   Load order in every tool page:
+     1. Google Fonts (Playfair Display + Newsreader + Archivo)
+     2. css/theme.css      ← tokens, reset, links, focus, footer
+     3. css/tools.css      ← this file (app chrome + controls)
+     4. the page's own <style> block (layout only)
+
+   theme.css owns: reset, --ink/--paper/--rule/--accent, the three
+   fonts, .column, .t-display/.t-body/.t-meta, focus rings.
+   Never redefine those here or in a tool page.
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  /* App-only additions to theme.css. Nothing here overrides theme.css. */
+  --accent-press: #142C66;   /* pressed / active navy            */
+  --accent-wash:  #EDF1FA;   /* selected row, hover on accent UI */
+  --field:        #F7F9FC;   /* inset input ground               */
+  --ok:           #1B5C3C;   /* confirmed / success ink          */
+  --ok-wash:      #EEF5F1;
+  --flag:         #8C1B1B;   /* destructive / error ink          */
+  --flag-wash:    #FAF0F0;
+  --note:         #6B4A0F;   /* heads-up / caution ink           */
+  --note-wash:    #FBF5EA;
+  --control-h:    40px;      /* every input, select and button   */
+  --control-h-sm: 30px;
+}
+
+/* ══ 1. APP FRAME ═══════════════════════════════════════════
+   Tools are full-height app shells, not scrolling documents. */
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.app > main { flex: 1; min-height: 0; }
+
+/* Working width for form-shaped tools. Canvas tools go full-bleed. */
+.work { max-width: 940px; width: 100%; margin: 0 auto; padding: 34px var(--gutter) 72px; }
+.work--narrow { max-width: 720px; }
+
+/* ══ 2. TOOL HEADER ═════════════════════════════════════════
+   The ink bar from the landing page's utility bar, reused as tool
+   chrome so a tool reads as the same publication as the home page. */
+
+.tool-header {
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  min-height: 52px;
+  padding: 8px var(--gutter);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.tool-header__left,
+.tool-header__right { display: flex; align-items: center; gap: 14px; }
+
+.tool-header__brand {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1;
+  color: var(--paper);
+  white-space: nowrap;
+}
+.tool-header__brand:hover { color: var(--accent-on-dark); }
+
+.tool-header__rule { width: 1px; height: 20px; background: #2A323D; flex-shrink: 0; }
+
+.tool-header__name {
+  font-family: var(--font-meta);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--on-dark-muted);
+}
+
+/* Header actions sit on ink: hairline outline, never a filled button. */
+.tool-header__action {
+  font-family: var(--font-meta);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: none;
+  border: 1px solid #333B47;
+  border-radius: 0;
+  padding: 7px 13px;
+  cursor: pointer;
+}
+.tool-header__action:hover { border-color: var(--accent-on-dark); color: var(--accent-on-dark); }
+
+/* ══ 3. PAGE TITLING ════════════════════════════════════════ */
+
+.page-head { border-bottom: 3px double var(--ink); padding-bottom: 18px; margin-bottom: 28px; }
+
+.page-eyebrow {
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.page-title { font-family: var(--font-display); font-weight: 500; font-size: 38px; line-height: 1.08; }
+.page-sub {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--body-muted);
+  max-width: 62ch;
+  margin-top: 10px;
+  text-wrap: pretty;
+}
+
+/* Section label inside a working column. */
+.section-label {
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--meta);
+  border-bottom: var(--hairline);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+/* ══ 4. CARD ════════════════════════════════════════════════
+   Hairline box on paper. No radius, no shadow — the landing page
+   grid is the reference. Elevation is for modals only. */
+
+.card { background: var(--paper); border: var(--hairline); padding: 24px 26px; }
+.card + .card { margin-top: 20px; }
+.card__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.15;
+  border-bottom: var(--hairline);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+/* Cards abutting in a grid share hairlines — see .hairline-grid. */
+.hairline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  border-top: var(--hairline);
+  border-left: var(--hairline);
+}
+.hairline-grid > * { border-right: var(--hairline); border-bottom: var(--hairline); }
+
+/* ══ 5. FORM CONTROLS ═══════════════════════════════════════ */
+
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.row-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+
+label {
+  display: block;
+  font-family: var(--font-meta);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 7px;
+}
+.label-optional { color: var(--meta); letter-spacing: 0.14em; }
+.required-mark { color: var(--flag); }
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--meta);
+  margin-top: 7px;
+  text-wrap: pretty;
+}
+
+input[type=text], input[type=number], input[type=email], input[type=search],
+textarea, select {
+  width: 100%;
+  min-height: var(--control-h);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--field);
+  border: var(--hairline);
+  border-radius: 0;
+  padding: 9px 12px;
+  transition: border-color .12s, background .12s;
+}
+input:hover, textarea:hover, select:hover { border-color: var(--meta); }
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+  background: var(--paper);
+}
+::placeholder { color: var(--meta); opacity: 1; }
+textarea { resize: vertical; min-height: 104px; }
+select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+                    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+input[aria-invalid=true], textarea[aria-invalid=true] { border-color: var(--flag); background: var(--flag-wash); }
+
+/* Monospace slot — share links, IDs, filenames. */
+.mono { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 13px; letter-spacing: 0; }
+
+/* ══ 6. BUTTONS ═════════════════════════════════════════════
+   Square. Archivo, uppercase, tracked. One primary per screen. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 20px;
+  font-family: var(--font-meta);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn--primary { background: var(--accent); color: var(--paper); }
+.btn--primary:hover:not(:disabled) { background: var(--accent-press); }
+
+.btn--secondary { background: var(--paper); color: var(--ink); border-color: var(--rule); }
+.btn--secondary:hover:not(:disabled) { border-color: var(--ink); background: var(--paper-hover); }
+
+.btn--ghost { background: none; color: var(--meta); padding: 0 8px; }
+.btn--ghost:hover:not(:disabled) { color: var(--ink); }
+
+.btn--danger { background: var(--paper); color: var(--flag); border-color: var(--flag); }
+.btn--danger:hover:not(:disabled) { background: var(--flag); color: var(--paper); }
+
+.btn--sm { min-height: var(--control-h-sm); padding: 0 12px; font-size: 10.5px; letter-spacing: 0.14em; }
+.btn--full { width: 100%; }
+
+/* Dashed add-row. */
+.btn--add {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--rule);
+  color: var(--meta);
+}
+.btn--add:hover { border-color: var(--accent); border-style: solid; color: var(--accent); background: var(--accent-wash); }
+
+/* Action row: primary right, everything else left. */
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+.actions__spacer { margin-right: auto; }
+
+/* ══ 7. TABS ════════════════════════════════════════════════
+   Editorial tabs are underlined, not pilled. */
+
+.tabs { display: flex; gap: 26px; border-bottom: var(--hairline); margin-bottom: 24px; }
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0 0 10px;
+  font-family: var(--font-meta);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--meta);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected=true] { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* ══ 8. NOTICES ═════════════════════════════════════════════
+   Left rule + wash. Never a rounded pill, never an emoji icon. */
+
+.notice {
+  border: var(--hairline);
+  border-left: 3px solid var(--meta);
+  background: var(--paper-hover);
+  padding: 14px 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--body-muted);
+  margin-bottom: 20px;
+  text-wrap: pretty;
+}
+.notice strong { color: var(--ink); font-weight: 500; }
+.notice__title {
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.notice ul { margin: 8px 0 0 20px; }
+
+.notice--privacy { border-left-color: var(--ok); background: var(--ok-wash); }
+.notice--privacy .notice__title { color: var(--ok); }
+.notice--caution { border-left-color: var(--note); background: var(--note-wash); }
+.notice--caution .notice__title { color: var(--note); }
+.notice--error { border-left-color: var(--flag); background: var(--flag-wash); }
+.notice--error .notice__title { color: var(--flag); }
+.notice--done { border-left-color: var(--ok); background: var(--ok-wash); }
+.notice--done .notice__title { color: var(--ok); }
+
+/* Small inline status tag (QR / MANUAL / 3 PAGES). */
+.tag {
+  display: inline-block;
+  font-family: var(--font-meta);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: var(--hairline);
+  border-radius: 0;
+  padding: 3px 7px;
+  color: var(--meta);
+  background: var(--paper);
+  white-space: nowrap;
+}
+.tag--ok { color: var(--ok); border-color: var(--ok); }
+.tag--flag { color: var(--flag); border-color: var(--flag); }
+.tag--accent { color: var(--accent); border-color: var(--accent); }
+
+/* ══ 9. STATS ═══════════════════════════════════════════════ */
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  border-top: var(--hairline);
+  border-left: var(--hairline);
+  margin-bottom: 24px;
+}
+.stat {
+  border-right: var(--hairline);
+  border-bottom: var(--hairline);
+  padding: 18px 20px;
+}
+.stat__num { font-family: var(--font-display); font-weight: 500; font-size: 40px; line-height: 1; color: var(--accent); }
+.stat__num--flag { color: var(--flag); }
+.stat__lbl {
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--meta);
+  margin-top: 8px;
+}
+
+/* ══ 10. LISTS AND TABLES ═══════════════════════════════════
+   Rows are separated by hairlines, never by cards-with-gaps. */
+
+.rows { border-top: var(--hairline); }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 13px 2px;
+  border-bottom: var(--hairline);
+}
+.row:hover { background: var(--paper-hover); }
+.row__main { flex: 1; min-width: 180px; }
+.row__name { font-family: var(--font-body); font-size: 17px; color: var(--ink); }
+.row__meta { font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--meta); margin-top: 4px; }
+.row--selected { background: var(--accent-wash); }
+.row--flagged { background: var(--flag-wash); }
+
+table.data { width: 100%; border-collapse: collapse; }
+table.data th {
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--meta);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
+}
+table.data td { font-family: var(--font-body); font-size: 16px; padding: 11px 12px; border-bottom: var(--hairline); }
+table.data tbody tr:hover { background: var(--paper-hover); }
+
+/* ══ 11. DROP ZONE ══════════════════════════════════════════ */
+
+.drop {
+  border: 1px dashed var(--rule);
+  background: var(--paper);
+  padding: 52px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.drop:hover, .drop.is-over { border-color: var(--accent); border-style: solid; background: var(--accent-wash); }
+.drop__title { font-family: var(--font-display); font-weight: 500; font-size: 24px; }
+.drop__sub { font-family: var(--font-body); font-size: 16px; color: var(--meta); margin-top: 8px; }
+
+/* ══ 12. PROGRESS ═══════════════════════════════════════════ */
+
+.prog { height: 4px; background: var(--rule); overflow: hidden; }
+.prog__bar { height: 100%; width: 0; background: var(--accent); transition: width .15s linear; }
+.prog__label {
+  font-family: var(--font-meta);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--meta);
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* ══ 13. TOGGLE ═════════════════════════════════════════════ */
+
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 15px 0;
+  border-bottom: var(--hairline);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-row__label { font-family: var(--font-body); font-size: 17px; color: var(--ink); }
+.toggle-row__hint { font-family: var(--font-body); font-size: 15px; line-height: 1.5; color: var(--meta); margin-top: 4px; max-width: 58ch; text-wrap: pretty; }
+
+.toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 24px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--meta);
+  transition: left .12s, background .12s;
+}
+.toggle[aria-checked=true] { background: var(--accent); border-color: var(--accent); }
+.toggle[aria-checked=true]::after { left: 25px; background: var(--paper); }
+
+/* ══ 14. MODAL ══════════════════════════════════════════════
+   The one place elevation is allowed. */
+
+.modal-bd {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 22, .48);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-bd.is-open { display: flex; }
+.modal {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  padding: 26px 28px;
+  width: min(460px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 28px 64px rgba(13, 17, 22, .24);
+}
+.modal__title { font-family: var(--font-display); font-weight: 500; font-size: 26px; line-height: 1.12; margin-bottom: 16px; }
+.modal__btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* ══ 15. TOAST ══════════════════════════════════════════════ */
+
+.toast {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-meta);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 13px 26px;
+  border-radius: 0;
+  z-index: 600;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+}
+.toast.is-hidden { opacity: 0; transform: translate(-50%, 100%); }
+
+/* ══ 16. TOOL FOOTER ════════════════════════════════════════
+   Matches .site-footer in theme.css but single-line for app shells. */
+
+.tool-footer {
+  flex-shrink: 0;
+  background: var(--ink);
+  color: var(--on-dark-muted);
+  text-align: center;
+  padding: 14px var(--gutter);
+  font-family: var(--font-meta);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.tool-footer a { color: var(--on-dark-muted); }
+.tool-footer a:hover { color: var(--accent-on-dark); }
+
+/* ══ 17. SMALL-SCREEN NOTICE (canvas tools) ═════════════════ */
+
+.small-screen-notice {
+  display: none;
+  background: var(--note-wash);
+  border-bottom: 1px solid var(--note);
+  color: var(--note);
+  padding: 10px 20px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+@media (max-width: 768px) { .small-screen-notice { display: block; } }
+
+/* ══ 18. RESPONSIVE ═════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  .work { padding: 24px 20px 56px; }
+  .tool-header { padding: 8px 20px; }
+  .page-title { font-size: 30px; }
+  .page-sub { font-size: 17px; }
+  .card { padding: 20px 18px; }
+  .actions .btn { flex: 1; }
+  .tabs { gap: 18px; }
+}
+
+/* ══ 19. PRINT ══════════════════════════════════════════════
+   Tools that print (seating charts, coversheets, rosters) print the
+   artefact only. Chrome is never printed. */
+
+@media print {
+  .tool-header, .tool-footer, .toast, .tabs, .actions,
+  .small-screen-notice, .modal-bd { display: none !important; }
+  body { background: #fff; }
+  .work { max-width: none; padding: 0; }
+  .card { border: 1px solid #000; break-inside: avoid; }
+  table.data th { border-bottom: 1px solid #000; }
+}
+
+/* ══ 20. LEGACY ALIASES (delete once all tools are migrated) ═
+   Lets a half-migrated page render correctly. Do not write new
+   markup against these. */
+
+.header { composes: none; }
+.btn-primary { background: var(--accent); color: var(--paper); }
+.btn-green   { background: var(--accent); color: var(--paper); }
+.btn-outline { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
+.btn-danger  { background: var(--paper); color: var(--flag); border: 1px solid var(--flag); }
+.btn-ghost   { background: none; border: none; color: var(--meta); }
+.warn-box    { border: var(--hairline); border-left: 3px solid var(--note); background: var(--note-wash); padding: 14px 16px; margin-bottom: 20px; }
+.warn-box.bad{ border-left-color: var(--flag); background: var(--flag-wash); }
