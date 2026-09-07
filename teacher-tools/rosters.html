@@ -6,118 +6,97 @@
 <title>Class Lists — Teacher Toolshed</title>
 <meta name="description" content="Manage the class lists shared across every Teacher Toolshed tool. Saved in your browser only.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/toolshed.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
 <style>
   html,body{height:100%;overflow:hidden}
-  body{display:flex;flex-direction:column}
-
-  .app{flex:1;display:flex;overflow:hidden}
+  .split{flex:1;display:flex;overflow:hidden;min-height:0}
 
   /* LIST PANE */
-  .list-pane{width:280px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-  .list-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .list-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light)}
+  .list-pane{width:280px;flex-shrink:0;background:var(--paper);border-right:var(--hairline);display:flex;flex-direction:column;overflow:hidden}
+  .list-head{padding:14px 16px;border-bottom:var(--hairline);display:flex;align-items:center;justify-content:space-between;gap:8px}
   .list-items{flex:1;overflow-y:auto;padding:8px}
-  .list-item{width:100%;text-align:left;background:none;border:1.5px solid transparent;border-radius:var(--radius-sm);padding:9px 11px;cursor:pointer;font-family:var(--font-sans);transition:background .12s,border-color .12s;margin-bottom:2px}
-  .list-item:hover{background:var(--surface-2)}
-  .list-item.active{background:var(--accent-soft);border-color:#E4CFA0}
-  .list-item-name{font-size:13px;font-weight:600;color:var(--text);word-break:break-word}
-  .list-item-meta{font-size:11px;color:var(--text-light);margin-top:2px}
-  .list-empty{padding:22px 16px;text-align:center;color:var(--text-light);font-size:13px;line-height:1.6}
+  .list-item{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;padding:9px 11px;cursor:pointer;font-family:var(--font-body);transition:background .12s,border-color .12s;margin-bottom:2px}
+  .list-item:hover{background:var(--paper-hover)}
+  .list-item.row--selected{background:var(--accent-wash);border-color:var(--accent)}
+  .list-item-name{font-size:15px;color:var(--ink);word-break:break-word}
+  .list-item-meta{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);margin-top:3px}
+  .list-empty{padding:22px 16px;text-align:center;color:var(--meta);font-family:var(--font-body);font-size:15px;line-height:1.6}
 
   /* BACKUP */
-  .backup{padding:14px 16px;border-top:1px solid var(--border)}
+  .backup{padding:14px 16px;border-top:var(--hairline)}
   .backup .row-2{gap:8px;margin-bottom:8px}
 
   /* EDITOR */
   .editor-wrap{flex:1;overflow-y:auto;padding:32px 28px 60px}
   .editor{max-width:620px;margin:0 auto}
-  .page-title{font-family:var(--font-serif);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-  .page-sub{font-size:14px;color:var(--text-mid);margin-bottom:24px;line-height:1.6}
   #students-input{min-height:200px;line-height:1.7}
-  .editor-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
-  .count-badge{display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid var(--green-border);margin-left:6px}
+  #count-badge{margin-left:6px}
 
   .import-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
   .import-row .hint{margin:0}
 
-  .roster-preview{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+  .roster-preview{margin-top:16px;padding-top:16px;border-top:var(--hairline)}
 
   .col-map-row{margin-bottom:14px}
-  .col-map-label{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text-mid);display:block;margin-bottom:6px}
+  .col-map-label{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);display:block;margin-bottom:6px}
   .col-map-chips{display:flex;gap:8px;flex-wrap:wrap}
-  .col-chip{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 8px;min-width:96px}
-  .col-chip-sample{font-size:10.5px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;margin-bottom:4px}
-  .col-chip select{width:100%;padding:3px 4px;font-size:12px}
+  .col-chip{background:var(--field);border:var(--hairline);padding:6px 8px;min-width:96px}
+  .col-chip-sample{font-family:var(--font-meta);font-size:10px;color:var(--meta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;margin-bottom:4px}
+  .col-chip select{width:100%;padding:3px 4px;font-size:12px;min-height:auto}
 
-  .header-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-mid);margin-bottom:14px;cursor:pointer;user-select:none}
-  .header-toggle input{margin:0;width:auto}
+  .header-toggle{display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:15px;color:var(--body-muted);margin-bottom:14px;cursor:pointer;user-select:none}
+  .header-toggle input{margin:0;width:auto;min-height:auto}
 
-  .preview-summary{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:8px}
-  table.preview{width:100%;border-collapse:collapse;font-size:12.5px}
-  table.preview th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);font-weight:600;padding:0 10px 6px 0;border-bottom:1px solid var(--border)}
-  table.preview td{padding:6px 10px 6px 0;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
-  table.preview td.preview-id{font-variant-numeric:tabular-nums;color:var(--text-mid);width:130px}
-  .preview-none{color:var(--text-light)}
-  .preview-flagged td{background:var(--red-soft)}
-  .preview-flags{font-size:10.5px;color:#9E3A31;font-weight:600;white-space:nowrap}
-  .preview-ellipsis td{color:var(--text-light);font-size:12px;text-align:center;padding:8px 0}
+  .preview-summary{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:8px}
+  table.preview td.preview-id{font-variant-numeric:tabular-nums;color:var(--meta);width:130px}
+  .preview-none{color:var(--meta)}
+  .preview-flagged td{background:var(--flag-wash)}
+  .preview-flags{font-family:var(--font-meta);font-size:10.5px;color:var(--flag);font-weight:600;white-space:nowrap}
+  .preview-ellipsis td{color:var(--meta);font-size:15px;text-align:center;padding:8px 0}
 
   .blank-state{max-width:620px;margin:0 auto;text-align:center;padding-top:60px}
-  .blank-state .icon{font-size:44px;opacity:.2;margin-bottom:12px}
-  .blank-state h2{font-family:var(--font-serif);font-size:19px;font-weight:700;margin-bottom:8px}
-  .blank-state p{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:18px}
-
-  /* STORAGE NOTICE */
-  .storage-note{background:var(--accent-soft);border-bottom:1px solid #E4CFA0;padding:8px 20px;font-size:12.5px;color:var(--accent-hover);text-align:center;flex-shrink:0}
-  .storage-note.warn{background:var(--red-soft);border-bottom-color:#E8BDB7;color:var(--red)}
+  .blank-state h2{font-family:var(--font-display);font-weight:500;font-size:22px;margin-bottom:8px}
+  .blank-state p{font-family:var(--font-body);font-size:16px;color:var(--body-muted);line-height:1.6;margin-bottom:18px}
 
   @media (max-width:768px){
-    .app{flex-direction:column}
-    .list-pane{width:100%;max-height:38%;border-right:none;border-bottom:1.5px solid var(--border)}
+    .split{flex-direction:column}
+    .list-pane{width:100%;max-height:38%;border-right:none;border-bottom:var(--hairline)}
     .editor-wrap{padding:20px 16px 40px}
   }
 </style>
 </head>
-<body>
+<body class="app">
 
-<div class="toast hidden" id="toast"></div>
+<div class="toast is-hidden" id="toast"></div>
 
-<header class="header">
-  <div class="header-left">
-    <a class="brand" href="/">
-      <div class="brand-icon">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-        </svg>
-      </div>
-      <span class="brand-name">Teacher<span>Toolshed</span></span>
-    </a>
-    <span class="header-sep">/</span>
-    <a class="header-tool" href="rosters.html">Class Lists</a>
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Class Lists</span>
   </div>
 </header>
 
-<div class="storage-note" id="storage-note">
+<div class="notice notice--privacy" id="storage-note" style="margin:0">
   Class lists are saved only in this browser. Export a backup to keep a copy or move them to another device.
 </div>
 
-<div class="app">
+<div class="split">
   <aside class="list-pane">
     <div class="list-head">
-      <span class="list-label">Class Lists</span>
-      <button class="btn btn-primary btn-sm" onclick="newRoster()">+ New</button>
+      <span class="section-label" style="border:none;padding:0;margin:0">Class Lists</span>
+      <button class="btn btn--primary btn--sm" onclick="newRoster()">+ New</button>
     </div>
     <div class="list-items" id="list-items"></div>
     <div class="backup">
-      <div class="list-label" style="margin-bottom:8px">Backup</div>
+      <div class="section-label" style="margin-bottom:8px">Backup</div>
       <div class="row-2">
-        <button class="btn btn-outline btn-sm" onclick="exportBackup()">Export</button>
-        <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+        <button class="btn btn--secondary btn--sm" onclick="exportBackup()">Export</button>
+        <button class="btn btn--secondary btn--sm" onclick="document.getElementById('import-file').click()">Import</button>
       </div>
       <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(event)"/>
       <p class="hint">Exports every class list and everything saved in the other tools.</p>
@@ -126,15 +105,16 @@
 
   <main class="editor-wrap">
     <div class="blank-state" id="blank-state">
-      <div class="icon">📋</div>
       <h2>No class list selected</h2>
       <p>Class lists are shared across every tool — build one here and it shows up<br>in the Seating Chart Maker and Talk Tracker.</p>
-      <button class="btn btn-primary" onclick="newRoster()">+ New class list</button>
+      <button class="btn btn--primary" onclick="newRoster()">+ New class list</button>
     </div>
 
     <div class="editor" id="editor" style="display:none">
-      <h1 class="page-title" id="editor-title">New class list</h1>
-      <p class="page-sub">Give it a name, then paste or type one student per line.</p>
+      <div class="page-head">
+        <h1 class="page-title" id="editor-title">New class list</h1>
+        <p class="page-sub">Give it a name, then paste or type one student per line.</p>
+      </div>
 
       <div class="card">
         <div class="field">
@@ -142,10 +122,10 @@
           <input type="text" id="roster-name" placeholder="e.g. Period 3 English 10" maxlength="80"/>
         </div>
         <div class="field">
-          <label>Students <span class="count-badge" id="count-badge">0</span></label>
+          <label>Students <span class="tag tag--ok" id="count-badge">0</span></label>
           <textarea id="students-input" placeholder="Ada Lovelace&#10;Grace Hopper&#10;Alan Turing&#10;&#10;— or with student ID numbers, in any shape —&#10;&#10;82984196, Ada Lovelace&#10;82984197, Grace Hopper"></textarea>
           <div class="import-row">
-            <button type="button" class="btn btn-outline btn-sm" id="import-csv-btn">Import CSV…</button>
+            <button type="button" class="btn btn--secondary btn--sm" id="import-csv-btn">Import CSV…</button>
             <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none"/>
             <p class="hint">or paste above — a spreadsheet, a markdown table, a numbered
             list, anything with one student per line. ID numbers are optional, but keep
@@ -167,18 +147,16 @@
         </div>
       </div>
 
-      <div class="editor-actions">
-        <button class="btn-ghost" id="delete-btn" onclick="deleteCurrent()" style="visibility:hidden">Delete this list</button>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveCurrent()">Save class list</button>
-        </div>
+      <div class="actions">
+        <button class="btn btn--danger" id="delete-btn" onclick="deleteCurrent()" style="visibility:hidden;margin-right:auto">Delete this list</button>
+        <button class="btn btn--secondary" onclick="cancelEdit()">Cancel</button>
+        <button class="btn btn--primary" onclick="saveCurrent()">Save class list</button>
       </div>
     </div>
   </main>
 </div>
 
-<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a></div>
 
 <script src="../js/toolshed-store.js"></script>
 <script src="rosters-import.js"></script>
@@ -199,7 +177,8 @@ let lastParse = null;
   await ToolshedStore.ready();
   if (ToolshedStore.ephemeral) {
     const note = document.getElementById('storage-note');
-    note.className = 'storage-note warn';
+    note.className = 'notice notice--error';
+    note.style.margin = '0';
     note.textContent = 'This browser is blocking saved data (private mode?). Anything you enter here will be lost when you close the tab.';
   }
   document.getElementById('students-input').addEventListener('input', runParse);
@@ -223,7 +202,7 @@ async function refreshList(selectId) {
   }
   summaries.forEach(r => {
     const btn = document.createElement('button');
-    btn.className = 'list-item' + (r.id === selectId ? ' active' : '');
+    btn.className = 'list-item' + (r.id === selectId ? ' row--selected' : '');
     btn.innerHTML = `<div class="list-item-name"></div><div class="list-item-meta">${r.studentCount} student${r.studentCount === 1 ? '' : 's'}</div>`;
     btn.querySelector('.list-item-name').textContent = r.name;
     btn.onclick = () => openRoster(r.id);
@@ -233,7 +212,7 @@ async function refreshList(selectId) {
 
 function markActive(id) {
   document.querySelectorAll('.list-item').forEach((el, i) => {
-    el.classList.toggle('active', summaries[i] && summaries[i].id === id);
+    el.classList.toggle('row--selected', summaries[i] && summaries[i].id === id);
   });
 }
 
@@ -392,7 +371,7 @@ function renderWarnings(result) {
   }
 
   box.innerHTML = lines.length
-    ? `<div class="warn-box${dupSids.length ? ' bad' : ''}">${lines.map(l => `<p>${l}</p>`).join('')}</div>`
+    ? `<div class="notice ${dupSids.length ? 'notice--error' : 'notice--caution'}">${lines.map(l => `<p>${l}</p>`).join('')}</div>`
     : '';
 }
 
@@ -415,7 +394,7 @@ function renderSummaryAndTable(result) {
     return `<tr class="${flagged ? 'preview-flagged' : ''}">
       <td class="preview-id">${s.sid ? escapeHtml(s.sid) : '<span class="preview-none">—</span>'}</td>
       <td>${escapeHtml(s.name)}</td>
-      <td>${flagged ? `<span class="preview-flags">⚠ ${escapeHtml(flags)}</span>` : ''}</td>
+      <td>${flagged ? `<span class="preview-flags">${escapeHtml(flags)}</span>` : ''}</td>
     </tr>`;
   };
 
@@ -438,7 +417,7 @@ function renderSummaryAndTable(result) {
       tail;
   }
 
-  table.innerHTML = `<table class="preview">
+  table.innerHTML = `<table class="data preview">
     <thead><tr><th>ID</th><th>Name</th><th></th></tr></thead>
     <tbody>${bodyRows}</tbody>
   </table>`;
@@ -587,9 +566,9 @@ function importBackup(e) {
 function showToast(msg, dur = 2200) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.remove('hidden');
+  t.classList.remove('is-hidden');
   clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => t.classList.add('hidden'), dur);
+  showToast._timer = setTimeout(() => t.classList.add('is-hidden'), dur);
 }
 </script>
 </body>
