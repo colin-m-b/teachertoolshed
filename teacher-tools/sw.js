@@ -8,14 +8,15 @@
    once, losing the network mid-session must not break it. CACHE_NAME is
    version-tagged so a future edit to this file's own asset list evicts the
    old cache instead of serving stale files forever. */
-const CACHE_NAME = 'purewrite-shell-v1';
+const CACHE_NAME = 'purewrite-shell-v2';
 const SHELL_ASSETS = [
   'purewrite.html',
   'purewrite-setup.html',
   'purewrite-export.js',
   '../js/toolshed-zip.js',
   'vendor/jspdf.umd.min.js',
-  '../css/toolshed.css',
+  '../css/theme.css',
+  '../css/tools.css',
   '../favicon.svg'
 ];
 

@@ -596,15 +596,3 @@ table.data tbody tr:hover { background: var(--paper-hover); }
 .rubric-range__field input { width: 64px; }
 .rubric-range__hint { margin: 0; }
 
-/* ══ 20. LEGACY ALIASES (delete once all tools are migrated) ═
-   Lets a half-migrated page render correctly. Do not write new
-   markup against these. */
-
-.header { composes: none; }
-.btn-primary { background: var(--accent); color: var(--paper); }
-.btn-green   { background: var(--accent); color: var(--paper); }
-.btn-outline { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
-.btn-danger  { background: var(--paper); color: var(--flag); border: 1px solid var(--flag); }
-.btn-ghost   { background: none; border: none; color: var(--meta); }
-.warn-box    { border: var(--hairline); border-left: 3px solid var(--note); background: var(--note-wash); padding: 14px 16px; margin-bottom: 20px; }
-.warn-box.bad{ border-left-color: var(--flag); background: var(--flag-wash); }
