@@ -1,6 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <rect x="1" y="4" width="6" height="4" rx="0" fill="#1B3C8C" opacity=".9"/>
-  <rect x="9" y="4" width="6" height="4" rx="0" fill="#1B3C8C" opacity=".9"/>
-  <rect x="1" y="10" width="6" height="4" rx="0" fill="#1B3C8C" opacity=".55"/>
-  <rect x="9" y="10" width="6" height="4" rx="0" fill="#1B3C8C" opacity=".55"/>
+  <!-- Teacher Tool Shed. Editorial system: navy ground, paper letters, square
+       corners. A serif stack stands in for Playfair Display, which cannot be
+       embedded here — at 16px the difference is invisible, and the shape of a
+       filled block with light letters is what makes a tab findable. -->
+  <rect width="16" height="16" fill="#1B3C8C"/>
+  <text x="8" y="11.4" fill="#FFFFFF" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', 'Playfair Display', serif"
+        font-size="9" font-weight="600" letter-spacing="-0.2">tts</text>
 </svg>

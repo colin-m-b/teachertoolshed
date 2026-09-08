@@ -1,8 +1,8 @@
 # Teacher Toolshed — Standardization & Persistence Plan
 
-**Status: ACTIVE — this is the current work plan.** `ARCHITECTURE.md` describes a possible long-term SaaS future and is *not* being executed now; where the two disagree, this file wins.
+**Status: every phase below is BUILT (last verified 2026-09-08).** `ARCHITECTURE.md` describes a possible long-term SaaS future and is *not* being executed now; where the two disagree, this file wins.
 
-This plan is written to be executed phase by phase. Complete phases in order, commit at the end of each phase (one commit per phase minimum), and verify the acceptance checklist before moving on. Do not expand scope beyond what a phase specifies.
+The phases are kept as the record of *why* the site is shaped the way it is — the decisions, the specs, and the acceptance checks each one had to pass. They are no longer a queue of work. Read "Current state" below for what actually exists today; read a phase when you need to know why something was built that way. New work gets a new phase, the way Phases 6 and 7 did — one commit per phase minimum, and the phase's acceptance checklist verified before it is marked BUILT.
 
 ---
 
@@ -23,82 +23,70 @@ Because all data stays in the teacher's own browser and no data is ever transmit
 
 ---
 
-## Current state (verified 2026-08-22)
+## Current state (verified 2026-09-08)
 
 ```
-index.html                      landing page — cream + FOREST GREEN accent, Lora + Inter (wrong accent/body font)
-css/base.css                    landing tokens (forest palette) + shared buttons
-css/nav.css                     landing nav
-css/home.css                    landing sections
+index.html                      landing page
+privacy.html                    privacy page
+favicon.svg                     "tts" wordmark, navy ground
+CLAUDE.md                       the rules that hold across sessions — read first
+TOOLS-REBUILD-PLAN.md           tool-page style guide (ground truth for tools)
+css/theme.css                   editorial tokens, reset, page frame — the base layer
+css/tools.css                   shared tool chrome layered on theme.css
+css/home.css                    landing sections: masthead, tool grid, shelf, note
+js/toolshed-store.js            IndexedDB rosters + per-tool docs, JSON export/import
+js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
+js/toolshed-zip.js              zip writer (stack splitter, purewrite)
+js/toolshed-pdf-font.js         embedded PDF font helper
 teacher-tools/
-  seating-chart-maker.html      970 lines, self-contained. ✅ already target design. Has Pro/upgrade mockups (~32 mentions). Saves rosters to localStorage key `toolshed:rosters`. Does NOT save charts.
-  talk-tracker.html             823 lines, self-contained. ✅ already target design. Has Pro/upgrade mockups (~26 mentions). Saves NOTHING — sessions lost on reload.
-  hexthinking.html              872 lines, self-contained. ❌ off-brand: "HexThinking" name, Anybody font, orange #e86b30 accent, own hex logo. Teacher setup + student canvas in one file; sharing via base64 activity in location.hash; student canvas state saved to localStorage keyed by hash.
-  FONT-LICENSE.md
-ARCHITECTURE.md                 aspirational SaaS doc — superseded for now (see Status note to add in Phase 0)
-README.md
+  hexthinking.html
+  presentation-grader.html
+  purewrite.html                sw.js caches its shell for offline use
+  purewrite-setup.html
+  rosters.html                  the class-list manager
+  seating-chart-maker.html
+  stack-splitter.html + .js
+  talk-tracker.html
+  vendor/                       jsQR, jsPDF, pdf-lib, pdf.js, qrcode-generator (+ licences)
+ARCHITECTURE.md                 aspirational SaaS doc — superseded, see its own status note
 ```
 
-Known content bug: `index.html` lists tool 03 "Socratic seminar tracker" as *Coming soon*, but `talk-tracker.html` exists and works. Fixed in Phase 2.
+**One system, everywhere.** Landing page, tool pages and privacy page all run
+the editorial print system: `theme.css` for tokens and frame, `tools.css` for
+tool chrome, a page `<style>` for layout only. There is no second system to keep
+track of any more, and no page-by-page exception to remember.
+
+### Consolidated onto `main`, 2026-09-08
+
+Everything that was living in open pull requests is now on `main`, and the
+branches are gone:
+
+- The tool-page migration onto the editorial system (was PR #4).
+- Stack Splitter's configurable filenames (was PR #3), re-applied by hand — it
+  was written against the pre-migration page and could not be merged. It now
+  uses the shared `.toggle` switch instead of the raw checkboxes it had.
+- The favicon became a `tts` wordmark: navy ground, paper letters. The
+  four-rectangle mark it replaced was an orphan, since the migration dropped
+  that icon from every page header in favour of the wordmark.
 
 ---
 
 ## The design system (single source of truth)
 
-These tokens are lifted from `seating-chart-maker.html` / `talk-tracker.html` and become `css/toolshed.css`. Every page uses them.
+`css/theme.css` owns the tokens; `css/tools.css` owns the tool chrome;
+`TOOLS-REBUILD-PLAN.md` is the style guide. Those three files are the truth —
+this section is deliberately not a fourth copy of the palette to drift out of
+date. See `CLAUDE.md` for the short version.
 
-```css
-:root{
-  /* palette */
-  --bg:#F7F5F0; --surface:#FFFFFF; --surface-2:#F0EDE6; --border:#E0DDD4;
-  --border-focus:#B5843A;
-  --text:#28251E; --text-mid:#6B6457; --text-light:#A8A098;
-  --accent:#B5843A; --accent-hover:#9A6E2F; --accent-soft:#FBF4E8;
-  --green:#4A7C59; --green-soft:#EBF4EE; --green-border:#B8D9C2;
-  --red:#C44A3F; --red-soft:#FAECEA;
-  /* shape */
-  --radius:10px; --radius-sm:6px;
-  --shadow:0 1px 3px rgba(40,37,30,.08),0 1px 2px rgba(40,37,30,.05);
-  /* type */
-  --font-serif:"Lora",Georgia,serif;
-  --font-sans:"DM Sans","Helvetica Neue",sans-serif;
-}
-```
-
-**Fonts link (identical on every page):**
-```html
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-```
-
-**Type rules:** Lora (`--font-serif`) for headings, page titles, card titles, stat numbers, brand name. DM Sans (`--font-sans`) for everything else. Body 15px, line-height 1.5.
-
-**Component conventions** (already in the two on-brand tools — extract, don't invent):
-- `.btn` base + `.btn-primary` (accent bg, white text), `.btn-secondary` (surface-2 bg, border), `.btn-ghost` (no bg, text-mid). Radius `--radius-sm`, 13px, weight 600.
-- Inputs/selects/textareas: `--surface-2` bg, 1.5px `--border`, radius `--radius-sm`, focus → `--border-focus`.
-- Cards: `--surface` bg, 1px `--border`, radius `--radius`, `--shadow`.
-- Modals: centered, `--surface`, radius `--radius`, dimmed overlay.
-- Shared header (see Phase 1).
-
-**Orange→gold mapping for the hex tool** (Phase 1c):
-
-| hexthinking.html today | becomes |
-|---|---|
-| `--bg: #f4f1ec` | `#F7F5F0` |
-| `--bg-warm: #eae5dd` | `#F0EDE6` |
-| `--border: #d8d2c8` / `--border-light: #e8e3db` | `#E0DDD4` |
-| `--text: #2c2924` / `--text-mid: #6b635a` / `--text-dim: #9e9588` | `#28251E` / `#6B6457` / `#A8A098` |
-| `--accent: #e86b30` / `--accent-hover: #d45a22` | `#B5843A` / `#9A6E2F` |
-| `--accent-light: rgba(232,107,48,0.08)` | `#FBF4E8` |
-| `--red: #c94040` | `#C44A3F` |
-| font `Anybody` (all uses) | `Lora` (weights 600/700; drop 800) |
-| hardcoded `#e86b30` in inline SVGs (brand logo, canvas) | `#B5843A` |
-| hardcoded `#6b635a` in JS-generated SVG text | `#6B6457` |
-
-Note: hexagon *category colors* chosen by the teacher (the per-category color swatches) are content, not chrome — leave that palette alone.
+The cream + gold token block that used to be printed here described
+`css/toolshed.css`, which has been retired. It is not reproduced, to remove any
+chance of a future change reviving it from this document.
 
 ---
 
-## Phase 0 — Housekeeping (15 min)
+## Phase 0 — Housekeeping — DONE
+
+*(`ARCHITECTURE.md` carries its status note; `README.md` was rewritten — and rewritten again on 2026-09-08, since it had gone stale by three tools.)*
 
 1. Add this note at the top of `ARCHITECTURE.md`, right under the title:
    > **Status: aspirational / superseded.** This document sketches a possible future SaaS version. Current active work is defined in `PLAN.md`. Notably, the dark/lime design system in §11 has been rejected in favor of the cream/gold system, and the Next.js migration is not happening now.
@@ -106,7 +94,9 @@ Note: hexagon *category colors* chosen by the teacher (the per-category color sw
 
 **Accept:** both files updated; nothing else touched.
 
-## Phase 1 — Shared design system (the big one)
+## Phase 1 — Shared design system — DONE, then SUPERSEDED
+
+*(This phase built `css/toolshed.css` and put every tool on it, which is what "the tools all share one style" refers to — one style as each other, cream and gold. Decision 1 was later reversed and that sheet retired in favour of `css/theme.css` + `css/tools.css`. Kept as history; do not execute.)*
 
 ### 1a. Create `css/toolshed.css`
 
@@ -143,7 +133,9 @@ In `seating-chart-maker.html` and `talk-tracker.html`: link `css/toolshed.css` a
 
 **Accept (Phase 1):** open all four pages in a browser. Identical fonts everywhere (Lora/DM Sans — no Inter, no Anybody, check DevTools computed styles); identical header brand on the three tools; landing nav matches; no orange anywhere in hex chrome; no visual regressions in seating drag-drop, tracker live session, hex canvas (drag hexes, draw connections, open a student share link, confirm student canvas still loads from hash and still auto-saves).
 
-## Phase 2 — Remove monetization mockups
+## Phase 2 — Remove monetization mockups — DONE
+
+*(Zero case-insensitive hits for upgrade / pro plan / pricing / paywall across the HTML. The one `upgrade` in `js/toolshed-store.js` is IndexedDB's `onupgradeneeded`.)*
 
 - `index.html`: delete the Pricing section, the `#pricing` nav link, and the "Get started" nav button (or point it to `#tools`). Hero CTA "Try free — no account needed" → "Free to use — no account needed" or similar. Fix the tools grid: tool 03 becomes **Talk Tracker — Live**, linking to `teacher-tools/talk-tracker.html` (it exists; the "coming soon" card is stale).
 - `seating-chart-maker.html` + `talk-tracker.html`: remove all upgrade modals, "Upgrade to Pro" buttons/cards, pro-lock overlays, and any project-count limits gating features. Anything that was fake-locked behind Pro either becomes freely usable (if implemented) or is removed entirely (if it was a mockup with no behavior). Search each file for `pro`, `upgrade`, `Pro` case-insensitively and account for every hit. Remove the JS that opened these modals too — no dead handlers.
@@ -151,7 +143,9 @@ In `seating-chart-maker.html` and `talk-tracker.html`: link `css/toolshed.css` a
 
 **Accept:** zero case-insensitive matches for "upgrade" in all HTML; no mention of Pro, pricing, $5, or trials anywhere; all remaining buttons do something real; tools grid shows three live tools.
 
-## Phase 3 — Shared roster store (local-first, cloud-shaped)
+## Phase 3 — Shared roster store — DONE
+
+*(`js/toolshed-store.js` ships; `rosters.html` is the manager; six tool pages load the store — hex, presentation grader, rosters, seating chart, stack splitter, talk tracker. PureWrite deliberately uses plain `localStorage` for a student's in-progress draft and holds no roster.)*
 
 ### 3a. Create `js/toolshed-store.js`
 
@@ -198,7 +192,9 @@ Create `teacher-tools/rosters.html` (standard header, `toolshed.css`): list rost
 
 **Accept:** create a roster in the manager → it appears in seating chart and talk tracker pickers; edit it once, both see the change after reload; old `toolshed:rosters` data migrates and the key is gone; export → wipe site data → import restores everything; reload mid-seating-edit and mid-tracker-session recovers state; DevTools Network tab shows zero requests carrying roster data (only fonts).
 
-## Phase 4 — Privacy page & polish
+## Phase 4 — Privacy page & polish — DONE
+
+*(Every page verified 2026-09-08 to carry the `[Tool] — Teacher Toolshed` title pattern, a meta description, the SVG favicon, a footer, and a privacy link.)*
 
 - `privacy.html`: plain-language, on-system page: everything is stored only in your browser; nothing is sent to us — we run no server and no analytics; export/import is how you back up; clearing site data deletes everything; note for Safari users that unused-site storage may be cleared after ~7 days, so export backups; for FERPA-minded readers: no student data is transmitted to or held by Teacher Toolshed, and hex share links encode the activity in the link itself. Contact email. Link from footer of every page.
 - Consistent `<title>` pattern `[Tool] — Teacher Toolshed`, meta descriptions on all pages, shared footer on tools (small: brand + privacy link).
@@ -207,13 +203,17 @@ Create `teacher-tools/rosters.html` (standard header, `toolshed.css`): list rost
 
 **Accept:** privacy page linked from every page; every page has proper title/meta/favicon; nothing broken at 768px.
 
-## Phase 5 — Final QA (checklist, no new features)
+## Phase 5 — Final QA — DONE
+
+*(Re-run 2026-09-08: `Anybody` and `2d5a1b` are gone; no page loads Inter; the surviving `e86b30` is the student-facing hex-tile palette, and the `Inter` grep hits are substrings of "interface", "interval" and friends.)*
 
 Walk each flow end-to-end in a fresh browser profile: landing → each tool; seating chart full flow (roster → layout → assign → save → reload → load); tracker full flow (roster → live session → tag participation → end → summary → past sessions); hex full flow (create activity → save → share link in a private window → student places hexes → reload persists). Then: no console errors on any page; grep the codebase for `e86b30`, `Anybody`, `Inter`, `upgrade`, `2d5a1b` — all zero (except FONT-LICENSE.md if it mentions fonts); run through the Phase 3 network check once more.
 
 ---
 
-## Phase 6 — Presentation Grader (new tool) + shared rubrics
+## Phase 6 — Presentation Grader + shared rubrics — DONE
+
+*(`presentation-grader.html` and `js/toolshed-rubric.js` ship; the rubric module is wired into Talk Tracker too, which Phase 6 listed as optional follow-on.)*
 
 **Depends on Phase 3.** This phase leans entirely on the shared store (saved rubrics, saved groups, shared rosters). Do not start it before Phase 3 is done.
 
@@ -294,11 +294,82 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 ---
 
+## Built outside the numbered phases
+
+`purewrite.html` / `purewrite-setup.html` (+ `purewrite-export.js`, `sw.js`) and `stack-splitter.html` (+ `stack-splitter.js`) were added after Phase 6 without phases of their own, and the landing page was redesigned onto the editorial system in the same period. They are listed here so the phase list is not mistaken for the whole history.
+
+---
+
+## Phase 7 — Brain Breaks (new tool, new shelf) — IN PROGRESS
+
+**Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
+
+Not yet on `main`. The page is built and tested but was written before `css/tools.css` existed, so it is being rebuilt on the shared components before it lands. Two content calls were made in the build and are easy to reverse:
+
+- The draft's *Boy's Name* / *Girl's Name* categories became **Name** and **Famous Person** — same job, without splitting the room by gender to answer a warm-up.
+- *Colour* became **Color**, to match the site's own US-spelled copy ("Digitize", "Randomize").
+
+### Is it a tool? Yes — its own page, not folded into an existing one
+
+There is no host for it. Hex Thinking is the only other page students look at, but it is a built activity with an author, a share link, and saved canvas state; brain breaks are the opposite of authored. Bolting a tab onto it would ruin both.
+
+### Is it separate from the rest? Yes — deliberately, and visibly
+
+Every one of the six is the same shape: teacher-facing, roster-aware, produces a record (PDF, CSV, print, named files), persists through the shared store. Brain Breaks is student-facing, roster-free, stateless on purpose, and produces nothing at all. It fails every property that makes the six a set.
+
+The landing page is also built around the number: `<title>` says "Six small tools", the masthead says "Six small tools I built for my own classes", the nav says "The six", the cards are numbered No. 01–06. Making this No. 07 means renaming all of that to "seven" and dropping a projector toy into a row of gradebook workflow tools — and it means renumbering again for the next one.
+
+So: **its own page, and its own band on the landing page below the six.** The utility bar already does this for Class Lists, which sits outside "The six" for exactly the same reason. The band is also where the obvious follow-ons go (countdown timer, random picker, noise meter) without ever touching the six.
+
+### 7a. `teacher-tools/brain-breaks.html`
+
+Four tabs, one page: Stop the Bus, Make a Group, Word Association, This or That. The uploaded draft is the content and interaction source; it needs re-shelling to house conventions and four bug fixes before it ships.
+
+**Re-shell onto the editorial system**
+- Delete the inline `:root` token block and the duplicated reset/button CSS. The draft arrived in cream + gold, which is why an early attempt to re-shell it onto `css/toolshed.css` looked like a no-op: same palette, same Lora/DM Sans, same rounded cards.
+- The page links `css/theme.css` and wears the landing page's chrome — `.utility-bar` at the top (brand link, "The six", "Class lists", the Present button) and `.site-footer` at the bottom — plus a scaled-down masthead: eyebrow, Playfair title, italic sub, 3px double rule.
+- Editorial idiom throughout: hairline rules and square corners, ink-filled active tab, hairline grids for the categories and group items, Playfair for the letter/word/pairs, Archivo uppercase for buttons and meta.
+- **Outstanding:** this was written before `css/tools.css` existed on the branch, so its buttons, tab strip and page head are hand-rolled page-scoped rather than the shared components, and its alert red is a hand-picked `#8C1B1B` — the same value `tools.css` already defines as `--flag`. Rebuild on the shared sheet once PR #4 is on `main`. See "Known loose ends".
+- Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the landing page's exact fonts link and preconnects.
+
+**Fix these four before shipping**
+1. **The timer starts itself.** `newRound()` runs at init, so a 60-second round is already draining before the class is looking at the board. Render the letter and categories at rest and start on an explicit "Start round".
+2. **Switching tabs kills a running round.** The tab handler calls `stopTimer()` when you come *back* to Stop the Bus, so glancing at another tab silently ends the round. Pick a behaviour and implement it deliberately — a round that survives tab switches, or an explicit pause.
+3. **Round length is hard-coded to 60 s.** Offer 30 / 60 / 90 / 120.
+4. **The clock counts `setInterval` ticks**, which drifts and stalls outright when the tab is backgrounded. Compute remaining time from a `Date.now()` deadline.
+
+**Projector requirements** — this is the only page in the shed meant to be read from the back of a room, so they are requirements, not polish:
+- A present/fullscreen toggle (`requestFullscreen`) that scales the stage up.
+- Room-sized type. The 46px word display is right on a laptop and small on a projector at twenty feet; drive the stage type off `clamp()` with a much higher ceiling in presentation mode.
+- Keyboard control: Space advances the active tab (new round / shuffle / new word / next pair), `F` toggles fullscreen. Nobody should have to walk back to the laptop.
+- No hover-only affordances — there is no cursor on the projector.
+
+**Content pass before shipping**
+- "Boy's Name" / "Girl's Name" split every class into two lists by gender to answer a warm-up. "A name" and "A name from a book" do the same job. Teacher's call, but do not ship it unconsidered.
+- "Colour" — the rest of the site's copy is US-spelled ("Digitize", "Randomize"). Pick one and be consistent.
+- Read the This-or-That pairs once as a parent would. The Q/X/Z-skipping comment in the letters string is correct; keep it.
+
+**Deliberately not built:** no `ToolshedStore`, no saved state, no rosters, no student names, no export, no scoring. Loaded once, it must keep working with the network off — which also means there is no reason to touch `sw.js` (that cache is PureWrite's).
+
+### 7b. Landing page placement
+
+- Leave the six-card grid, its numbering, the masthead, the `<title>`, and the meta description alone. They still describe the six.
+- Add one band under `#tools`: a single wide card, styles in `css/home.css`, kicker "Also in the shed", in the landing page's ink/paper editorial system (not cream — Decision 1 still holds). Copy sells the actual value: nothing to set up, nothing saved, put it on the board when the energy dips.
+- Add "Brain breaks" to the utility-bar nav after "Class lists".
+
+### 7c. Same band later (not now)
+
+Countdown/stopwatch for timed tasks, random name picker (the only one that would want rosters), noise meter, would-you-rather. Each is a tab or a sibling page in the same band — never a seventh numbered card.
+
+**Accept (Phase 7):** page loads with the clock at rest; start a round, switch tabs and come back, confirm the round is where you left it; background the tab for thirty seconds and confirm the clock is still honest; each tab advances on Space; `F` fills the screen and the type is readable from the back of a classroom; kill the network and confirm every tab still works; no `ToolshedStore` call and zero network requests after load; the landing page still says six, and the new band links through.
+
+---
+
 ## Explicitly out of scope (do not build)
 
 - Accounts, auth, Supabase, Stripe, Netlify Functions, emails, analytics.
 - Next.js or any build tooling.
-- New tools or new features beyond persistence described above, **except** the Presentation Grader specified in Phase 6.
+- New tools or new features beyond persistence described above, **except** the tools specified in their own phases (Presentation Grader, Phase 6; Brain Breaks, Phase 7). PureWrite and Stack Splitter were added the same way, by an added phase, not by widening an existing one.
 - Server-side anything.
 
 ## Future (for reference only): cloud sync sketch
