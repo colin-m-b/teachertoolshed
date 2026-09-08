@@ -1,8 +1,8 @@
 # Teacher Toolshed — Standardization & Persistence Plan
 
-**Status: ACTIVE — this is the current work plan.** `ARCHITECTURE.md` describes a possible long-term SaaS future and is *not* being executed now; where the two disagree, this file wins.
+**Status: every phase below is BUILT (last verified 2026-09-08).** `ARCHITECTURE.md` describes a possible long-term SaaS future and is *not* being executed now; where the two disagree, this file wins.
 
-This plan is written to be executed phase by phase. Complete phases in order, commit at the end of each phase (one commit per phase minimum), and verify the acceptance checklist before moving on. Do not expand scope beyond what a phase specifies.
+The phases are kept as the record of *why* the site is shaped the way it is — the decisions, the specs, and the acceptance checks each one had to pass. They are no longer a queue of work. Read "Current state" below for what actually exists today; read a phase when you need to know why something was built that way. New work gets a new phase, the way Phases 6 and 7 did — one commit per phase minimum, and the phase's acceptance checklist verified before it is marked BUILT.
 
 ---
 
@@ -23,29 +23,56 @@ Because all data stays in the teacher's own browser and no data is ever transmit
 
 ---
 
-## Current state (verified 2026-08-22)
+## Current state (verified 2026-09-08)
 
 ```
-index.html                      landing page — cream + FOREST GREEN accent, Lora + Inter (wrong accent/body font)
-css/base.css                    landing tokens (forest palette) + shared buttons
-css/nav.css                     landing nav
-css/home.css                    landing sections
+index.html                      landing page — editorial ink/paper system
+privacy.html                    privacy page — cream + gold
+favicon.svg
+css/theme.css                   editorial tokens, page frame (utility bar, footer) — landing system
+css/home.css                    landing sections: masthead, tool grid, shelf, author's note
+css/toolshed.css                cream + gold design system — every tool page but one
+js/toolshed-store.js            IndexedDB rosters + per-tool docs, JSON export/import
+js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
+js/toolshed-zip.js              zip writer (stack splitter, purewrite)
+js/toolshed-pdf-font.js         embedded PDF font helper
 teacher-tools/
-  seating-chart-maker.html      970 lines, self-contained. ✅ already target design. Has Pro/upgrade mockups (~32 mentions). Saves rosters to localStorage key `toolshed:rosters`. Does NOT save charts.
-  talk-tracker.html             823 lines, self-contained. ✅ already target design. Has Pro/upgrade mockups (~26 mentions). Saves NOTHING — sessions lost on reload.
-  hexthinking.html              872 lines, self-contained. ❌ off-brand: "HexThinking" name, Anybody font, orange #e86b30 accent, own hex logo. Teacher setup + student canvas in one file; sharing via base64 activity in location.hash; student canvas state saved to localStorage keyed by hash.
-  FONT-LICENSE.md
-ARCHITECTURE.md                 aspirational SaaS doc — superseded for now (see Status note to add in Phase 0)
-README.md
+  brain-breaks.html             EDITORIAL system — the one exception, see Decision 1
+  hexthinking.html              cream + gold, but carries its own inline copy of the tokens
+  presentation-grader.html      toolshed.css
+  purewrite.html                toolshed.css; sw.js caches its shell for offline use
+  purewrite-setup.html          toolshed.css
+  rosters.html                  toolshed.css — the class-list manager
+  seating-chart-maker.html      toolshed.css
+  stack-splitter.html + .js     toolshed.css
+  talk-tracker.html             toolshed.css
+  sw.js                         PureWrite offline shell cache only
+  vendor/                       jsQR, jsPDF, pdf-lib, pdf.js, qrcode-generator (+ licences)
+ARCHITECTURE.md                 aspirational SaaS doc — superseded, see its own status note
 ```
 
-Known content bug: `index.html` lists tool 03 "Socratic seminar tracker" as *Coming soon*, but `talk-tracker.html` exists and works. Fixed in Phase 2.
+**Which page runs which system.** This is the thing most often misremembered, so, plainly:
+
+| Page | System | Fonts |
+| --- | --- | --- |
+| `index.html` | editorial ink/paper (`theme.css` + `home.css`) | Playfair Display · Newsreader · Archivo |
+| `teacher-tools/brain-breaks.html` | editorial ink/paper (`theme.css`) | Playfair Display · Newsreader · Archivo |
+| the other eight tool pages, and `privacy.html` | cream + gold (`toolshed.css`) | Lora · DM Sans |
+
+The tool pages are consistent **with each other** — that is what "standardize the design system" achieved, and it is why they all look alike. They do **not** match the landing page, and were never meant to: Decision 1 made the two systems deliberately different. Anyone reading "the tools are all on the same system" should read it as *the same as each other*, not *the same as the homepage*.
+
+### Loose ends in the current state
+
+- `hexthinking.html` does not link `css/toolshed.css`. It was recoloured onto the cream + gold palette (Phase 1c) but never deduplicated the way Phase 1d did for the other tools, so it still carries its own `:root` with the same 24 token values. Two copies of one palette, drifting apart by default.
+- `privacy.html` runs the tool system, though it is reached from the landing page's footer. Harmless, but it is a seam a visitor can see.
+- Phase 1a specified `ts-`-prefixed shared class names. The code shipped **unprefixed** (`.header`, `.brand`, `.brand-icon`, `.header-sep`, `.header-tool`). The unprefixed names are the reality on every page — do not "fix" the code to match the old spec.
+- `#e86b30` still appears in `hexthinking.html`, in the `PALETTE` array of hex-tile colours students choose from. That is content, not leftover chrome; the Phase 5 grep flags it every time, and it is fine.
 
 ---
 
 ## The design system (single source of truth)
 
-These tokens are lifted from `seating-chart-maker.html` / `talk-tracker.html` and become `css/toolshed.css`. Every page uses them.
+These tokens are lifted from `seating-chart-maker.html` / `talk-tracker.html` and became `css/toolshed.css`. **Every tool page uses them except `brain-breaks.html`**, which runs the landing page's editorial system instead (Decision 1). The landing page's own tokens live in `css/theme.css` and are a separate system — not a variant of this one.
 
 ```css
 :root{
@@ -98,7 +125,9 @@ Note: hexagon *category colors* chosen by the teacher (the per-category color sw
 
 ---
 
-## Phase 0 — Housekeeping (15 min)
+## Phase 0 — Housekeeping — DONE
+
+*(`ARCHITECTURE.md` carries its status note; `README.md` was rewritten — and rewritten again on 2026-09-08, since it had gone stale by three tools.)*
 
 1. Add this note at the top of `ARCHITECTURE.md`, right under the title:
    > **Status: aspirational / superseded.** This document sketches a possible future SaaS version. Current active work is defined in `PLAN.md`. Notably, the dark/lime design system in §11 has been rejected in favor of the cream/gold system, and the Next.js migration is not happening now.
@@ -106,7 +135,9 @@ Note: hexagon *category colors* chosen by the teacher (the per-category color sw
 
 **Accept:** both files updated; nothing else touched.
 
-## Phase 1 — Shared design system (the big one)
+## Phase 1 — Shared design system — DONE, with one loose end
+
+*(`css/toolshed.css` exists and every tool page links it **except** `hexthinking.html`, which still carries its own copy of the same tokens. Shared classes shipped unprefixed, not `ts-`. See "Loose ends" above.)*
 
 ### 1a. Create `css/toolshed.css`
 
@@ -143,7 +174,9 @@ In `seating-chart-maker.html` and `talk-tracker.html`: link `css/toolshed.css` a
 
 **Accept (Phase 1):** open all four pages in a browser. Identical fonts everywhere (Lora/DM Sans — no Inter, no Anybody, check DevTools computed styles); identical header brand on the three tools; landing nav matches; no orange anywhere in hex chrome; no visual regressions in seating drag-drop, tracker live session, hex canvas (drag hexes, draw connections, open a student share link, confirm student canvas still loads from hash and still auto-saves).
 
-## Phase 2 — Remove monetization mockups
+## Phase 2 — Remove monetization mockups — DONE
+
+*(Zero case-insensitive hits for upgrade / pro plan / pricing / paywall across the HTML. The one `upgrade` in `js/toolshed-store.js` is IndexedDB's `onupgradeneeded`.)*
 
 - `index.html`: delete the Pricing section, the `#pricing` nav link, and the "Get started" nav button (or point it to `#tools`). Hero CTA "Try free — no account needed" → "Free to use — no account needed" or similar. Fix the tools grid: tool 03 becomes **Talk Tracker — Live**, linking to `teacher-tools/talk-tracker.html` (it exists; the "coming soon" card is stale).
 - `seating-chart-maker.html` + `talk-tracker.html`: remove all upgrade modals, "Upgrade to Pro" buttons/cards, pro-lock overlays, and any project-count limits gating features. Anything that was fake-locked behind Pro either becomes freely usable (if implemented) or is removed entirely (if it was a mockup with no behavior). Search each file for `pro`, `upgrade`, `Pro` case-insensitively and account for every hit. Remove the JS that opened these modals too — no dead handlers.
@@ -151,7 +184,9 @@ In `seating-chart-maker.html` and `talk-tracker.html`: link `css/toolshed.css` a
 
 **Accept:** zero case-insensitive matches for "upgrade" in all HTML; no mention of Pro, pricing, $5, or trials anywhere; all remaining buttons do something real; tools grid shows three live tools.
 
-## Phase 3 — Shared roster store (local-first, cloud-shaped)
+## Phase 3 — Shared roster store — DONE
+
+*(`js/toolshed-store.js` ships; `rosters.html` is the manager; six tool pages load the store — hex, presentation grader, rosters, seating chart, stack splitter, talk tracker. PureWrite deliberately uses plain `localStorage` for a student's in-progress draft and holds no roster.)*
 
 ### 3a. Create `js/toolshed-store.js`
 
@@ -198,7 +233,9 @@ Create `teacher-tools/rosters.html` (standard header, `toolshed.css`): list rost
 
 **Accept:** create a roster in the manager → it appears in seating chart and talk tracker pickers; edit it once, both see the change after reload; old `toolshed:rosters` data migrates and the key is gone; export → wipe site data → import restores everything; reload mid-seating-edit and mid-tracker-session recovers state; DevTools Network tab shows zero requests carrying roster data (only fonts).
 
-## Phase 4 — Privacy page & polish
+## Phase 4 — Privacy page & polish — DONE
+
+*(Every page verified 2026-09-08 to carry the `[Tool] — Teacher Toolshed` title pattern, a meta description, the SVG favicon, a footer, and a privacy link.)*
 
 - `privacy.html`: plain-language, on-system page: everything is stored only in your browser; nothing is sent to us — we run no server and no analytics; export/import is how you back up; clearing site data deletes everything; note for Safari users that unused-site storage may be cleared after ~7 days, so export backups; for FERPA-minded readers: no student data is transmitted to or held by Teacher Toolshed, and hex share links encode the activity in the link itself. Contact email. Link from footer of every page.
 - Consistent `<title>` pattern `[Tool] — Teacher Toolshed`, meta descriptions on all pages, shared footer on tools (small: brand + privacy link).
@@ -207,13 +244,17 @@ Create `teacher-tools/rosters.html` (standard header, `toolshed.css`): list rost
 
 **Accept:** privacy page linked from every page; every page has proper title/meta/favicon; nothing broken at 768px.
 
-## Phase 5 — Final QA (checklist, no new features)
+## Phase 5 — Final QA — DONE
+
+*(Re-run 2026-09-08: `Anybody` and `2d5a1b` are gone; no page loads Inter; the surviving `e86b30` is the student-facing hex-tile palette, and the `Inter` grep hits are substrings of "interface", "interval" and friends.)*
 
 Walk each flow end-to-end in a fresh browser profile: landing → each tool; seating chart full flow (roster → layout → assign → save → reload → load); tracker full flow (roster → live session → tag participation → end → summary → past sessions); hex full flow (create activity → save → share link in a private window → student places hexes → reload persists). Then: no console errors on any page; grep the codebase for `e86b30`, `Anybody`, `Inter`, `upgrade`, `2d5a1b` — all zero (except FONT-LICENSE.md if it mentions fonts); run through the Phase 3 network check once more.
 
 ---
 
-## Phase 6 — Presentation Grader (new tool) + shared rubrics
+## Phase 6 — Presentation Grader + shared rubrics — DONE
+
+*(`presentation-grader.html` and `js/toolshed-rubric.js` ship; the rubric module is wired into Talk Tracker too, which Phase 6 listed as optional follow-on.)*
 
 **Depends on Phase 3.** This phase leans entirely on the shared store (saved rubrics, saved groups, shared rosters). Do not start it before Phase 3 is done.
 
@@ -291,6 +332,12 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 - **Per-band descriptors** (MYP 1–2 / 3–4 / 5–6 / 7–8) and click-a-band-to-score. The data model above already accommodates them (`descriptions` is an array). Worth doing once the basics are in — clicking a band is genuinely faster than typing a number when grading eight groups back to back.
 - Wiring the rubric module into Talk Tracker for seminar scoring.
 - Rubric import/export as JSON files, and rubric sharing between teachers.
+
+---
+
+## Built outside the numbered phases
+
+`purewrite.html` / `purewrite-setup.html` (+ `purewrite-export.js`, `sw.js`) and `stack-splitter.html` (+ `stack-splitter.js`) were added after Phase 6 without phases of their own, and the landing page was redesigned onto the editorial system in the same period. They are listed here so the phase list is not mistaken for the whole history.
 
 ---
 
