@@ -294,9 +294,14 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 ---
 
-## Phase 7 — Brain Breaks (new tool, new shelf)
+## Phase 7 — Brain Breaks (new tool, new shelf) — BUILT
 
 **Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
+
+Shipped as `teacher-tools/brain-breaks.html` (+ the `.shelf` block in `css/home.css` and `index.html`). Two content calls were made in the build and are easy to reverse:
+
+- The draft's *Boy's Name* / *Girl's Name* categories became **Name** and **Famous Person** — same job, without splitting the room by gender to answer a warm-up.
+- *Colour* became **Color**, to match the site's own US-spelled copy ("Digitize", "Randomize").
 
 ### Is it a tool? Yes — its own page, not folded into an existing one
 

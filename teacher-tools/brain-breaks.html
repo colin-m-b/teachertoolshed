@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Breaks — Teacher Toolshed</title>
+<meta name="description" content="Four no-prep activities to put on the projector when a lesson needs a reset: Stop the Bus, Make a Group, Word Association, and This or That. Nothing to set up and nothing saved.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/toolshed.css">
+<style>
+  body{display:flex;flex-direction:column;min-height:100vh}
+
+  .wrap{
+    flex:1;max-width:940px;width:100%;margin:0 auto;padding:26px 22px 40px;
+    /* One scale for every activity, so presentation mode is a token swap
+       rather than a per-component override. */
+    --letter: clamp(84px,12vw,108px);
+    --word:   clamp(36px,6.4vw,54px);
+    --item:   clamp(16px,2.2vw,20px);
+    --vs:     clamp(17px,2.4vw,22px);
+    --cat:    14px;
+    --clock:  20px;
+  }
+  .page-title{font-family:var(--font-serif);font-size:25px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+  .page-sub{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:20px}
+
+  .tool-tabs{max-width:560px;margin-bottom:20px}
+
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* ── STAGE (the part the room reads) ── */
+  .stage{
+    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:40px 28px 30px;text-align:center
+  }
+  .stage-hint{font-size:13px;color:var(--text-mid);margin-bottom:22px;line-height:1.5}
+  .actions{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap}
+  .actions .btn{font-size:14px;padding:11px 22px}
+  .btn[disabled]{opacity:.4;cursor:default}
+  .btn[disabled]:active{transform:none}
+
+  .kbd-hint{margin-top:16px;text-align:center;font-size:12px;color:var(--text-light);line-height:1.6}
+  .kbd{font-family:var(--font-sans);font-size:11px;font-weight:600;background:var(--surface-2);
+    border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--text-mid)}
+
+  /* ── STOP THE BUS ── */
+  .letter-badge{
+    width:var(--letter);height:var(--letter);border-radius:50%;
+    background:var(--accent-soft);border:2.5px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;
+    font-family:var(--font-serif);font-size:calc(var(--letter)*.46);font-weight:700;color:var(--accent-hover);line-height:1
+  }
+  .cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 auto 22px;max-width:620px}
+  .cat-pill{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    padding:12px 10px;font-size:var(--cat);font-weight:600;color:var(--text)}
+
+  .len-row{display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:18px;flex-wrap:wrap}
+  .len-label{font-size:12px;color:var(--text-light);margin-right:2px}
+  .len-btn{font-family:var(--font-sans);font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;
+    background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    color:var(--text-mid);transition:all .15s}
+  .len-btn:hover:not(.active){background:var(--surface);color:var(--text)}
+  .len-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .timer-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px}
+  .timer-display{font-family:var(--font-serif);font-size:var(--clock);font-weight:700;color:var(--text-mid);
+    min-width:2.6em;text-align:right;font-variant-numeric:tabular-nums}
+  .timer-track{width:220px;max-width:40vw;height:8px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:8px;overflow:hidden}
+  .timer-fill{height:100%;background:var(--accent);width:100%;transition:width .25s linear,background .3s}
+  .timer-fill.low{background:var(--red)}
+  .timer-display.low{color:var(--red)}
+  .round-status{font-size:14px;font-weight:600;color:var(--green);min-height:21px;margin-bottom:8px}
+
+  /* ── MAKE A GROUP ── */
+  .item-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:520px;margin:0 auto 26px}
+  .item-card{background:var(--green-soft);border:1.5px solid var(--green-border);border-radius:var(--radius);
+    padding:24px 12px;font-family:var(--font-serif);font-size:var(--item);font-weight:600;color:#33574B}
+
+  /* ── WORD ASSOCIATION ── */
+  .word-display{font-family:var(--font-serif);font-size:var(--word);font-weight:700;color:var(--accent-hover);
+    line-height:1.1;margin-bottom:10px;word-break:break-word}
+  .word-sub{font-size:13px;color:var(--text-mid);margin-bottom:26px}
+
+  /* ── THIS OR THAT ── */
+  .vs-row{display:flex;align-items:stretch;max-width:640px;margin:0 auto 26px}
+  .vs-option{flex:1;background:var(--surface-2);border:1.5px solid var(--border);padding:30px 16px;
+    font-family:var(--font-serif);font-size:var(--vs);font-weight:600;color:var(--text);line-height:1.25;
+    display:flex;align-items:center;justify-content:center}
+  .vs-option.a{border-radius:var(--radius) 0 0 var(--radius)}
+  .vs-option.b{border-radius:0 var(--radius) var(--radius) 0}
+  .vs-divider{display:flex;align-items:center;justify-content:center;width:54px;flex-shrink:0;
+    background:var(--accent);color:#fff;font-family:var(--font-serif);font-size:13px;font-weight:700;letter-spacing:.04em}
+
+  /* ── PRESENTATION MODE ──
+     Same markup, bigger scale, no chrome. Sizes are viewport-relative so the
+     stage fills a projector instead of sitting in a 940px column. */
+  body.presenting .header,
+  body.presenting .tool-footer,
+  body.presenting .page-title,
+  body.presenting .page-sub,
+  body.presenting .stage-hint,
+  body.presenting .kbd-hint{display:none}
+  body.presenting .wrap{
+    max-width:none;padding:14px 20px 20px;display:flex;flex-direction:column;
+    --letter: min(32vh,320px);
+    --word:   min(15vh,160px);
+    --item:   min(7vh,68px);
+    --vs:     min(6.5vh,62px);
+    --cat:    min(3.6vh,32px);
+    --clock:  min(7vh,66px);
+  }
+  body.presenting .tool-tabs{max-width:760px;margin:0 auto 14px;flex-shrink:0}
+  body.presenting .tab{font-size:13px;padding:8px 6px;white-space:nowrap}
+  body.presenting .screen.active{flex:1;display:flex}
+  body.presenting .stage{
+    flex:1;display:flex;flex-direction:column;justify-content:center;
+    padding:24px;box-shadow:none
+  }
+  body.presenting .cat-grid{max-width:min(1100px,92vw);gap:14px}
+  body.presenting .cat-pill{padding:calc(var(--cat)*.7) 14px}
+  body.presenting .item-grid{max-width:min(1000px,90vw);gap:20px}
+  body.presenting .item-card{padding:calc(var(--item)*.9) 16px}
+  body.presenting .vs-row{max-width:min(1200px,94vw)}
+  body.presenting .vs-option{padding:calc(var(--vs)*.9) 20px}
+  body.presenting .vs-divider{width:calc(var(--vs)*1.6);font-size:calc(var(--vs)*.42)}
+  body.presenting .timer-track{width:min(520px,50vw);max-width:none;height:14px}
+  body.presenting .round-status{font-size:min(3.4vh,30px);min-height:min(4vh,36px)}
+  body.presenting .word-sub,
+  body.presenting .len-row{display:none}
+  body.presenting .actions .btn{font-size:15px}
+
+  @media (max-width:520px){
+    .stage{padding:28px 18px 24px}
+    .vs-row{flex-direction:column}
+    .vs-option.a{border-radius:var(--radius) var(--radius) 0 0}
+    .vs-option.b{border-radius:0 0 var(--radius) var(--radius)}
+    .vs-divider{width:100%;height:34px}
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <a class="brand" href="/">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
+          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
+        </svg>
+      </div>
+      <span class="brand-name">Teacher<span>Toolshed</span></span>
+    </a>
+    <span class="header-sep">/</span>
+    <a class="header-tool" href="brain-breaks.html">Brain Breaks</a>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-outline btn-sm" id="present-btn">⛶ Present</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1 class="page-title">Brain Breaks</h1>
+  <p class="page-sub">Four fast activities to put on the projector when the energy dips. Nothing to set
+    up, nothing saved — pick a tab and go.</p>
+
+  <div class="template-tabs tool-tabs" role="tablist" aria-label="Activity">
+    <button class="tab active" role="tab" aria-selected="true"  aria-controls="screen-bus"   data-screen="bus">Stop the Bus</button>
+    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-group" data-screen="group">Make a Group</button>
+    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-assoc" data-screen="assoc">Word Association</button>
+    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-tt"    data-screen="tt">This or That</button>
+  </div>
+
+  <!-- ══════════════ STOP THE BUS ══════════════ -->
+  <div class="screen active" id="screen-bus" role="tabpanel">
+    <div class="stage">
+      <p class="stage-hint">One answer per category, all starting with the letter — before the clock runs out.</p>
+      <div class="letter-badge" id="bus-letter">B</div>
+      <div class="cat-grid" id="bus-cats"></div>
+
+      <div class="len-row">
+        <span class="len-label">Round length</span>
+        <button class="len-btn" data-len="30">30s</button>
+        <button class="len-btn active" data-len="60">60s</button>
+        <button class="len-btn" data-len="90">90s</button>
+        <button class="len-btn" data-len="120">120s</button>
+      </div>
+
+      <div class="round-status" id="bus-status" role="status" aria-live="polite"></div>
+      <div class="timer-row">
+        <span class="timer-display" id="bus-time" role="timer">60</span>
+        <div class="timer-track"><div class="timer-fill" id="bus-fill"></div></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="bus-primary">Start round</button>
+        <button class="btn btn-danger" id="bus-stop">🚌 Stop the bus!</button>
+        <button class="btn btn-outline" id="bus-new">New letter</button>
+      </div>
+    </div>
+    <p class="kbd-hint"><span class="kbd">Space</span> start, pause, resume &nbsp;·&nbsp;
+      <span class="kbd">N</span> new letter &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+  </div>
+
+  <!-- ══════════════ MAKE A GROUP ══════════════ -->
+  <div class="screen" id="screen-group" role="tabpanel">
+    <div class="stage">
+      <p class="stage-hint">Four unrelated things — find, or invent, a way they belong together.</p>
+      <div class="item-grid" id="group-items" aria-live="polite"></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="group-next">Shuffle</button>
+      </div>
+    </div>
+    <p class="kbd-hint"><span class="kbd">Space</span> shuffle &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+  </div>
+
+  <!-- ══════════════ WORD ASSOCIATION ══════════════ -->
+  <div class="screen" id="screen-assoc" role="tabpanel">
+    <div class="stage">
+      <p class="stage-hint">Say a word connected to this one. The next student builds off theirs — keep the chain going.</p>
+      <div class="word-display" id="assoc-word" aria-live="polite">Ocean</div>
+      <p class="word-sub">Start a new chain any time.</p>
+      <div class="actions">
+        <button class="btn btn-primary" id="assoc-next">New word</button>
+      </div>
+    </div>
+    <p class="kbd-hint"><span class="kbd">Space</span> new word &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+  </div>
+
+  <!-- ══════════════ THIS OR THAT ══════════════ -->
+  <div class="screen" id="screen-tt" role="tabpanel">
+    <div class="stage">
+      <p class="stage-hint">Pick a side of the room — or just shout it out.</p>
+      <div class="vs-row" aria-live="polite">
+        <div class="vs-option a" id="tt-a">Texting</div>
+        <div class="vs-divider">OR</div>
+        <div class="vs-option b" id="tt-b">Calling</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="tt-next">Next</button>
+      </div>
+    </div>
+    <p class="kbd-hint"><span class="kbd">Space</span> next pair &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+  </div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+
+<script>
+/* Brain Breaks — four projector activities, no storage and no network.
+   Nothing here touches ToolshedStore or a roster on purpose: loaded once,
+   the page keeps working with the network off. */
+
+/* ══════════════ UTILS ══════════════ */
+function shuffle(arr){
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pickN(arr, n){ return shuffle(arr).slice(0, n); }
+
+/* A pool hands out every entry once before repeating, so a class doesn't get
+   the same word twice in five minutes. */
+function makePool(items){
+  let pool = [];
+  return function take(){
+    if (!pool.length) pool = shuffle(items);
+    return pool.pop();
+  };
+}
+
+/* ══════════════ TABS ══════════════ */
+const tabs = document.querySelectorAll('.tool-tabs .tab');
+let activeScreen = 'bus';
+
+tabs.forEach(tab => tab.addEventListener('click', () => showScreen(tab.dataset.screen)));
+
+function showScreen(name){
+  activeScreen = name;
+  tabs.forEach(t => {
+    const on = t.dataset.screen === name;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.toggle('active', s.id === 'screen-' + name);
+  });
+  /* Leaving the tab does NOT touch the clock — a round survives a glance at
+     another activity. Pausing is always deliberate. */
+}
+
+/* ══════════════ STOP THE BUS ══════════════ */
+const BUS_LETTERS = 'ABCDEFGHIJKLMNOPRSTUVW'.split(''); // Q, X, Z skipped — too hard for a timed round
+const BUS_CATEGORIES = ['Animal','Country','Food','Name','Famous Person','Movie or Show','Sport','Job',
+  'Color','Fruit or Vegetable','City','School Subject','Drink','Superhero','Instrument',
+  'Item of Clothing','Vehicle','Board Game'];
+
+const busEl = {
+  letter:  document.getElementById('bus-letter'),
+  cats:    document.getElementById('bus-cats'),
+  status:  document.getElementById('bus-status'),
+  time:    document.getElementById('bus-time'),
+  fill:    document.getElementById('bus-fill'),
+  primary: document.getElementById('bus-primary'),
+  stop:    document.getElementById('bus-stop')
+};
+
+/* state: 'idle' | 'running' | 'paused' | 'done'.
+   The clock is driven off a wall-clock deadline rather than a count of
+   interval ticks, so it stays honest when the browser throttles a
+   background tab or the machine sleeps. */
+const bus = { state:'idle', length:60000, remaining:60000, deadline:0, ticker:null };
+let lastLetter = '';
+
+function busNewRound(){
+  busClearTicker();
+  bus.state = 'idle';
+  bus.remaining = bus.length;
+
+  let letter = BUS_LETTERS[Math.floor(Math.random() * BUS_LETTERS.length)];
+  if (letter === lastLetter) { // never the same letter twice running
+    letter = BUS_LETTERS[(BUS_LETTERS.indexOf(letter) + 1 + Math.floor(Math.random() * (BUS_LETTERS.length - 1))) % BUS_LETTERS.length];
+  }
+  lastLetter = letter;
+
+  busEl.letter.textContent = letter;
+  busEl.cats.innerHTML = pickN(BUS_CATEGORIES, 5).map(c => `<div class="cat-pill">${c}</div>`).join('');
+  busEl.status.textContent = '';
+  busRender();
+}
+
+function busStart(){
+  bus.deadline = Date.now() + bus.remaining;
+  bus.state = 'running';
+  busEl.status.textContent = '';
+  busClearTicker();
+  bus.ticker = setInterval(busTick, 200);
+  busRender();
+}
+
+function busPause(){
+  if (bus.state !== 'running') return;
+  bus.remaining = Math.max(bus.deadline - Date.now(), 0);
+  bus.state = 'paused';
+  busClearTicker();
+  busRender();
+}
+
+function busTick(){
+  bus.remaining = Math.max(bus.deadline - Date.now(), 0);
+  if (bus.remaining <= 0) { busStopBus(true); return; }
+  busRender();
+}
+
+function busStopBus(ranOut){
+  if (bus.state !== 'running' && bus.state !== 'paused') return;
+  busClearTicker();
+  bus.remaining = 0;
+  bus.state = 'done';
+  busEl.status.textContent = ranOut
+    ? '🚌 Time! Compare answers, then start a new round.'
+    : '🚌 Stopped! Compare answers, then start a new round.';
+  busRender();
+}
+
+function busClearTicker(){ clearInterval(bus.ticker); bus.ticker = null; }
+
+function busSetLength(seconds){
+  bus.length = seconds * 1000;
+  busClearTicker();
+  bus.state = 'idle';           // changing the length resets the clock, keeping the letter
+  bus.remaining = bus.length;
+  busEl.status.textContent = '';
+  busRender();
+}
+
+function busRender(){
+  const secs = Math.ceil(bus.remaining / 1000);
+  const low  = bus.remaining <= 15000 && bus.state !== 'idle';
+  busEl.time.textContent = secs;
+  busEl.fill.style.width = (bus.remaining / bus.length * 100) + '%';
+  busEl.fill.classList.toggle('low', low);
+  busEl.time.classList.toggle('low', low);
+
+  busEl.primary.textContent =
+    bus.state === 'running' ? 'Pause' :
+    bus.state === 'paused'  ? 'Resume' :
+    bus.state === 'done'    ? 'New round' : 'Start round';
+  busEl.stop.disabled = bus.state !== 'running' && bus.state !== 'paused';
+}
+
+function busPrimary(){
+  if (bus.state === 'running')      busPause();
+  else if (bus.state === 'done')    busNewRound();
+  else                              busStart();   // idle or paused
+}
+
+busEl.primary.addEventListener('click', busPrimary);
+busEl.stop.addEventListener('click', () => busStopBus(false));
+document.getElementById('bus-new').addEventListener('click', busNewRound);
+
+document.querySelectorAll('.len-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.len-btn').forEach(b => b.classList.toggle('active', b === btn));
+    busSetLength(Number(btn.dataset.len));
+  });
+});
+
+/* A throttled background tab can go a minute between ticks; catch up the
+   moment the tab is looked at again. */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && bus.state === 'running') busTick();
+});
+
+/* ══════════════ MAKE A GROUP ══════════════ */
+const GROUP_ITEMS = ['Umbrella','Dragon','Calculator','Thunderstorm','Sandwich','Referee','Glacier','Trombone',
+  'Spider','Birthday Cake','Submarine','Mirror','Cactus','Tornado','Stapler','Kangaroo','Volcano','Compass',
+  'Skateboard','Beehive','Lighthouse','Backpack','Octopus','Campfire','Trophy','Parachute','Snowman','Violin',
+  'Pyramid','Jellyfish','Treehouse','Anchor','Firefly','Telescope','Waterfall','Pretzel','Scarecrow',
+  'Rollercoaster','Igloo','Bagpipes','Chessboard','Hammock','Penguin','Lantern','Cauldron','Windmill',
+  'Boomerang','Marble'];
+const takeGroupItem = makePool(GROUP_ITEMS);
+
+function newGroup(){
+  const items = [takeGroupItem(), takeGroupItem(), takeGroupItem(), takeGroupItem()];
+  document.getElementById('group-items').innerHTML =
+    items.map(i => `<div class="item-card">${i}</div>`).join('');
+}
+document.getElementById('group-next').addEventListener('click', newGroup);
+
+/* ══════════════ WORD ASSOCIATION ══════════════ */
+const ASSOC_WORDS = ['Ocean','Bicycle','Coffee','Mountain','Guitar','Butterfly','Bridge','Pizza','Thunder',
+  'Garden','Robot','Candle','River','Puzzle','Feather','Rocket','Blanket','Compass','Lantern','Maze',
+  'Whisper','Shadow','Harvest','Anchor','Meadow','Kite','Echo','Marble','Journey','Spark','Nest','Tide',
+  'Orbit','Canvas','Drift','Ember','Glow','Ripple','Wander','Bloom'];
+const takeWord = makePool(ASSOC_WORDS);
+
+function newWord(){ document.getElementById('assoc-word').textContent = takeWord(); }
+document.getElementById('assoc-next').addEventListener('click', newWord);
+
+/* ══════════════ THIS OR THAT ══════════════ */
+const TT_PAIRS = [
+  ['Texting','Calling'],['Beach vacation','Mountain vacation'],['Morning person','Night owl'],
+  ['Read the book','Watch the movie'],['Sweet','Salty'],['Fly','Turn invisible'],
+  ['Summer','Winter'],['Pizza','Tacos'],['Dogs','Cats'],['City life','Country life'],
+  ['Camping','Hotel'],['Coffee','Tea'],['Board games','Video games'],['Handwriting','Typing'],
+  ['Silence while working','Music while working'],['Road trip','Flight'],['Home-cooked','Takeout'],
+  ['No phone ever again','No TV ever again'],['Time travel to the past','Time travel to the future'],
+  ['A big group of friends','A few close friends'],['Rainy day','Sunny day'],['Save dessert for later','Eat it now'],
+  ['Window seat','Aisle seat'],['Read minds','See the future'],['Live without music','Live without movies'],
+  ['Always 10 minutes early','Always 10 minutes late'],['Talk to animals','Speak every language'],
+  ['One long vacation','Several short trips'],['Perfect memory','Perfect eyesight'],['Never itch','Never get cold']
+];
+const takePair = makePool(TT_PAIRS);
+
+function newPair(){
+  const [a, b] = takePair();
+  document.getElementById('tt-a').textContent = a;
+  document.getElementById('tt-b').textContent = b;
+}
+document.getElementById('tt-next').addEventListener('click', newPair);
+
+/* ══════════════ PRESENTATION MODE ══════════════ */
+const presentBtn = document.getElementById('present-btn');
+
+function togglePresent(){
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+presentBtn.addEventListener('click', togglePresent);
+document.addEventListener('fullscreenchange', () => {
+  document.body.classList.toggle('presenting', !!document.fullscreenElement);
+});
+
+/* ══════════════ KEYBOARD ══════════════
+   Space runs the active activity, so the room can be driven from a clicker
+   without walking back to the laptop. */
+const PRIMARY = { bus: busPrimary, group: newGroup, assoc: newWord, tt: newPair };
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  /* Let a focused button handle its own Space/Enter rather than firing twice. */
+  const onButton = document.activeElement && document.activeElement.tagName === 'BUTTON';
+
+  if ((e.key === ' ' || e.key === 'ArrowRight') && !onButton) {
+    e.preventDefault();
+    PRIMARY[activeScreen]();
+  } else if (e.key === 'f' || e.key === 'F') {
+    e.preventDefault();
+    togglePresent();
+  } else if ((e.key === 'n' || e.key === 'N') && activeScreen === 'bus') {
+    e.preventDefault();
+    busNewRound();
+  } else if (e.key >= '1' && e.key <= '4') {
+    e.preventDefault();
+    showScreen(tabs[Number(e.key) - 1].dataset.screen);
+  }
+});
+
+/* ══════════════ INIT ══════════════
+   Everything is dealt out ready to go, but the clock starts only when the
+   teacher says so — no round quietly draining before the class looks up. */
+busNewRound();
+newGroup();
+newWord();
+newPair();
+</script>
+</body>
+</html>
