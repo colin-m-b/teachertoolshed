@@ -1,255 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brain Breaks — Teacher Toolshed</title>
-<meta name="description" content="Four no-prep activities to put on the projector when a lesson needs a reset: Stop the Bus, Make a Group, Word Association, and This or That. Nothing to set up and nothing saved.">
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/toolshed.css">
-<style>
-  body{display:flex;flex-direction:column;min-height:100vh}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Breaks — Teacher Toolshed</title>
+  <meta name="description" content="Four no-prep activities to put on the projector when a lesson needs a reset: Stop the Bus, Make a Group, Word Association, and This or That. Nothing to set up and nothing saved.">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/theme.css">
+  <style>
+  /* Brain Breaks runs the landing page's editorial system (css/theme.css),
+     not the cream + gold tool system — it is the shelf item on the homepage,
+     not one of the six. Only the stage components live here. */
+  body { display: flex; flex-direction: column; min-height: 100vh; }
 
-  .wrap{
-    flex:1;max-width:940px;width:100%;margin:0 auto;padding:26px 22px 40px;
+  .utility-bar__brand { color: var(--paper); }
+  .utility-bar__brand:hover { color: var(--accent-on-dark); }
+  .utility-bar__nav button {
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    background: none; border: none; padding: 0; cursor: pointer; color: var(--paper);
+  }
+  .utility-bar__nav button:hover { color: var(--accent-on-dark); }
+
+  /* ── PAGE HEAD (the masthead, one size down) ── */
+  /* width:100% is load-bearing: body is a flex column, and .column's
+     margin:0 auto would otherwise cancel the default cross-axis stretch
+     and shrink the head to its content width. */
+  .page-head { width: 100%; padding-top: 30px; text-align: center; }
+  .page-head__inner { border-bottom: 3px double var(--ink); padding-bottom: 18px; }
+  .page-head__eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .24em; color: var(--meta); }
+  .page-head h1 { font-size: clamp(34px, 4.8vw, 54px); margin-top: 8px; }
+  .page-head__sub {
+    margin: 12px auto 0; max-width: 56ch; font-size: 18px; font-style: italic;
+    color: var(--body-muted); text-wrap: pretty;
+  }
+
+  .wrap {
+    flex: 1; width: 100%; max-width: var(--column); margin: 0 auto;
+    padding: 26px var(--gutter) 56px;
     /* One scale for every activity, so presentation mode is a token swap
        rather than a per-component override. */
-    --letter: clamp(84px,12vw,108px);
-    --word:   clamp(36px,6.4vw,54px);
-    --item:   clamp(16px,2.2vw,20px);
-    --vs:     clamp(17px,2.4vw,22px);
-    --cat:    14px;
-    --clock:  20px;
+    --letter: clamp(96px, 12vw, 128px);
+    --word:   clamp(40px, 7vw, 68px);
+    --item:   clamp(19px, 2.6vw, 26px);
+    --vs:     clamp(19px, 2.6vw, 26px);
+    --cat:    clamp(15px, 1.7vw, 19px);
+    --clock:  26px;
+    /* The editorial palette has no alert colour; the clock needs one for the
+       last fifteen seconds. Deep ink red, not the tool system's orange-red. */
+    --alert:  #8C1B1B;
   }
-  .page-title{font-family:var(--font-serif);font-size:25px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
-  .page-sub{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:20px}
 
-  .tool-tabs{max-width:560px;margin-bottom:20px}
-
-  .screen{display:none}
-  .screen.active{display:block}
-
-  /* ── STAGE (the part the room reads) ── */
-  .stage{
-    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
-    box-shadow:var(--shadow);padding:40px 28px 30px;text-align:center
+  /* ── TABS ── */
+  .tabs { display: flex; border-top: var(--hairline); border-bottom: var(--hairline); }
+  .tab {
+    flex: 1; background: none; border: none; border-left: var(--hairline);
+    padding: 14px 8px; cursor: pointer;
+    font-family: var(--font-meta); font-size: 11px; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--meta);
+    transition: background .12s, color .12s;
   }
-  .stage-hint{font-size:13px;color:var(--text-mid);margin-bottom:22px;line-height:1.5}
-  .actions{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap}
-  .actions .btn{font-size:14px;padding:11px 22px}
-  .btn[disabled]{opacity:.4;cursor:default}
-  .btn[disabled]:active{transform:none}
+  .tab:first-child { border-left: none; }
+  .tab:hover:not(.active) { background: var(--paper-hover); color: var(--ink); }
+  .tab.active { background: var(--ink); color: var(--paper); }
 
-  .kbd-hint{margin-top:16px;text-align:center;font-size:12px;color:var(--text-light);line-height:1.6}
-  .kbd{font-family:var(--font-sans);font-size:11px;font-weight:600;background:var(--surface-2);
-    border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--text-mid)}
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── STAGE ── */
+  .stage {
+    border-left: var(--hairline); border-right: var(--hairline); border-bottom: var(--hairline);
+    padding: 44px 30px 32px; text-align: center;
+  }
+  .stage-hint {
+    font-size: 17px; font-style: italic; color: var(--body-muted);
+    max-width: 58ch; margin: 0 auto 28px; text-wrap: pretty;
+  }
+
+  /* ── BUTTONS (theme.css has none — the landing page is all links) ── */
+  .actions { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-meta); font-size: 11.5px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase;
+    padding: 13px 24px; border: 1.5px solid var(--ink); background: none; color: var(--ink);
+    cursor: pointer; transition: background .12s, color .12s;
+  }
+  .btn:hover { background: var(--paper-hover); }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: #253141; color: var(--paper); }
+  .btn-alert { border-color: var(--alert); color: var(--alert); }
+  .btn-alert:hover { background: #FAF1F1; }
+  .btn[disabled] { opacity: .3; cursor: default; }
+  .btn[disabled]:hover { background: none; }
+
+  .kbd-hint {
+    margin-top: 18px; text-align: center; font-size: 15px; color: var(--meta); line-height: 2;
+  }
+  .kbd {
+    font-family: var(--font-meta); font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; border: var(--hairline); padding: 3px 7px; color: var(--ink);
+  }
 
   /* ── STOP THE BUS ── */
-  .letter-badge{
-    width:var(--letter);height:var(--letter);border-radius:50%;
-    background:var(--accent-soft);border:2.5px solid var(--accent);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;
-    font-family:var(--font-serif);font-size:calc(var(--letter)*.46);font-weight:700;color:var(--accent-hover);line-height:1
+  .letter-badge {
+    display: flex; align-items: center; justify-content: center;
+    width: var(--letter); height: var(--letter); margin: 0 auto 26px;
+    border: 2px solid var(--ink);
+    font-family: var(--font-display); font-size: calc(var(--letter) * .6);
+    font-weight: 500; line-height: 1;
   }
-  .cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 auto 22px;max-width:620px}
-  .cat-pill{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    padding:12px 10px;font-size:var(--cat);font-weight:600;color:var(--text)}
+  .cat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border-top: var(--hairline); border-left: var(--hairline);
+    max-width: 800px; margin: 0 auto 26px;
+  }
+  .cat-pill {
+    border-right: var(--hairline); border-bottom: var(--hairline);
+    padding: 15px 10px; font-family: var(--font-body); font-size: var(--cat); color: var(--ink);
+  }
 
-  .len-row{display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:18px;flex-wrap:wrap}
-  .len-label{font-size:12px;color:var(--text-light);margin-right:2px}
-  .len-btn{font-family:var(--font-sans);font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;
-    background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    color:var(--text-mid);transition:all .15s}
-  .len-btn:hover:not(.active){background:var(--surface);color:var(--text)}
-  .len-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .len-row { display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+  .len-label {
+    font-family: var(--font-meta); font-size: 10px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--meta); margin-right: 3px;
+  }
+  .len-btn {
+    font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; padding: 7px 13px; border: var(--hairline); background: none;
+    color: var(--meta); cursor: pointer; transition: all .12s;
+  }
+  .len-btn:hover:not(.active) { background: var(--paper-hover); color: var(--ink); }
+  .len-btn.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
-  .timer-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px}
-  .timer-display{font-family:var(--font-serif);font-size:var(--clock);font-weight:700;color:var(--text-mid);
-    min-width:2.6em;text-align:right;font-variant-numeric:tabular-nums}
-  .timer-track{width:220px;max-width:40vw;height:8px;background:var(--surface-2);border:1px solid var(--border);
-    border-radius:8px;overflow:hidden}
-  .timer-fill{height:100%;background:var(--accent);width:100%;transition:width .25s linear,background .3s}
-  .timer-fill.low{background:var(--red)}
-  .timer-display.low{color:var(--red)}
-  .round-status{font-size:14px;font-weight:600;color:var(--green);min-height:21px;margin-bottom:8px}
+  .timer-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 22px; }
+  .timer-display {
+    font-family: var(--font-display); font-size: var(--clock); font-weight: 500;
+    min-width: 2.4em; text-align: right; font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .timer-track { width: 260px; max-width: 42vw; height: 10px; border: var(--hairline); }
+  .timer-fill { height: 100%; background: var(--ink); width: 100%; transition: width .25s linear, background .3s; }
+  .timer-fill.low, .timer-display.low { background: var(--alert); }
+  .timer-display.low { background: none; color: var(--alert); }
+  .round-status {
+    font-family: var(--font-body); font-size: 18px; font-style: italic; color: var(--accent);
+    min-height: 26px; margin-bottom: 10px;
+  }
 
   /* ── MAKE A GROUP ── */
-  .item-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:520px;margin:0 auto 26px}
-  .item-card{background:var(--green-soft);border:1.5px solid var(--green-border);border-radius:var(--radius);
-    padding:24px 12px;font-family:var(--font-serif);font-size:var(--item);font-weight:600;color:#33574B}
+  .item-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    border-top: var(--hairline); border-left: var(--hairline);
+    max-width: 620px; margin: 0 auto 28px;
+  }
+  .item-card {
+    border-right: var(--hairline); border-bottom: var(--hairline);
+    padding: 30px 14px; font-family: var(--font-display); font-size: var(--item); font-weight: 500;
+  }
 
   /* ── WORD ASSOCIATION ── */
-  .word-display{font-family:var(--font-serif);font-size:var(--word);font-weight:700;color:var(--accent-hover);
-    line-height:1.1;margin-bottom:10px;word-break:break-word}
-  .word-sub{font-size:13px;color:var(--text-mid);margin-bottom:26px}
+  .word-display {
+    font-family: var(--font-display); font-size: var(--word); font-weight: 500;
+    line-height: 1.06; margin-bottom: 12px; word-break: break-word;
+  }
+  .word-sub { font-size: 16px; font-style: italic; color: var(--meta); margin-bottom: 30px; }
 
   /* ── THIS OR THAT ── */
-  .vs-row{display:flex;align-items:stretch;max-width:640px;margin:0 auto 26px}
-  .vs-option{flex:1;background:var(--surface-2);border:1.5px solid var(--border);padding:30px 16px;
-    font-family:var(--font-serif);font-size:var(--vs);font-weight:600;color:var(--text);line-height:1.25;
-    display:flex;align-items:center;justify-content:center}
-  .vs-option.a{border-radius:var(--radius) 0 0 var(--radius)}
-  .vs-option.b{border-radius:0 var(--radius) var(--radius) 0}
-  .vs-divider{display:flex;align-items:center;justify-content:center;width:54px;flex-shrink:0;
-    background:var(--accent);color:#fff;font-family:var(--font-serif);font-size:13px;font-weight:700;letter-spacing:.04em}
+  .vs-row { display: flex; align-items: stretch; border: var(--hairline); max-width: 760px; margin: 0 auto 28px; }
+  .vs-option {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 34px 18px; font-family: var(--font-display); font-size: var(--vs); font-weight: 500;
+    line-height: 1.2;
+  }
+  .vs-divider {
+    display: flex; align-items: center; justify-content: center; width: 56px; flex-shrink: 0;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-meta); font-size: 11px; font-weight: 700; letter-spacing: .18em;
+  }
 
   /* ── PRESENTATION MODE ──
      Same markup, bigger scale, no chrome. Sizes are viewport-relative so the
-     stage fills a projector instead of sitting in a 940px column. */
-  body.presenting .header,
-  body.presenting .tool-footer,
-  body.presenting .page-title,
-  body.presenting .page-sub,
+     stage fills a projector instead of sitting in a 1140px column. */
+  body.presenting .utility-bar,
+  body.presenting .site-footer,
+  body.presenting .page-head,
   body.presenting .stage-hint,
-  body.presenting .kbd-hint{display:none}
-  body.presenting .wrap{
-    max-width:none;padding:14px 20px 20px;display:flex;flex-direction:column;
-    --letter: min(32vh,320px);
-    --word:   min(15vh,160px);
-    --item:   min(7vh,68px);
-    --vs:     min(6.5vh,62px);
-    --cat:    min(3.6vh,32px);
-    --clock:  min(7vh,66px);
+  body.presenting .kbd-hint { display: none; }
+  body.presenting .wrap {
+    max-width: none; padding: 16px 22px 22px; display: flex; flex-direction: column;
+    --letter: min(32vh, 320px);
+    --word:   min(16vh, 170px);
+    --item:   min(7vh, 68px);
+    --vs:     min(6.5vh, 62px);
+    --cat:    min(4vh, 36px);
+    --clock:  min(7.5vh, 70px);
   }
-  body.presenting .tool-tabs{max-width:760px;margin:0 auto 14px;flex-shrink:0}
-  body.presenting .tab{font-size:13px;padding:8px 6px;white-space:nowrap}
-  body.presenting .screen.active{flex:1;display:flex}
-  body.presenting .stage{
-    flex:1;display:flex;flex-direction:column;justify-content:center;
-    padding:24px;box-shadow:none
-  }
-  body.presenting .cat-grid{max-width:min(1100px,92vw);gap:14px}
-  body.presenting .cat-pill{padding:calc(var(--cat)*.7) 14px}
-  body.presenting .item-grid{max-width:min(1000px,90vw);gap:20px}
-  body.presenting .item-card{padding:calc(var(--item)*.9) 16px}
-  body.presenting .vs-row{max-width:min(1200px,94vw)}
-  body.presenting .vs-option{padding:calc(var(--vs)*.9) 20px}
-  body.presenting .vs-divider{width:calc(var(--vs)*1.6);font-size:calc(var(--vs)*.42)}
-  body.presenting .timer-track{width:min(520px,50vw);max-width:none;height:14px}
-  body.presenting .round-status{font-size:min(3.4vh,30px);min-height:min(4vh,36px)}
-  body.presenting .word-sub,
-  body.presenting .len-row{display:none}
-  body.presenting .actions .btn{font-size:15px}
+  body.presenting .tabs { flex-shrink: 0; }
+  body.presenting .tab { font-size: 12px; padding: 10px 6px; white-space: nowrap; }
+  body.presenting .screen.active { flex: 1; display: flex; }
+  body.presenting .stage { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 26px 22px; }
+  body.presenting .cat-grid { max-width: min(1150px, 94vw); }
+  body.presenting .cat-pill { padding: calc(var(--cat) * .8) 14px; }
+  body.presenting .item-grid { max-width: min(1050px, 92vw); }
+  body.presenting .item-card { padding: calc(var(--item) * .95) 16px; }
+  body.presenting .vs-row { max-width: min(1250px, 95vw); }
+  body.presenting .vs-option { padding: calc(var(--vs) * .95) 22px; }
+  body.presenting .vs-divider { width: calc(var(--vs) * 1.7); font-size: calc(var(--vs) * .34); }
+  body.presenting .timer-track { width: min(560px, 52vw); max-width: none; height: 16px; }
+  body.presenting .round-status { font-size: min(3.6vh, 32px); min-height: min(4.4vh, 40px); }
+  body.presenting .len-row, body.presenting .word-sub { display: none; }
+  body.presenting .btn { font-size: 12.5px; padding: 14px 26px; }
 
-  @media (max-width:520px){
-    .stage{padding:28px 18px 24px}
-    .vs-row{flex-direction:column}
-    .vs-option.a{border-radius:var(--radius) var(--radius) 0 0}
-    .vs-option.b{border-radius:0 0 var(--radius) var(--radius)}
-    .vs-divider{width:100%;height:34px}
+  @media (max-width: 600px) {
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    .stage { padding: 30px 18px 26px; }
+    .tab { font-size: 9.5px; letter-spacing: .1em; padding: 12px 4px; }
+    .vs-row { flex-direction: column; }
+    .vs-divider { width: 100%; height: 34px; }
   }
-</style>
+  </style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-left">
-    <a class="brand" href="/">
-      <div class="brand-icon">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="9" y="4" width="6" height="4" rx="1" fill="#4A7C59" opacity=".7"/>
-          <rect x="1" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-          <rect x="9" y="10" width="6" height="4" rx="1" fill="#4A7C59" opacity=".4"/>
-        </svg>
-      </div>
-      <span class="brand-name">Teacher<span>Toolshed</span></span>
-    </a>
-    <span class="header-sep">/</span>
-    <a class="header-tool" href="brain-breaks.html">Brain Breaks</a>
-  </div>
-  <div class="header-right">
-    <button class="btn btn-outline btn-sm" id="present-btn">⛶ Present</button>
-  </div>
-</header>
-
-<div class="wrap">
-  <h1 class="page-title">Brain Breaks</h1>
-  <p class="page-sub">Four fast activities to put on the projector when the energy dips. Nothing to set
-    up, nothing saved — pick a tab and go.</p>
-
-  <div class="template-tabs tool-tabs" role="tablist" aria-label="Activity">
-    <button class="tab active" role="tab" aria-selected="true"  aria-controls="screen-bus"   data-screen="bus">Stop the Bus</button>
-    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-group" data-screen="group">Make a Group</button>
-    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-assoc" data-screen="assoc">Word Association</button>
-    <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-tt"    data-screen="tt">This or That</button>
+  <!-- UTILITY BAR -->
+  <div class="utility-bar">
+    <div class="column utility-bar__inner">
+      <a class="utility-bar__brand" href="../">← Teacher Toolshed</a>
+      <nav class="utility-bar__nav">
+        <a href="../#tools">The six</a>
+        <a href="rosters.html">Class lists</a>
+        <button type="button" id="present-btn">⛶ Present</button>
+      </nav>
+    </div>
   </div>
 
-  <!-- ══════════════ STOP THE BUS ══════════════ -->
-  <div class="screen active" id="screen-bus" role="tabpanel">
-    <div class="stage">
-      <p class="stage-hint">One answer per category, all starting with the letter — before the clock runs out.</p>
-      <div class="letter-badge" id="bus-letter">B</div>
-      <div class="cat-grid" id="bus-cats"></div>
+  <!-- PAGE HEAD -->
+  <header class="page-head column">
+    <div class="page-head__inner">
+      <p class="page-head__eyebrow t-meta">Also in the shed</p>
+      <h1 class="t-display">Brain Breaks</h1>
+      <p class="page-head__sub">Four no-prep activities for the projector, for when a lesson runs out of air.</p>
+    </div>
+  </header>
 
-      <div class="len-row">
-        <span class="len-label">Round length</span>
-        <button class="len-btn" data-len="30">30s</button>
-        <button class="len-btn active" data-len="60">60s</button>
-        <button class="len-btn" data-len="90">90s</button>
-        <button class="len-btn" data-len="120">120s</button>
+  <main class="wrap">
+
+    <nav class="tabs" role="tablist" aria-label="Activity">
+      <button class="tab active" role="tab" aria-selected="true"  aria-controls="screen-bus"   data-screen="bus">Stop the Bus</button>
+      <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-group" data-screen="group">Make a Group</button>
+      <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-assoc" data-screen="assoc">Word Association</button>
+      <button class="tab"        role="tab" aria-selected="false" aria-controls="screen-tt"    data-screen="tt">This or That</button>
+    </nav>
+
+    <!-- ══════════════ STOP THE BUS ══════════════ -->
+    <section class="screen active" id="screen-bus" role="tabpanel">
+      <div class="stage">
+        <p class="stage-hint">One answer per category, all starting with the letter — before the clock runs out.</p>
+        <div class="letter-badge" id="bus-letter">B</div>
+        <div class="cat-grid" id="bus-cats"></div>
+
+        <div class="len-row">
+          <span class="len-label">Round length</span>
+          <button class="len-btn" data-len="30">30s</button>
+          <button class="len-btn active" data-len="60">60s</button>
+          <button class="len-btn" data-len="90">90s</button>
+          <button class="len-btn" data-len="120">120s</button>
+        </div>
+
+        <p class="round-status" id="bus-status" role="status" aria-live="polite"></p>
+        <div class="timer-row">
+          <span class="timer-display" id="bus-time" role="timer">60</span>
+          <div class="timer-track"><div class="timer-fill" id="bus-fill"></div></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="bus-primary">Start round</button>
+          <button class="btn btn-alert" id="bus-stop">Stop the bus</button>
+          <button class="btn" id="bus-new">New letter</button>
+        </div>
       </div>
+      <p class="kbd-hint"><span class="kbd">Space</span> start, pause, resume &nbsp;·&nbsp;
+        <span class="kbd">N</span> new letter &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+    </section>
 
-      <div class="round-status" id="bus-status" role="status" aria-live="polite"></div>
-      <div class="timer-row">
-        <span class="timer-display" id="bus-time" role="timer">60</span>
-        <div class="timer-track"><div class="timer-fill" id="bus-fill"></div></div>
+    <!-- ══════════════ MAKE A GROUP ══════════════ -->
+    <section class="screen" id="screen-group" role="tabpanel">
+      <div class="stage">
+        <p class="stage-hint">Four unrelated things — find, or invent, a way they belong together.</p>
+        <div class="item-grid" id="group-items" aria-live="polite"></div>
+        <div class="actions">
+          <button class="btn btn-primary" id="group-next">Shuffle</button>
+        </div>
       </div>
+      <p class="kbd-hint"><span class="kbd">Space</span> shuffle &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+    </section>
 
-      <div class="actions">
-        <button class="btn btn-primary" id="bus-primary">Start round</button>
-        <button class="btn btn-danger" id="bus-stop">🚌 Stop the bus!</button>
-        <button class="btn btn-outline" id="bus-new">New letter</button>
+    <!-- ══════════════ WORD ASSOCIATION ══════════════ -->
+    <section class="screen" id="screen-assoc" role="tabpanel">
+      <div class="stage">
+        <p class="stage-hint">Say a word connected to this one. The next student builds off theirs — keep the chain going.</p>
+        <div class="word-display" id="assoc-word" aria-live="polite">Ocean</div>
+        <p class="word-sub">Start a new chain any time.</p>
+        <div class="actions">
+          <button class="btn btn-primary" id="assoc-next">New word</button>
+        </div>
+      </div>
+      <p class="kbd-hint"><span class="kbd">Space</span> new word &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+    </section>
+
+    <!-- ══════════════ THIS OR THAT ══════════════ -->
+    <section class="screen" id="screen-tt" role="tabpanel">
+      <div class="stage">
+        <p class="stage-hint">Pick a side of the room — or just shout it out.</p>
+        <div class="vs-row" aria-live="polite">
+          <div class="vs-option" id="tt-a">Texting</div>
+          <div class="vs-divider">OR</div>
+          <div class="vs-option" id="tt-b">Calling</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="tt-next">Next</button>
+        </div>
+      </div>
+      <p class="kbd-hint"><span class="kbd">Space</span> next pair &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="column site-footer__inner">
+      <span>Teacher Toolshed · Made for teachers, by a teacher</span>
+      <div class="site-footer__links">
+        <a href="../privacy.html">Privacy</a>
+        <span class="site-footer__copyright">© 2026</span>
       </div>
     </div>
-    <p class="kbd-hint"><span class="kbd">Space</span> start, pause, resume &nbsp;·&nbsp;
-      <span class="kbd">N</span> new letter &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
-  </div>
-
-  <!-- ══════════════ MAKE A GROUP ══════════════ -->
-  <div class="screen" id="screen-group" role="tabpanel">
-    <div class="stage">
-      <p class="stage-hint">Four unrelated things — find, or invent, a way they belong together.</p>
-      <div class="item-grid" id="group-items" aria-live="polite"></div>
-      <div class="actions">
-        <button class="btn btn-primary" id="group-next">Shuffle</button>
-      </div>
-    </div>
-    <p class="kbd-hint"><span class="kbd">Space</span> shuffle &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
-  </div>
-
-  <!-- ══════════════ WORD ASSOCIATION ══════════════ -->
-  <div class="screen" id="screen-assoc" role="tabpanel">
-    <div class="stage">
-      <p class="stage-hint">Say a word connected to this one. The next student builds off theirs — keep the chain going.</p>
-      <div class="word-display" id="assoc-word" aria-live="polite">Ocean</div>
-      <p class="word-sub">Start a new chain any time.</p>
-      <div class="actions">
-        <button class="btn btn-primary" id="assoc-next">New word</button>
-      </div>
-    </div>
-    <p class="kbd-hint"><span class="kbd">Space</span> new word &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
-  </div>
-
-  <!-- ══════════════ THIS OR THAT ══════════════ -->
-  <div class="screen" id="screen-tt" role="tabpanel">
-    <div class="stage">
-      <p class="stage-hint">Pick a side of the room — or just shout it out.</p>
-      <div class="vs-row" aria-live="polite">
-        <div class="vs-option a" id="tt-a">Texting</div>
-        <div class="vs-divider">OR</div>
-        <div class="vs-option b" id="tt-b">Calling</div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-primary" id="tt-next">Next</button>
-      </div>
-    </div>
-    <p class="kbd-hint"><span class="kbd">Space</span> next pair &nbsp;·&nbsp; <span class="kbd">F</span> present</p>
-  </div>
-</div>
-
-<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+  </footer>
 
 <script>
 /* Brain Breaks — four projector activities, no storage and no network.
@@ -278,7 +365,7 @@ function makePool(items){
 }
 
 /* ══════════════ TABS ══════════════ */
-const tabs = document.querySelectorAll('.tool-tabs .tab');
+const tabs = document.querySelectorAll('.tabs .tab');
 let activeScreen = 'bus';
 
 tabs.forEach(tab => tab.addEventListener('click', () => showScreen(tab.dataset.screen)));

@@ -8,7 +8,7 @@ This plan is written to be executed phase by phase. Complete phases in order, co
 
 ## Decisions already made (do not re-litigate)
 
-1. **Design system:** the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html` (Lora headings + DM Sans body, `#F7F5F0` background, `#B5843A` accent) becomes the system for the tools — including the hex tool — but **not** the landing page. The landing page (`index.html`) runs a separate editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, no warm/cream tones — tokens in `css/theme.css`) per an explicit site-owner decision that rejected cream/beige for the landing page and invented "time saved" claims. The two systems are intentionally different; do not unify them by re-skinning the landing page into cream + gold, and do not carry the landing page's ink palette into the tool pages without a separate decision to do so.
+1. **Design system:** the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html` (Lora headings + DM Sans body, `#F7F5F0` background, `#B5843A` accent) becomes the system for the tools — including the hex tool — but **not** the landing page. The landing page (`index.html`) runs a separate editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, no warm/cream tones — tokens in `css/theme.css`) per an explicit site-owner decision that rejected cream/beige for the landing page and invented "time saved" claims. The two systems are intentionally different; do not unify them by re-skinning the landing page into cream + gold, and do not carry the landing page's ink palette into the tool pages without a separate decision to do so. **One such separate decision exists:** `teacher-tools/brain-breaks.html` (Phase 7) runs the landing page's `theme.css` system on the site owner's explicit instruction. It is the shelf item under the six rather than one of them, so it wears the landing page's clothes. This applies to that page only — the six stay cream + gold.
 2. **Architecture:** stays a static HTML site. No frameworks, no build step, no npm. Shared code goes in plain `.css` and `.js` files.
 3. **Persistence:** local-first. A shared roster/data store in the browser (IndexedDB) used by all tools, with JSON export/import as backup. **No accounts, no server, no analytics.** The store is written behind an async interface so a cloud backend could be swapped in later — but no cloud code is written now.
 4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls.
@@ -298,7 +298,7 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 **Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
 
-Shipped as `teacher-tools/brain-breaks.html` (+ the `.shelf` block in `css/home.css` and `index.html`). Two content calls were made in the build and are easy to reverse:
+Shipped as `teacher-tools/brain-breaks.html` (+ the `.shelf` block in `css/home.css` and `index.html`), on `css/theme.css` — see the re-shell note in 7a and the exception recorded under Decision 1. Two content calls were made in the build and are easy to reverse:
 
 - The draft's *Boy's Name* / *Girl's Name* categories became **Name** and **Famous Person** — same job, without splitting the room by gender to answer a warm-up.
 - *Colour* became **Color**, to match the site's own US-spelled copy ("Digitize", "Randomize").
@@ -319,11 +319,12 @@ So: **its own page, and its own band on the landing page below the six.** The ut
 
 Four tabs, one page: Stop the Bus, Make a Group, Word Association, This or That. The uploaded draft is the content and interaction source; it needs re-shelling to house conventions and four bug fixes before it ships.
 
-**Re-shell to house conventions**
-- Delete the inline `:root` token block and the duplicated reset/button CSS. Link `../css/toolshed.css` and keep a page-scoped `<style>` for the stage, tabs, and per-game components only — same shape as `stack-splitter.html`.
-- Replace the draft's ad-hoc header (`.brand-mark` hexagon, absolute `teachertoolshed.com` links, "← Back to site") with the shared `.header` / `.brand-icon` / `.header-sep` / `.header-tool` markup every other tool uses, with relative links.
-- Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the site's exact fonts link — the draft's asks for a DM Sans 700 the rest of the site does not load.
-- The draft's palette already matches the tool system (gold `#B5843A` on cream); it needs no recolouring, only de-duplicating.
+**Re-shell onto the landing page's system — the exception to Decision 1**
+- Delete the inline `:root` token block and the duplicated reset/button CSS. The draft arrived in cream + gold, which is why re-shelling it onto `css/toolshed.css` looked like a no-op: same palette, same Lora/DM Sans, same rounded cards. **This page links `css/theme.css` instead**, per an explicit site-owner instruction to match the landing page. It is the only tool page that does, and that is consistent with where it lives: it is the shelf item under the six, not one of them.
+- Wear the landing page's own chrome — `.utility-bar` at the top (brand link, "The six", "Class lists", the Present button) and `.site-footer` at the bottom — plus a scaled-down masthead: eyebrow, Playfair title, italic sub, 3px double rule.
+- Editorial idiom throughout, not translated cream-and-gold: hairline rules and square corners (`--radius` is 0), ink-filled active tab, hairline grids for the categories and group items, Playfair for the letter/word/pairs, Archivo uppercase for buttons and meta.
+- `theme.css` has no button component (the landing page is all links), so `.btn` is defined page-scoped in that idiom. The editorial palette also has no alert colour; the last fifteen seconds of the clock use a page-scoped deep ink red, not the tool system's orange-red.
+- Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the landing page's exact fonts link and preconnects.
 
 **Fix these four before shipping**
 1. **The timer starts itself.** `newRound()` runs at init, so a 60-second round is already draining before the class is looking at the board. Render the letter and categories at rest and start on an explicit "Start round".
