@@ -8,7 +8,7 @@ The phases are kept as the record of *why* the site is shaped the way it is — 
 
 ## Decisions already made (do not re-litigate)
 
-1. **Design system:** the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html` (Lora headings + DM Sans body, `#F7F5F0` background, `#B5843A` accent) becomes the system for the tools — including the hex tool — but **not** the landing page. The landing page (`index.html`) runs a separate editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, no warm/cream tones — tokens in `css/theme.css`) per an explicit site-owner decision that rejected cream/beige for the landing page and invented "time saved" claims. The two systems are intentionally different; do not unify them by re-skinning the landing page into cream + gold, and do not carry the landing page's ink palette into the tool pages without a separate decision to do so. **One such separate decision exists:** `teacher-tools/brain-breaks.html` (Phase 7) runs the landing page's `theme.css` system on the site owner's explicit instruction. It is the shelf item under the six rather than one of them, so it wears the landing page's clothes. This applies to that page only — the six stay cream + gold.
+1. **Design system:** ~~the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html`… becomes the system for the tools~~ — **superseded, 2026-09-07.** The site now runs a single design system: the landing page's editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, square — tokens in `css/theme.css`) extends to every tool page via `css/tools.css`. `css/toolshed.css` (cream, gold, Lora/DM Sans, radii, shadows) is being retired tool by tool per `TOOLS-REBUILD-PLAN.md`, which is the ground truth for tool-page style. Do not re-introduce the cream/gold system anywhere.
 2. **Architecture:** stays a static HTML site. No frameworks, no build step, no npm. Shared code goes in plain `.css` and `.js` files.
 3. **Persistence:** local-first. A shared roster/data store in the browser (IndexedDB) used by all tools, with JSON export/import as backup. **No accounts, no server, no analytics.** The store is written behind an async interface so a cloud backend could be swapped in later — but no cloud code is written now.
 4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls.
@@ -25,103 +25,69 @@ Because all data stays in the teacher's own browser and no data is ever transmit
 
 ## Current state (verified 2026-09-08)
 
+> **Temporary note — delete when PR #4 lands.** `main` is behind the site. The
+> migration of every tool page onto the editorial system lives in the open PR
+> #4 (`claude/website-restyling-6xwygz`), which adds `css/tools.css`, deletes
+> `css/toolshed.css` and rewrites the nine tool/privacy pages. The description
+> below is the site as it stands with that work — which is what is deployed and
+> what every future change should assume. On `main` alone, the tool pages are
+> still the retired cream + gold.
+
 ```
-index.html                      landing page — editorial ink/paper system
-privacy.html                    privacy page — cream + gold
-favicon.svg
-css/theme.css                   editorial tokens, page frame (utility bar, footer) — landing system
-css/home.css                    landing sections: masthead, tool grid, shelf, author's note
-css/toolshed.css                cream + gold design system — every tool page but one
+index.html                      landing page
+privacy.html                    privacy page
+favicon.svg                     ink / navy
+CLAUDE.md                       the rules that hold across sessions — read first
+TOOLS-REBUILD-PLAN.md           tool-page style guide (ground truth for tools)
+css/theme.css                   editorial tokens, reset, page frame — the base layer
+css/tools.css                   shared tool chrome layered on theme.css
+css/home.css                    landing sections: masthead, tool grid, shelf, note
 js/toolshed-store.js            IndexedDB rosters + per-tool docs, JSON export/import
 js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
 js/toolshed-zip.js              zip writer (stack splitter, purewrite)
 js/toolshed-pdf-font.js         embedded PDF font helper
 teacher-tools/
-  brain-breaks.html             EDITORIAL system — the one exception, see Decision 1
-  hexthinking.html              cream + gold, but carries its own inline copy of the tokens
-  presentation-grader.html      toolshed.css
-  purewrite.html                toolshed.css; sw.js caches its shell for offline use
-  purewrite-setup.html          toolshed.css
-  rosters.html                  toolshed.css — the class-list manager
-  seating-chart-maker.html      toolshed.css
-  stack-splitter.html + .js     toolshed.css
-  talk-tracker.html             toolshed.css
-  sw.js                         PureWrite offline shell cache only
+  brain-breaks.html             the projector activities — see Phase 7
+  hexthinking.html
+  presentation-grader.html
+  purewrite.html                sw.js caches its shell for offline use
+  purewrite-setup.html
+  rosters.html                  the class-list manager
+  seating-chart-maker.html
+  stack-splitter.html + .js
+  talk-tracker.html
   vendor/                       jsQR, jsPDF, pdf-lib, pdf.js, qrcode-generator (+ licences)
 ARCHITECTURE.md                 aspirational SaaS doc — superseded, see its own status note
 ```
 
-**Which page runs which system.** This is the thing most often misremembered, so, plainly:
+**One system, everywhere.** Landing page, tool pages and privacy page all run
+the editorial print system: `theme.css` for tokens and frame, `tools.css` for
+tool chrome, a page `<style>` for layout only. There is no second system to keep
+track of any more, and no page-by-page exception to remember.
 
-| Page | System | Fonts |
-| --- | --- | --- |
-| `index.html` | editorial ink/paper (`theme.css` + `home.css`) | Playfair Display · Newsreader · Archivo |
-| `teacher-tools/brain-breaks.html` | editorial ink/paper (`theme.css`) | Playfair Display · Newsreader · Archivo |
-| the other eight tool pages, and `privacy.html` | cream + gold (`toolshed.css`) | Lora · DM Sans |
+### Known loose ends
 
-The tool pages are consistent **with each other** — that is what "standardize the design system" achieved, and it is why they all look alike. They do **not** match the landing page, and were never meant to: Decision 1 made the two systems deliberately different. Anyone reading "the tools are all on the same system" should read it as *the same as each other*, not *the same as the homepage*.
-
-### Loose ends in the current state
-
-- `hexthinking.html` does not link `css/toolshed.css`. It was recoloured onto the cream + gold palette (Phase 1c) but never deduplicated the way Phase 1d did for the other tools, so it still carries its own `:root` with the same 24 token values. Two copies of one palette, drifting apart by default.
-- `privacy.html` runs the tool system, though it is reached from the landing page's footer. Harmless, but it is a seam a visitor can see.
-- Phase 1a specified `ts-`-prefixed shared class names. The code shipped **unprefixed** (`.header`, `.brand`, `.brand-icon`, `.header-sep`, `.header-tool`). The unprefixed names are the reality on every page — do not "fix" the code to match the old spec.
-- `#e86b30` still appears in `hexthinking.html`, in the `PALETTE` array of hex-tile colours students choose from. That is content, not leftover chrome; the Phase 5 grep flags it every time, and it is fine.
+- `teacher-tools/brain-breaks.html` (Phase 7) was written against `theme.css`
+  alone, before `tools.css` existed on its branch, so it hand-rolls buttons, a
+  tab strip and a page head that `tools.css` already provides — its alert red is
+  even byte-identical to `--flag`. It looks right and behaves right; it is
+  duplicated code. Rebuild it on the shared components once PR #4 is on `main`.
+- PR #3 (`claude/teachertoolshed-redesign-fxdpje`, Stack Splitter filename
+  fields) predates the migration and touches a version of
+  `stack-splitter.html` that PR #4 rewrote. It needs re-applying, not merging.
 
 ---
 
 ## The design system (single source of truth)
 
-These tokens are lifted from `seating-chart-maker.html` / `talk-tracker.html` and became `css/toolshed.css`. **Every tool page uses them except `brain-breaks.html`**, which runs the landing page's editorial system instead (Decision 1). The landing page's own tokens live in `css/theme.css` and are a separate system — not a variant of this one.
+`css/theme.css` owns the tokens; `css/tools.css` owns the tool chrome;
+`TOOLS-REBUILD-PLAN.md` is the style guide. Those three files are the truth —
+this section is deliberately not a fourth copy of the palette to drift out of
+date. See `CLAUDE.md` for the short version.
 
-```css
-:root{
-  /* palette */
-  --bg:#F7F5F0; --surface:#FFFFFF; --surface-2:#F0EDE6; --border:#E0DDD4;
-  --border-focus:#B5843A;
-  --text:#28251E; --text-mid:#6B6457; --text-light:#A8A098;
-  --accent:#B5843A; --accent-hover:#9A6E2F; --accent-soft:#FBF4E8;
-  --green:#4A7C59; --green-soft:#EBF4EE; --green-border:#B8D9C2;
-  --red:#C44A3F; --red-soft:#FAECEA;
-  /* shape */
-  --radius:10px; --radius-sm:6px;
-  --shadow:0 1px 3px rgba(40,37,30,.08),0 1px 2px rgba(40,37,30,.05);
-  /* type */
-  --font-serif:"Lora",Georgia,serif;
-  --font-sans:"DM Sans","Helvetica Neue",sans-serif;
-}
-```
-
-**Fonts link (identical on every page):**
-```html
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-```
-
-**Type rules:** Lora (`--font-serif`) for headings, page titles, card titles, stat numbers, brand name. DM Sans (`--font-sans`) for everything else. Body 15px, line-height 1.5.
-
-**Component conventions** (already in the two on-brand tools — extract, don't invent):
-- `.btn` base + `.btn-primary` (accent bg, white text), `.btn-secondary` (surface-2 bg, border), `.btn-ghost` (no bg, text-mid). Radius `--radius-sm`, 13px, weight 600.
-- Inputs/selects/textareas: `--surface-2` bg, 1.5px `--border`, radius `--radius-sm`, focus → `--border-focus`.
-- Cards: `--surface` bg, 1px `--border`, radius `--radius`, `--shadow`.
-- Modals: centered, `--surface`, radius `--radius`, dimmed overlay.
-- Shared header (see Phase 1).
-
-**Orange→gold mapping for the hex tool** (Phase 1c):
-
-| hexthinking.html today | becomes |
-|---|---|
-| `--bg: #f4f1ec` | `#F7F5F0` |
-| `--bg-warm: #eae5dd` | `#F0EDE6` |
-| `--border: #d8d2c8` / `--border-light: #e8e3db` | `#E0DDD4` |
-| `--text: #2c2924` / `--text-mid: #6b635a` / `--text-dim: #9e9588` | `#28251E` / `#6B6457` / `#A8A098` |
-| `--accent: #e86b30` / `--accent-hover: #d45a22` | `#B5843A` / `#9A6E2F` |
-| `--accent-light: rgba(232,107,48,0.08)` | `#FBF4E8` |
-| `--red: #c94040` | `#C44A3F` |
-| font `Anybody` (all uses) | `Lora` (weights 600/700; drop 800) |
-| hardcoded `#e86b30` in inline SVGs (brand logo, canvas) | `#B5843A` |
-| hardcoded `#6b635a` in JS-generated SVG text | `#6B6457` |
-
-Note: hexagon *category colors* chosen by the teacher (the per-category color swatches) are content, not chrome — leave that palette alone.
+The cream + gold token block that used to be printed here described
+`css/toolshed.css`, which has been retired. It is not reproduced, to remove any
+chance of a future change reviving it from this document.
 
 ---
 
@@ -135,9 +101,9 @@ Note: hexagon *category colors* chosen by the teacher (the per-category color sw
 
 **Accept:** both files updated; nothing else touched.
 
-## Phase 1 — Shared design system — DONE, with one loose end
+## Phase 1 — Shared design system — DONE, then SUPERSEDED
 
-*(`css/toolshed.css` exists and every tool page links it **except** `hexthinking.html`, which still carries its own copy of the same tokens. Shared classes shipped unprefixed, not `ts-`. See "Loose ends" above.)*
+*(This phase built `css/toolshed.css` and put every tool on it, which is what "the tools all share one style" refers to — one style as each other, cream and gold. Decision 1 was later reversed and that sheet retired in favour of `css/theme.css` + `css/tools.css`. Kept as history; do not execute.)*
 
 ### 1a. Create `css/toolshed.css`
 
@@ -345,7 +311,7 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 **Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
 
-Shipped as `teacher-tools/brain-breaks.html` (+ the `.shelf` block in `css/home.css` and `index.html`), on `css/theme.css` — see the re-shell note in 7a and the exception recorded under Decision 1. Two content calls were made in the build and are easy to reverse:
+Shipped as `teacher-tools/brain-breaks.html` (+ the `.shelf` block in `css/home.css` and `index.html`), on `css/theme.css`. Two content calls were made in the build and are easy to reverse:
 
 - The draft's *Boy's Name* / *Girl's Name* categories became **Name** and **Famous Person** — same job, without splitting the room by gender to answer a warm-up.
 - *Colour* became **Color**, to match the site's own US-spelled copy ("Digitize", "Randomize").
@@ -366,11 +332,11 @@ So: **its own page, and its own band on the landing page below the six.** The ut
 
 Four tabs, one page: Stop the Bus, Make a Group, Word Association, This or That. The uploaded draft is the content and interaction source; it needs re-shelling to house conventions and four bug fixes before it ships.
 
-**Re-shell onto the landing page's system — the exception to Decision 1**
-- Delete the inline `:root` token block and the duplicated reset/button CSS. The draft arrived in cream + gold, which is why re-shelling it onto `css/toolshed.css` looked like a no-op: same palette, same Lora/DM Sans, same rounded cards. **This page links `css/theme.css` instead**, per an explicit site-owner instruction to match the landing page. It is the only tool page that does, and that is consistent with where it lives: it is the shelf item under the six, not one of them.
-- Wear the landing page's own chrome — `.utility-bar` at the top (brand link, "The six", "Class lists", the Present button) and `.site-footer` at the bottom — plus a scaled-down masthead: eyebrow, Playfair title, italic sub, 3px double rule.
-- Editorial idiom throughout, not translated cream-and-gold: hairline rules and square corners (`--radius` is 0), ink-filled active tab, hairline grids for the categories and group items, Playfair for the letter/word/pairs, Archivo uppercase for buttons and meta.
-- `theme.css` has no button component (the landing page is all links), so `.btn` is defined page-scoped in that idiom. The editorial palette also has no alert colour; the last fifteen seconds of the clock use a page-scoped deep ink red, not the tool system's orange-red.
+**Re-shell onto the editorial system**
+- Delete the inline `:root` token block and the duplicated reset/button CSS. The draft arrived in cream + gold, which is why an early attempt to re-shell it onto `css/toolshed.css` looked like a no-op: same palette, same Lora/DM Sans, same rounded cards.
+- The page links `css/theme.css` and wears the landing page's chrome — `.utility-bar` at the top (brand link, "The six", "Class lists", the Present button) and `.site-footer` at the bottom — plus a scaled-down masthead: eyebrow, Playfair title, italic sub, 3px double rule.
+- Editorial idiom throughout: hairline rules and square corners, ink-filled active tab, hairline grids for the categories and group items, Playfair for the letter/word/pairs, Archivo uppercase for buttons and meta.
+- **Outstanding:** this was written before `css/tools.css` existed on the branch, so its buttons, tab strip and page head are hand-rolled page-scoped rather than the shared components, and its alert red is a hand-picked `#8C1B1B` — the same value `tools.css` already defines as `--flag`. Rebuild on the shared sheet once PR #4 is on `main`. See "Known loose ends".
 - Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the landing page's exact fonts link and preconnects.
 
 **Fix these four before shipping**

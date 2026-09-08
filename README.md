@@ -23,14 +23,15 @@ A static site. No build step, no framework, no server, no npm. Plain HTML/CSS/JS
 ```
 index.html                landing page
 privacy.html              privacy page
-css/theme.css             editorial ink/paper system — landing page tokens and page frame
+CLAUDE.md                 the rules that hold across sessions — read this first
+css/theme.css             editorial tokens, reset, page frame — the base layer
+css/tools.css             shared tool chrome, layered on theme.css
 css/home.css              landing page sections
-css/toolshed.css          cream + gold system — the tool pages
 js/                       shared modules: store, rubric builder, zip writer, PDF font
 teacher-tools/            one self-contained HTML page per tool (+ vendored libraries)
 ```
 
-**Two design systems, on purpose.** The landing page runs an editorial ink-and-paper system (Playfair Display / Newsreader / Archivo, hairline rules, square corners). The tool pages run a warmer cream-and-gold system (Lora / DM Sans). They are consistent within themselves, not with each other — the tool pages match *each other*, not the homepage. The one crossover is `teacher-tools/brain-breaks.html`, which runs the landing page's system because it is the shelf item under the six rather than one of them. `PLAN.md` records this under "Decisions already made".
+**One design system.** The whole site runs an editorial print style — ink on paper, navy accent, Playfair Display / Newsreader / Archivo, hairline rules, square corners. `theme.css` holds the tokens and the page frame, `tools.css` the tool chrome, and each page's own `<style>` block is layout only. An earlier cream-and-gold system for the tool pages has been retired; new tools use the editorial system. See `TOOLS-REBUILD-PLAN.md` for the tool-page style guide.
 
 ## Privacy
 
