@@ -126,6 +126,30 @@
       <p class="hint" style="margin-bottom:12px">Check the groups below before exporting. Click any
         page to move a boundary or reassign it. A navy border marks the page a student's work starts on.</p>
       <div class="rows" id="groups"></div>
+
+      <div class="card" id="filename-card">
+        <div class="card__title">File names</div>
+        <p class="hint" style="margin-bottom:6px">Fields that are on join in the order below. At least
+          one has to stay on.</p>
+        <div class="toggle-row">
+          <div class="toggle-row__label">Class name</div>
+          <button class="toggle" id="fn-class" role="switch" aria-checked="true" aria-label="Include class name"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row__label">Student name</div>
+          <button class="toggle" id="fn-name" role="switch" aria-checked="true" aria-label="Include student name"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row__label">Student ID</div>
+          <button class="toggle" id="fn-sid" role="switch" aria-checked="true" aria-label="Include student ID"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-row__label">Assignment</div>
+          <button class="toggle" id="fn-assignment" role="switch" aria-checked="true" aria-label="Include assignment"></button>
+        </div>
+        <p class="hint" id="filename-preview" style="margin-top:14px"></p>
+      </div>
+
       <div class="actions">
         <span class="actions__spacer"></span>
         <button class="btn btn--ghost" id="start-over">Start over</button>
