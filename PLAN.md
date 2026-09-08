@@ -39,6 +39,7 @@ js/toolshed-rubric.js           shared rubric builder (presentation grader, talk
 js/toolshed-zip.js              zip writer (stack splitter, purewrite)
 js/toolshed-pdf-font.js         embedded PDF font helper
 teacher-tools/
+  brain-breaks.html             the projector activities — see Phase 7
   hexthinking.html
   presentation-grader.html
   purewrite.html                sw.js caches its shell for offline use
@@ -300,11 +301,11 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 ---
 
-## Phase 7 — Brain Breaks (new tool, new shelf) — IN PROGRESS
+## Phase 7 — Brain Breaks (new tool, new shelf) — BUILT
 
 **Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
 
-Not yet on `main`. The page is built and tested but was written before `css/tools.css` existed, so it is being rebuilt on the shared components before it lands. Two content calls were made in the build and are easy to reverse:
+Shipped as `teacher-tools/brain-breaks.html`, plus the `.shelf` block in `css/home.css` and `index.html`. Two content calls were made in the build and are easy to reverse:
 
 - The draft's *Boy's Name* / *Girl's Name* categories became **Name** and **Famous Person** — same job, without splitting the room by gender to answer a warm-up.
 - *Colour* became **Color**, to match the site's own US-spelled copy ("Digitize", "Randomize").
@@ -325,12 +326,10 @@ So: **its own page, and its own band on the landing page below the six.** The ut
 
 Four tabs, one page: Stop the Bus, Make a Group, Word Association, This or That. The uploaded draft is the content and interaction source; it needs re-shelling to house conventions and four bug fixes before it ships.
 
-**Re-shell onto the editorial system**
-- Delete the inline `:root` token block and the duplicated reset/button CSS. The draft arrived in cream + gold, which is why an early attempt to re-shell it onto `css/toolshed.css` looked like a no-op: same palette, same Lora/DM Sans, same rounded cards.
-- The page links `css/theme.css` and wears the landing page's chrome — `.utility-bar` at the top (brand link, "The six", "Class lists", the Present button) and `.site-footer` at the bottom — plus a scaled-down masthead: eyebrow, Playfair title, italic sub, 3px double rule.
-- Editorial idiom throughout: hairline rules and square corners, ink-filled active tab, hairline grids for the categories and group items, Playfair for the letter/word/pairs, Archivo uppercase for buttons and meta.
-- **Outstanding:** this was written before `css/tools.css` existed on the branch, so its buttons, tab strip and page head are hand-rolled page-scoped rather than the shared components, and its alert red is a hand-picked `#8C1B1B` — the same value `tools.css` already defines as `--flag`. Rebuild on the shared sheet once PR #4 is on `main`. See "Known loose ends".
-- Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the landing page's exact fonts link and preconnects.
+**Built on the shared component set**
+- The draft arrived as a standalone page with its own copy of the retired cream + gold tokens. All of it is gone: the page links `css/theme.css` + `css/tools.css` and its own `<style>` block is layout only, per `CLAUDE.md`.
+- Chrome, buttons, tabs, cards and the alert colour are all `tools.css`: `.tool-header` with the Present action, `.page-head`/`.page-eyebrow`/`.page-title`/`.page-sub`, `.tabs`/`.tab` (which style off `aria-selected`, so the JS drives them directly), `.card`, `.hairline-grid` for the category and group cells, `.btn--primary`/`--secondary`/`--danger`, and `--flag` for the last fifteen seconds of the clock.
+- What the page genuinely owns, and all it owns: the stage — the letter badge, the timer, the word display, the this-or-that row, and one scale of custom properties that presentation mode swaps for viewport-relative values.
 
 **Fix these four before shipping**
 1. **The timer starts itself.** `newRound()` runs at init, so a 60-second round is already draining before the class is looking at the board. Render the letter and categories at rest and start on an explicit "Start round".

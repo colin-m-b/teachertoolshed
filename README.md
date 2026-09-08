@@ -13,6 +13,7 @@ teachertoolshed.com — free classroom tools, made by a real teacher.
 
 ## Also in the shed
 
+- **Brain Breaks** — four no-prep projector activities (Stop the Bus, Make a Group, Word Association, This or That) for when a lesson runs out of air. Deliberately not one of the six: no roster, no setup, nothing saved.
 - **Class lists** — the shared roster manager. Build a class once and every tool reuses it.
 
 ## Stack
