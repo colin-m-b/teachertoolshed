@@ -294,11 +294,70 @@ Add Presentation Grader as tool 04 (Live). Update Talk Tracker's description to 
 
 ---
 
+## Phase 7 — Brain Breaks (new tool, new shelf)
+
+**Depends on nothing.** This is the first tool that touches neither `ToolshedStore` nor a roster, so it can ship in any order relative to the other phases.
+
+### Is it a tool? Yes — its own page, not folded into an existing one
+
+There is no host for it. Hex Thinking is the only other page students look at, but it is a built activity with an author, a share link, and saved canvas state; brain breaks are the opposite of authored. Bolting a tab onto it would ruin both.
+
+### Is it separate from the rest? Yes — deliberately, and visibly
+
+Every one of the six is the same shape: teacher-facing, roster-aware, produces a record (PDF, CSV, print, named files), persists through the shared store. Brain Breaks is student-facing, roster-free, stateless on purpose, and produces nothing at all. It fails every property that makes the six a set.
+
+The landing page is also built around the number: `<title>` says "Six small tools", the masthead says "Six small tools I built for my own classes", the nav says "The six", the cards are numbered No. 01–06. Making this No. 07 means renaming all of that to "seven" and dropping a projector toy into a row of gradebook workflow tools — and it means renumbering again for the next one.
+
+So: **its own page, and its own band on the landing page below the six.** The utility bar already does this for Class Lists, which sits outside "The six" for exactly the same reason. The band is also where the obvious follow-ons go (countdown timer, random picker, noise meter) without ever touching the six.
+
+### 7a. `teacher-tools/brain-breaks.html`
+
+Four tabs, one page: Stop the Bus, Make a Group, Word Association, This or That. The uploaded draft is the content and interaction source; it needs re-shelling to house conventions and four bug fixes before it ships.
+
+**Re-shell to house conventions**
+- Delete the inline `:root` token block and the duplicated reset/button CSS. Link `../css/toolshed.css` and keep a page-scoped `<style>` for the stage, tabs, and per-game components only — same shape as `stack-splitter.html`.
+- Replace the draft's ad-hoc header (`.brand-mark` hexagon, absolute `teachertoolshed.com` links, "← Back to site") with the shared `.header` / `.brand-icon` / `.header-sep` / `.header-tool` markup every other tool uses, with relative links.
+- Add the standard `<link rel="icon" href="../favicon.svg">`, a `<meta name="description">`, and the site's exact fonts link — the draft's asks for a DM Sans 700 the rest of the site does not load.
+- The draft's palette already matches the tool system (gold `#B5843A` on cream); it needs no recolouring, only de-duplicating.
+
+**Fix these four before shipping**
+1. **The timer starts itself.** `newRound()` runs at init, so a 60-second round is already draining before the class is looking at the board. Render the letter and categories at rest and start on an explicit "Start round".
+2. **Switching tabs kills a running round.** The tab handler calls `stopTimer()` when you come *back* to Stop the Bus, so glancing at another tab silently ends the round. Pick a behaviour and implement it deliberately — a round that survives tab switches, or an explicit pause.
+3. **Round length is hard-coded to 60 s.** Offer 30 / 60 / 90 / 120.
+4. **The clock counts `setInterval` ticks**, which drifts and stalls outright when the tab is backgrounded. Compute remaining time from a `Date.now()` deadline.
+
+**Projector requirements** — this is the only page in the shed meant to be read from the back of a room, so they are requirements, not polish:
+- A present/fullscreen toggle (`requestFullscreen`) that scales the stage up.
+- Room-sized type. The 46px word display is right on a laptop and small on a projector at twenty feet; drive the stage type off `clamp()` with a much higher ceiling in presentation mode.
+- Keyboard control: Space advances the active tab (new round / shuffle / new word / next pair), `F` toggles fullscreen. Nobody should have to walk back to the laptop.
+- No hover-only affordances — there is no cursor on the projector.
+
+**Content pass before shipping**
+- "Boy's Name" / "Girl's Name" split every class into two lists by gender to answer a warm-up. "A name" and "A name from a book" do the same job. Teacher's call, but do not ship it unconsidered.
+- "Colour" — the rest of the site's copy is US-spelled ("Digitize", "Randomize"). Pick one and be consistent.
+- Read the This-or-That pairs once as a parent would. The Q/X/Z-skipping comment in the letters string is correct; keep it.
+
+**Deliberately not built:** no `ToolshedStore`, no saved state, no rosters, no student names, no export, no scoring. Loaded once, it must keep working with the network off — which also means there is no reason to touch `sw.js` (that cache is PureWrite's).
+
+### 7b. Landing page placement
+
+- Leave the six-card grid, its numbering, the masthead, the `<title>`, and the meta description alone. They still describe the six.
+- Add one band under `#tools`: a single wide card, styles in `css/home.css`, kicker "Also in the shed", in the landing page's ink/paper editorial system (not cream — Decision 1 still holds). Copy sells the actual value: nothing to set up, nothing saved, put it on the board when the energy dips.
+- Add "Brain breaks" to the utility-bar nav after "Class lists".
+
+### 7c. Same band later (not now)
+
+Countdown/stopwatch for timed tasks, random name picker (the only one that would want rosters), noise meter, would-you-rather. Each is a tab or a sibling page in the same band — never a seventh numbered card.
+
+**Accept (Phase 7):** page loads with the clock at rest; start a round, switch tabs and come back, confirm the round is where you left it; background the tab for thirty seconds and confirm the clock is still honest; each tab advances on Space; `F` fills the screen and the type is readable from the back of a classroom; kill the network and confirm every tab still works; no `ToolshedStore` call and zero network requests after load; the landing page still says six, and the new band links through.
+
+---
+
 ## Explicitly out of scope (do not build)
 
 - Accounts, auth, Supabase, Stripe, Netlify Functions, emails, analytics.
 - Next.js or any build tooling.
-- New tools or new features beyond persistence described above, **except** the Presentation Grader specified in Phase 6.
+- New tools or new features beyond persistence described above, **except** the tools specified in their own phases (Presentation Grader, Phase 6; Brain Breaks, Phase 7). PureWrite and Stack Splitter were added the same way, by an added phase, not by widening an existing one.
 - Server-side anything.
 
 ## Future (for reference only): cloud sync sketch
