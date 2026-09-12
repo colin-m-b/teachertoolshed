@@ -11,7 +11,7 @@ The phases are kept as the record of *why* the site is shaped the way it is — 
 1. **Design system:** ~~the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html`… becomes the system for the tools~~ — **superseded, 2026-09-07.** The site now runs a single design system: the landing page's editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, square — tokens in `css/theme.css`) extends to every tool page via `css/tools.css`. `css/toolshed.css` (cream, gold, Lora/DM Sans, radii, shadows) is being retired tool by tool per `TOOLS-REBUILD-PLAN.md`, which is the ground truth for tool-page style. Do not re-introduce the cream/gold system anywhere.
 2. **Architecture:** stays a static HTML site. No frameworks, no build step, no npm. Shared code goes in plain `.css` and `.js` files.
 3. **Persistence:** local-first. A shared roster/data store in the browser (IndexedDB) used by all tools, with JSON export/import as backup. **No accounts, no server, no analytics.** The store is written behind an async interface so a cloud backend could be swapped in later — but no cloud code is written now.
-4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls.
+4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls. *(Under review: `TIERS-PLAN.md` proposes a Free / Pro split that keeps every byte of student data in the browser. This decision stands until that plan's Phase T1 lands on `main`.)*
 
 ### FERPA posture (informs several phases)
 
