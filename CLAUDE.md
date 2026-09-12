@@ -59,7 +59,7 @@ fragment specifically to stay serverless — keep it that way.
 - `CLAUDE.md` (this file) — the rules that hold across sessions.
 - `PLAN.md` — what was built and why: decisions, phase history, current state.
 - `TOOLS-REBUILD-PLAN.md` — the tool-page style guide.
-- `TIERS-PLAN.md` — the Free / Pro tier proposal. Not built; `PLAN.md` decision 4
+- `TIERS-PLAN.md` — the Free / Pro tier proposal, on branch `freemium_plan`. Not built; `PLAN.md` decision 4
   (everything free) still stands until its Phase T1 lands on `main`.
 - `ARCHITECTURE.md` — an aspirational SaaS future. **Not** being built.
 

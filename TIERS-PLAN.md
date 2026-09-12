@@ -1,9 +1,9 @@
 # Teacher Toolshed — Free tier / Pro tier plan
 
-**Status: PROPOSAL, nothing built (2026-09-12).** This document supersedes
+**Status: PROPOSAL, nothing built (revised 2026-09-12).** This document supersedes
 decision 4 in `PLAN.md` ("Monetization: everything is free, no fake paywalls")
 *only once Phase T1 below lands on `main`*. Until then, decision 4 stands and the
-site stays free.
+site stays free. Work in progress lives on the `freemium_plan` branch.
 
 It follows the house convention: decisions first, then the phases, each with an
 acceptance checklist that must pass before it is marked BUILT.
@@ -20,13 +20,11 @@ without asking their district for a vendor review, a DPA, or a NY Ed Law 2-d
 agreement, and it is what makes EU use a non-event. A paid tier must not spend
 that asset.
 
-So the split is:
-
 | | Lives where | Who can see it |
 |---|---|---|
 | Rosters, names, scores, notes, seating, writing | Teacher's browser (IndexedDB), exactly as today | Teacher only |
 | Optional cloud copy of the above (Pro) | **Teacher's own Google Drive / OneDrive**, written from the browser with the teacher's own OAuth token | Teacher, and their school's existing Google/Microsoft agreement |
-| Who paid, for what, until when | Merchant-of-record (Lemon Squeezy or Paddle) + a licence key in the teacher's browser | Us, the MoR |
+| Who paid, for what, until when | Merchant of record (Lemon Squeezy or Paddle) + a licence key in the teacher's browser | Us, the MoR |
 
 Nothing in the third row references a student. Nothing in the first two rows
 ever touches a server we run. The FERPA paragraph on the privacy page stays
@@ -37,9 +35,8 @@ true word for word; the GDPR position is that we process one data subject
 `ARCHITECTURE.md`).** The moment rosters sit in our Postgres, we hold
 education records: FERPA "school official" language, state student-privacy
 laws (NY 2-d, IL SOPPA, CA SOPIPA), GDPR Art. 28 processor contracts with every
-EU school, a DPO question, breach-notification duties, and a data-residency
-question for EU customers. That is a compliance programme, not a side project,
-and it is the thing this site's whole pitch says it does not do. End-to-end
+EU school, a DPO question, breach-notification duties, and data residency for
+EU customers. That is a compliance programme, not a side project. End-to-end
 encrypted sync is better but still "we store encrypted student data", and
 teachers lose everything if they forget the passphrase. Not now; possibly
 never.
@@ -48,409 +45,377 @@ never.
 
 ## 1. Decisions
 
-### D1. What is free and what is Pro
+### D1. What Pro is
 
-**Free stays genuinely useful. Pro is convenience, not rescue.** A teacher
-must be able to run a whole year on free without hitting a wall mid-lesson.
-Gates only ever appear at *setup* moments, never in front of a class.
+**Free is "run any lesson, with any tool, today, on this device."**
+**Pro is "your records, kept for the year, on every device."**
 
-| | Free | Pro |
+That line follows from a fact about the site: local browser storage is
+reliable for a lesson and unreliable for a year. Safari evicts site storage
+after about a week idle; school laptops are reimaged over the summer;
+teachers move between a home machine, a school machine and a phone; a
+district policy push can clear site data without warning. So any feature that
+depends on records surviving the term (history, per-student views, reports)
+is only an honest promise when paired with sync. History and sync are one Pro
+feature, not two.
+
+The gates sit where the teacher already feels the value: the moment *after*
+the lesson when they want the record. Three rules hold everywhere:
+
+1. **Nothing a student sees is gated.** Hex canvas, PureWrite writing surface
+   and its exports, Brain Breaks. A student's browser has no licence, so a
+   gate there is unenforceable as well as wrong.
+2. **Nothing that fires during a lesson is gated.** Timers, tapping, scoring,
+   randomising, printing. Free must never gate in front of a class.
+3. **Export of the teacher's own data is never gated.** A backup held hostage
+   is the one thing that would earn the site a bad name.
+
+### D1a. Tool by tool
+
+| Tool | Free | Pro |
 |---|---|---|
-| All six tools + Brain Breaks + Class Lists | ✔ | ✔ |
-| Classes (rosters) | up to **3** | unlimited |
-| Saved rubrics (Presentation Tracker, Talk Tracker) | 2 | unlimited, shared library across tools |
-| Saved seating charts / talk sessions / hex activities | 5 per tool | unlimited |
-| JSON export / import backup | ✔ | ✔ |
-| **Cloud backup + sync to your own Drive/OneDrive** | — | ✔ |
-| PureWrite: PDF export | ✔ | ✔ |
-| PureWrite: Word (.docx) export, batch zip of a whole class | — | ✔ |
-| Stack Splitter | full | full (it is the most "wow" tool; gating it kills word of mouth) |
-| Print / PDF everywhere | ✔ | ✔ |
-| Support | none (as now) | email, 2 working days |
-| School / department licence | — | ✔ (seat-based) |
+| **Class Lists** | 2 classes, paste-in, JSON export/import | Unlimited classes; CSV import (Google Classroom, school exports); **Drive/OneDrive sync**; student IDs across tools |
+| **Talk Tracker** | Setup, live tapping, talking points, target, summary, Print, current session | CSV export; session history; **term participation report per student**; unlimited saved rubrics |
+| **Presentation Tracker** | Session, timer, rubric scoring, per-student overrides, Print, one saved rubric | CSV export; session history; per-student view across sessions; unlimited rubrics + shared rubric library with Talk Tracker |
+| **Seating Chart Maker** | All layouts, randomize, swap, Print, one saved chart per class | Unlimited saved charts with history; Download PDF; **constraints** (keep apart, front row, then generate) |
+| **Hexagonal Activity** | Create, share link, students build and export their canvas | Saved activity library (reuse, duplicate); printable hexagon sheets (PDF); teacher template gallery |
+| **PureWrite** | Everything students touch, **including PDF and Word export** | Setup-page task library (prompts, passages, targets reused across classes); class-branded export header; integrity cover page (focus losses, paste attempts, already counted) |
+| **Stack Splitter** | The whole thing: coversheets, split, zip, save to folder | Configurable filename scheme; save into a Drive-synced folder; batch across several classes |
+| **Brain Breaks** | Everything | — |
 
-Things deliberately **not** gated: anything a student sees (hex canvas,
-PureWrite writing surface, Brain Breaks), anything that happens live in a
-lesson (Talk Tracker tapping, Presentation Tracker timer), export of the
-teacher's own data (holding backups hostage is the one thing that would
-justify the "they'll enshittify it" fear).
+**Do not cap hexagons**, ever. The canvas is the student surface, the activity
+is encoded in the share link, and a thinking activity with a hexagon limit is a
+worse activity.
 
-The numbers (3 classes, 5 saved items) are a starting guess. Most secondary
-teachers have 4–6 classes, so 3 is the point where a real teacher feels it
-without a trial-lesson teacher feeling it. Tune after launch, never downward
-for existing users.
+**Class cap.** 2 on Free. It is a nudge, not the pitch: a teacher can delete
+and re-paste a class for free forever, and that is fine, because pasting a list
+gets them into the lesson and never gets them the CSV afterwards. Tune after
+launch; never downward for existing users.
+
+**Build before launch, because they are Pro by nature and cheap:** seating
+constraints and the Talk Tracker term report.
 
 ### D2. Enforcement is client-side and honest about it
 
 Limits are checked in the browser by a new `js/toolshed-licence.js`. A
 determined teacher can open DevTools and flip a flag. That is fine: the
-customer is a teacher paying $3 a month, not a pirate, and every indie
-desktop app for the last thirty years has worked this way. Do not build a
-server-side wall to stop a hypothetical; it would need accounts, which
-breaks §0.
+customer is a teacher paying $3 a month, not a pirate, and every indie desktop
+app for thirty years has worked this way. Do not build a server-side wall to
+stop a hypothetical; it would need accounts, which breaks §0.
 
-### D3. Licence keys, not accounts (Phase T1)
+### D3. Licence keys, not accounts
+
+A licence is a proof of purchase; an account is an identity. This site sells
+to individuals using one or two devices, which is the licence-key case.
 
 Buying produces a **licence key** (MoR-issued). The teacher pastes it into
-`teacher-tools/rosters.html` (the shared page every tool already links to).
-The browser calls the MoR's public licence-validation endpoint with *only the
-key* — no email, no roster, no student data — and stores the result locally.
+`teacher-tools/rosters.html`. The browser calls the MoR's public
+licence-validation endpoint with *only the key* — no email, no roster, no
+student data — and stores the result locally.
 
 - Re-validate silently every 30 days; **90-day offline grace** so a teacher
-  with a locked-down school network never loses Pro mid-term.
-- One key activates up to **3 devices** (home laptop, school laptop, phone)
-  via the MoR's activation count.
-- No password, no login page, no reset flow, no session cookies, nothing for
-  a GDPR cookie banner to be about.
+  on a locked-down school network never loses Pro mid-term.
+- One key activates up to **3 devices** via the MoR's activation count.
+- No password, no login page, no reset flow, no session cookies.
 
-Accounts (Google sign-in etc.) are **not** in this plan. If school licences
-later need per-seat management, revisit — as a separate phase with its own
-privacy write-up.
+**If accounts are ever needed** (school licences with per-seat admin), the
+architecture that keeps §0 intact is identity-only: a hosted auth provider
+(Supabase Auth / Clerk) for Google or Microsoft sign-in, one table of
+`{user, email, plan, expiry, mor_customer_id}`, one Netlify Function for the
+MoR webhook, rosters still in IndexedDB. Costs: a session cookie (the
+"no cookies" line goes), a GDPR controller relationship with each teacher, a
+delete-account flow. An account can hold a licence key internally, so keys
+sold before that day keep working. Not in this plan.
 
-### D4. Merchant of record, because the operator is outside the US
+### D4. Merchant of record
 
-You are a US citizen living abroad selling to teachers in the US, EU, UK and
-elsewhere. Without a merchant of record you personally owe: EU VAT via OSS in
-your country of residence, UK VAT once over threshold, and US state sales tax
-in the states that tax SaaS (nexus rules vary by state; economic-nexus
-thresholds are around $100k/200 transactions but some states count lower).
-That is the wrong use of a teacher's evenings.
-
-A **merchant of record** (MoR) is legally the seller: it collects and remits
-VAT/GST/sales tax worldwide, handles refunds and chargebacks, and issues
-tax-compliant invoices. You receive a payout.
+Selling from outside the US to teachers in the US, EU and UK means EU VAT
+(OSS), UK VAT over threshold, and US state sales tax where SaaS is taxed. A
+**merchant of record** is legally the seller and remits all of it; you get a
+payout.
 
 | | Lemon Squeezy | Paddle | Stripe (not MoR) |
 |---|---|---|---|
-| Tax handled for you | ✔ | ✔ | ✗ (Stripe Tax calculates, you still file) |
-| Built-in licence keys + public validate/activate API callable from a static page | ✔ | ✗ (needs a function + Keygen or similar) | ✗ |
-| Fee | ~5% + 50¢ | ~5% + 50¢ | 2.9% + 30¢ + your accountant |
-| Fits a no-server static site | best | needs one Netlify Function | needs several |
+| Tax handled for you | ✔ | ✔ | ✗ |
+| Licence keys + public validate/activate API callable from a static page | ✔ | ✗ (needs a function + key service) | ✗ |
+| Fee | ~5% + 50¢ | ~5% + 50¢ | 2.9% + 30¢ + accountant |
+| Fits a no-server static site | best | needs one function | needs several |
 
-**Recommendation: Lemon Squeezy** (owned by Stripe since 2024). One caveat to
-verify before committing: that your country of residence is on its supported
-payout list, and that payouts to a non-US bank in your residence country work.
-If not, Paddle plus a ~40-line Netlify Function that mints/validates keys.
-
-**Personal-tax note (not advice; ask an accountant who does US-expat
-returns):** as a US citizen you file a US return on worldwide income
-regardless of where you live. Self-employment income abroad usually means
-Schedule C + SE tax unless a totalization agreement applies; the Foreign
-Earned Income Exclusion may or may not cover it; FBAR/FATCA thresholds on
-foreign accounts are low. Your country of residence taxes you too, probably
-first. Decide *before launch* whether the seller on the MoR account is you as
-an individual or a local sole-proprietorship/company — changing it later
-means a new MoR store. Budget one paid hour with an expat accountant; it is
-cheaper than one mistake.
+**Recommendation: Lemon Squeezy.** Payouts go to a US bank account, which the
+owner has. That does not change the tax picture: income is taxed where you
+live and work, and a US citizen files a US return on worldwide income
+regardless. Decide before launch whether the seller on the MoR account is you
+as an individual or a local entity; changing it later means a new store.
+Budget one paid hour with an expat accountant.
 
 ### D5. Pricing
 
-The customer pays out of their own pocket, resents subscriptions, and is
-extremely price sensitive. Benchmarks: Classroomscreen Pro ≈ €4/mo, Wheel of
-Names Premium ≈ $5/mo, Quizlet Plus ≈ $3/mo annual, Canva for Education free.
-Teachers do pay $3–5/month for something they use weekly.
+Benchmarks: Classroomscreen Pro ≈ €4/mo, Wheel of Names Premium ≈ $5/mo,
+Quizlet Plus ≈ $3/mo annual. Teachers pay $3–5/month for something used weekly.
 
 | Plan | Price | Notes |
 |---|---|---|
 | Free | $0 | forever, no card, no signup |
-| **Pro, annual** | **$29 / year** (≈ $2.42/mo) | the headline; the only one on the button |
-| Pro, monthly | $4 / month | exists so nobody bounces on "annual only"; costs more so nobody picks it |
-| **Founding teacher** (first 200 or first 6 months) | $49 **once, lifetime** | funds year one, rewards early word-of-mouth, converts the people who hate subscriptions |
+| **Pro, annual** | **$29 / year** | the headline; the only one on the button |
+| Pro, monthly | $4 / month | exists so nobody bounces on "annual only" |
+| **Founding year** (first 6 months of sales) | $19 first year, renews at $29 | early-adopter energy without a permanent liability |
 | Department (up to 10 teachers) | $149 / year | one key, 30 activations |
-| School (unlimited) | $399 / year | invoice, PO, W-9 / VAT number on request — schools buy this way |
+| School (unlimited) | $399 / year | invoice, PO, W-9 / VAT number on request |
 
-Rules that go with it:
+**No lifetime licence.** It caps revenue from the most enthusiastic users,
+creates a support obligation with no income behind it, and anchors $29/year as
+expensive. The founding-year discount replaces it.
 
-- **Price in USD, let the MoR localise** (it shows € / £ and adds tax at
-  checkout, which also solves "is the price incl. VAT?" for EU teachers).
-- Enable the MoR's purchasing-power-parity discounts if available (teachers in
-  lower-income countries are a real audience and cost nothing to serve).
-- Never raise the price on existing subscribers; grandfather.
-- A **30-day no-questions refund**, stated on the pricing page. Teachers trust
-  that more than a trial, and it is the MoR's problem to process.
-- No free trial of Pro at launch. The free tier *is* the trial. (Revisit if
-  conversion is poor: a 30-day Pro trial key is one setting in the MoR.)
+Rules: price in USD and let the MoR localise; enable purchasing-power-parity
+discounts if offered; never raise prices on existing subscribers; 30-day
+no-questions refund on the pricing page; no free trial (Free is the trial).
 
 ### D6. The site is still a static site
 
-No framework, no build step, no npm — `CLAUDE.md` still holds. The additions
-are: one JS module, one pricing page, one help page per tool, a `_headers`
-file, and (Phase T3) an OAuth client ID in a config constant. Netlify
-Functions are permitted only for the webhook in Phase T4 (school licences)
-and only if the MoR forces it.
+No framework, no build step, no npm. Additions: two JS modules, a pricing page,
+a help page per tool, a `_headers` file, and (Phase T3) an OAuth client ID in a
+config constant. Netlify Functions only for a school-licence webhook if the
+MoR forces it.
+
+### D7. Analytics, cookies and the footer line
+
+**Analytics.** The privacy promise is about *student data* never leaving the
+browser; page-view counting does not touch it. What changes is the sentence
+"no analytics". Two honest options:
+
+- **Plausible** (EU company, cookieless, no personal data, no consent banner
+  under current guidance): script on the page, counts URL, referrer, country,
+  browser class. It does not send URL fragments, so hex share links stay
+  private. Privacy page then says: "we count page views with Plausible; it
+  stores no personal data and sets no cookies; nothing you type is included."
+- **Netlify server-side analytics** ($9/mo): counts from request logs, no
+  script on the page, and "no tracking scripts" stays literally true.
+
+Pick one before T1. Never Google Analytics.
+
+**Cookies.** Nothing requires announcing the absence of cookies, but it is
+good marketing. One footer line, not a dismissable banner: *"No cookies. No
+accounts. Nothing you type leaves your browser."* It is only true once Google
+Fonts is self-hosted (T0), and it goes the day an account or session cookie
+arrives.
+
+**No public changelog.** A "last updated" date on the landing page does the
+same job.
 
 ---
 
-## 2. Privacy and law, tier by tier
+## 2. Privacy and law
 
-### Free tier — unchanged
+### Free tier — two fixes needed regardless
 
-No data leaves the browser. Two things need fixing anyway, because they are
-already a GDPR wobble on a site that sells itself on privacy:
-
-1. **Google Fonts is loaded from Google on every page.** A Munich regional
-   court (LG München I, 3 O 17493/20, Jan 2022) held that loading Google
-   Fonts from Google's servers transmits the visitor's IP to Google in the US
-   without consent and is a GDPR violation. Self-host the three families
-   (`css/fonts/`, WOFF2, ~150 KB total, OFL-licensed) and drop the
-   `<link>` tags. Faster, works offline, and the privacy page loses a
-   paragraph it currently has to explain.
+1. **Google Fonts is loaded from Google on every page.** LG München I
+   (3 O 17493/20, Jan 2022) held this transmits the visitor's IP to Google
+   without consent and breaches GDPR. Self-host the three families
+   (`css/fonts/`, WOFF2, OFL-licensed) and drop the `<link>` tags.
 2. **Seating Chart Maker fetches jsPDF from cdnjs** at
-   `seating-chart-maker.html:836`, even though `vendor/jspdf.umd.min.js` is
-   already in the repo and PureWrite uses it. Point it at the vendored copy.
-   Same privacy-page paragraph disappears.
+   `seating-chart-maker.html:836`, though `vendor/jspdf.umd.min.js` is already
+   in the repo. Use the vendored copy.
 
-After both, `privacy.html` can say: *"Pages make no outside requests at all."*
-That is the sentence to put on the pricing page.
+After both, `privacy.html` can say *"Pages make no outside requests at all."*
 
 ### Pro tier — what the teacher gives us
 
-| Data | Held by | Lawful basis / notes |
+| Data | Held by | Basis |
 |---|---|---|
-| Name, email, card, billing country | Merchant of record (controller for the sale) | contract; the MoR publishes its own privacy policy and DPA |
-| Licence key, plan, activation count, device fingerprint the MoR uses to count activations | MoR, and the key itself in the teacher's browser | contract |
-| Support emails | Your mailbox (Fastmail / Proton / whatever — pick one with an EU DPA) | legitimate interest; tell teachers **not to paste student names into support mail** |
+| Name, email, card, billing country | MoR (controller for the sale) | contract; MoR publishes its own policy and DPA |
+| Licence key, plan, activation count | MoR, and the key in the teacher's browser | contract |
+| Support emails | Your mailbox (pick a provider with an EU DPA) | legitimate interest; tell teachers not to paste student names into support mail |
 
-We hold **no** database of customers ourselves. If someone asks "delete my
-data", it is a request to the MoR plus deleting an email thread. Write that
-down in the privacy page so the answer is one sentence.
+We hold no customer database ourselves. "Delete my data" is a request to the
+MoR plus deleting an email thread; say so on the privacy page.
 
-### Pro tier — Drive/OneDrive sync (Phase T3)
+### Pro tier — Drive/OneDrive sync (T3)
 
-- The browser gets a token via Google Identity Services (or MSAL for
-  Microsoft) **client-side**; the token never passes through a server we run.
-- Scope: `drive.appdata` (a hidden per-app folder) or `drive.file` (a visible
-  "Teacher Toolshed" folder). Both are "non-sensitive" scopes, so Google's
-  OAuth verification is the light-touch one, but it still needs a verified
-  domain, a published privacy policy URL, and a demo video of the consent
-  flow. Start that application early; it takes weeks.
-- The file that gets written is exactly the JSON that "Export backup" already
-  produces. Sync = "export to Drive on change, import from Drive on open,
-  newest `updatedAt` wins" — the merge rule `importAll` already implements.
-- School-managed Google accounts are covered by the school's existing Google
-  Workspace for Education agreement, which is the point. The privacy page
-  says: *"Your backup is stored in your own Google Drive under your school's
-  existing Google agreement. We never see it, and we never could."*
-- Some districts block third-party OAuth apps on school accounts. Then the
-  teacher uses a personal account or stays on JSON export. Say so in the
-  help page rather than letting them find out.
+- Token obtained client-side via Google Identity Services / MSAL; it never
+  passes through a server we run.
+- Scope `drive.appdata` or `drive.file` (both "non-sensitive"); Google
+  verification still needs a verified domain, a privacy policy URL and a demo
+  video of the consent flow. **Start the application in T1; it takes weeks.**
+- The file written is exactly the JSON that Export already produces. Sync =
+  export on change, import on open, `updatedAt` wins (the rule `importAll`
+  already implements).
+- School-managed Google accounts fall under the school's existing Workspace
+  for Education agreement. Some districts block third-party OAuth; the help
+  page says so and points at JSON export.
 
-### Documents to add (all static pages, editorial system)
+### Documents to add (static pages, editorial system)
 
-- `pricing.html` — the tiers table above, the refund line, the privacy line.
-- `terms.html` — short. Licence is per teacher, non-transferable; school
-  licence per site; no warranty; governing law = your residence country;
-  MoR's terms cover the sale.
-- `privacy.html` — updated per above; add "Pro" section; add a real contact
-  address (GDPR requires one; the current "no contact form yet" line has to
-  go).
-- **Imprint / legal notice** if you live in Germany, Austria or Switzerland
-  (Impressum is mandatory and fined); an "About / contact" page everywhere
-  else.
-- `for-your-it-department.html` (or a PDF) — one page a teacher can forward:
-  what is stored where, that no student data is transmitted, FERPA reasoning,
-  GDPR reasoning, the OAuth scopes used, sub-processors (MoR only). This is a
-  sales page disguised as compliance; many "can I use this?" questions are
-  answered by forwarding it.
+- `pricing.html`, `terms.html` (licence per teacher, non-transferable; school
+  licence per site; governing law = residence country; MoR's terms cover the
+  sale), updated `privacy.html` with a real contact address (GDPR requires
+  one), an imprint if resident in DE/AT/CH, and a one-page
+  `for-your-it-department.html`: what is stored where, FERPA and GDPR
+  reasoning, OAuth scopes, sub-processors (MoR only).
 
 ### Student-facing pages stay data-free
 
 Hex canvas, PureWrite writing surface, Brain Breaks: no licence check, no
-sync, no analytics, no fonts fetched from anywhere, nothing that would ever
-make them "a service directed at children" under COPPA or Art. 8 GDPR. Keep
-the URL-fragment share mechanism exactly as it is.
+sync, no analytics, no fonts fetched from anywhere. Keep the URL-fragment
+share mechanism exactly as it is.
 
 ---
 
-## 3. Teaching teachers to use it (videos and beyond)
+## 3. Teaching teachers to use it
 
-Yes to YouTube — teachers search YouTube before they search Google — but with
-three rules:
+**First, before any video: "Load a sample class".** A fictional roster of ~24
+names (plausibly international, obviously not real, a couple of shared first
+names so disambiguation shows) as a constant in `js/toolshed-sample.js`; a
+button on Class Lists that calls the existing `saveRoster` with a fixed id so
+loading twice replaces rather than duplicates; a "Sample" tag in the list; a
+one-line notice in tools when the active roster is the sample. Optionally seed
+a demo rubric and seating layout the same way. About an afternoon. Every video
+and screenshot then uses it, and no real student name can ever appear.
 
-1. **Never embed YouTube directly.** An embedded player sets Google cookies on
-   your page, which drags a cookie banner onto a site that otherwise needs
-   none. Use a **click-to-load facade**: a static poster image with a play
-   button; clicking it swaps in `https://www.youtube-nocookie.com/embed/…`.
-   Say under it "Plays from YouTube; nothing loads until you click."
-2. **Never show a real roster.** Record with a demo class (see below). Real
-   names in a screencast is the one way this project could actually leak
-   student data.
-3. **Short.** One video per tool, 2–4 minutes, the *first* real task ("Grade
-   a group presentation in Presentation Tracker"), not a feature tour. One
-   60-second "what is Teacher Toolshed" for the landing page.
+**YouTube, with three rules.** Never embed the player directly (it sets Google
+cookies and drags a banner onto a site that needs none): use a click-to-load
+poster that swaps in a `youtube-nocookie.com` embed. Never show a real roster.
+Keep it short: one video per tool, 2–4 minutes, the first real task, plus a
+60-second overview. OBS, 1080p, captions corrected, help-page URL in every
+description.
 
-**Better than videos, and do it first:** a **"Load a sample class"** button on
-Class Lists that seeds a fictional roster ("Period 3 — sample", 24 names,
-obviously fake). Every tool becomes explorable in one click; every video is
-recorded against it; every screenshot in the help pages uses it.
-
-**Help pages** (`help/<tool>.html`, editorial system, one per tool): a
-150-word "what it is for", the steps, the video facade, a "things that go
-wrong" list (Safari clears storage, school network blocks Drive, printer
-margins). Link from each tool's `.tool-header`.
-
-Practicalities: record with OBS (free) at 1080p, system font size bumped; use
-the site's own colours for thumbnails so the channel looks like the site;
-turn on auto-captions and correct them (accessibility, and many teachers
-watch muted in a staff room); put the help page URL in every description.
+**Help pages** (`help/<tool>.html`): 150-word "what it is for", the steps, the
+video, a "things that go wrong" list. Linked from each tool's header.
 
 ---
 
-## 4. Scalability: Netlify free is fine for a long time, with two changes
+## 4. Scalability
 
-Current numbers: a tool page is 10–60 KB; `vendor/` is ~3 MB but only Stack
-Splitter loads the heavy pieces (pdf.js + worker ≈ 1.8 MB, pdf-lib 0.5 MB).
-Netlify free: 100 GB bandwidth/month, 300 build minutes (irrelevant, no
-build), 125k function invocations.
+A tool page is 10–60 KB; `vendor/` is ~3 MB but only Stack Splitter loads the
+heavy parts (~2.3 MB). Netlify free gives 100 GB/month: worst case, every visit
+a cold-cache Stack Splitter visit, ≈ **43,000 visits/month** before the cap.
+Netlify Pro ($19/mo) lifts it to 1 TB; Cloudflare Pages has no cap and deploys
+the same folder, so moving is a DNS change. Do not move pre-emptively.
 
-Worst case, every visit is a Stack Splitter visit with a cold cache: 100 GB /
-2.3 MB ≈ **43,000 visits a month** before the free tier is exceeded. Realistic
-mixed traffic with caching is well above that. Netlify Pro at $19/month lifts
-it to 1 TB if it ever matters; that is a good problem.
+Do now: `_headers` with `Cache-Control: public, max-age=31536000, immutable`
+on `vendor/*`, `css/*`, `js/*`, fonts (version filenames when a lib changes),
+plus `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+strict-origin-when-cross-origin`, and a CSP once fonts are self-hosted.
 
-Do these now, both trivial:
-
-1. **Add `_headers`** so `vendor/*`, `css/*`, `js/*` and fonts get
-   `Cache-Control: public, max-age=31536000, immutable` (version the filename
-   when a vendor lib changes, e.g. `pdf.min.v4.mjs`). Repeat visits stop
-   counting against bandwidth almost entirely. Also add
-   `X-Content-Type-Options: nosniff`, `Referrer-Policy:
-   strict-origin-when-cross-origin`, and a CSP once fonts are self-hosted
-   (`default-src 'self'` plus the MoR and OAuth origins in Phase T1/T3).
-2. **Self-host fonts** (above) — removes a third-party dependency and a
-   render-blocking request at the same time.
-
-Escape hatch if traffic does explode: Cloudflare Pages has no bandwidth cap on
-its free plan and deploys the same folder. Because there is no build step,
-moving is a DNS change. Don't move pre-emptively.
-
-Things that do **not** need to scale, because they never exist: a database, a
-session store, an API. The licence check hits the MoR, and the MoR's job is
-to scale.
+Nothing else needs to scale, because it never exists: no database, no session
+store, no API. The licence check hits the MoR, whose job is to scale.
 
 ---
 
-## 5. Improvements worth doing alongside (pick, don't do all)
+## 5. Also worth doing (pick, don't do all)
 
-- **PWA manifest + service worker for every tool**, not just PureWrite. Tools
-  that work offline are a selling point for schools with bad Wi-Fi and a
-  requirement for the offline-grace licence check. Careful with cache
-  invalidation; PureWrite's `sw.js` is the pattern.
-- **Roster import from Google Classroom CSV / PowerSchool / ManageBac
-  export** — `rosters-import.js` already parses pasted lists; add the three
-  most common CSV shapes. Removes the biggest onboarding step.
-- **Email list** (Buttondown or Kit, both fine for GDPR with double opt-in) on
-  the landing page: "new tool every term". It is the only marketing channel
-  that survives algorithm changes. Teachers on it are the founding-licence
-  buyers.
-- **Changelog page.** Cheap, and it is what convinces a teacher a one-person
-  project is alive.
-- **Feedback route.** A `mailto:` is enough. Netlify Forms would also be fine
-  (form contents go to Netlify, so the form must say "no student names").
-- **Landing page per tool with a real H1** (`/stack-splitter/` etc.) for
-  search. Currently the six are anchors on one page; teachers search for
-  "split scanned pdf by student" not "teacher toolshed".
-- **Accessibility pass** on Talk Tracker and Presentation Tracker (keyboard
-  tapping, focus order) — a school licence buyer's IT department will ask
-  about WCAG, and the projector work on Brain Breaks already set the bar.
-- **Student Privacy Pledge** signatory and a **1EdTech / Common Sense Privacy**
-  listing once the privacy page is final. Free, and they are what a US
-  district's checklist actually names.
+- `navigator.storage.persist()` on Class Lists (Chrome/Firefox stop evicting
+  the site; Safari ignores it, say so on the privacy page).
+- Backup nudge after a session ends, once a week, never on page load.
+- PWA manifest + service worker for every tool, on PureWrite's `sw.js` pattern.
+- Email list (Buttondown or Kit, double opt-in) on the landing page.
+- A landing page per tool with a real H1 for search.
+- Accessibility pass on Talk Tracker and Presentation Tracker.
+- Student Privacy Pledge signatory once the privacy page is final.
 
 ---
 
-## 6. Phases
+## 6. Phases and what each takes
 
-Numbering starts at T1 so they cannot collide with `PLAN.md` phases.
+Estimates are for one person who knows the codebase, in focused days.
 
-### T0. Ground work (no visible change; do first)
+### T0. Ground work (no visible change; do first) — ~2 days
 
 - Self-host fonts; remove Google Fonts `<link>`s from all pages.
 - Seating Chart Maker uses `vendor/jspdf.umd.min.js`.
-- Add `_headers` (cache + security headers).
-- "Load a sample class" on Class Lists.
-- Update `privacy.html` ("no outside requests") and `README.md`.
+- `_headers` (cache + security headers).
+- `navigator.storage.persist()` on Class Lists.
+- "Load a sample class".
+- Historical banner over Phase 1 in `PLAN.md` (the cream/gold CSS it
+  describes no longer exists).
+- Update `privacy.html` ("no outside requests"), `README.md`, footer line.
 
 **Accept when:** DevTools Network tab on every page shows zero third-party
-requests; Lighthouse best-practices ≥ 95; sample class seeds and every tool
-can use it.
+requests; sample class seeds and every tool can use it; footer line is
+literally true.
 
-### T1. Licence module and the Free/Pro split
+### T1. Licence module, gates, pricing — ~5 days + MoR setup
 
-- `js/toolshed-licence.js`: `ToolshedLicence.status()` → `{tier, plan,
-  validUntil, checkedAt, activations}`; `activate(key)`; `deactivate()`;
-  `assertCan(feature, currentCount)` returning `{ok, limit, upgradeUrl}`.
-  Stores activation in the existing IndexedDB (`meta` store, bump
-  `DB_VERSION`), *not* localStorage, so export/import round-trips it.
-- Validation call: `POST` to the MoR's licence endpoint with the key only.
-  30-day re-check, 90-day grace, network failure = keep last known state.
-- Gates in the five places named in D1, each using the shared `.notice`
-  component with one line of copy and one `.btn--primary` "See Pro". No
-  modals, no countdowns, no nagging on tool open.
+- `js/toolshed-licence.js`: `status()` → `{tier, plan, validUntil, checkedAt,
+  activations}`; `activate(key)`; `deactivate()`; `assertCan(feature,
+  currentCount)` → `{ok, limit, upgradeUrl}`. Activation stored in IndexedDB
+  (`meta` store, bump `DB_VERSION`), not localStorage, so export/import
+  round-trips it. 30-day re-check, 90-day grace, network failure keeps last
+  known state.
+- Gates per D1a, each a `.notice` with one line of copy and one
+  `.btn--primary` "See Pro". No modals, no nagging on tool open.
 - Activation UI on `rosters.html`: paste key → "Pro until …" / "Free".
 - `pricing.html`, `terms.html`, contact address on `privacy.html`, imprint if
-  required.
-- MoR store configured: products for the five plans in D5, licence keys on,
-  3 activations per key (30 for department, 1000 for school), refund policy
-  text, tax collection on, PPP if offered.
+  required, "for your IT department" page.
+- MoR store: products for the plans in D5, licence keys on, activation counts
+  (3 / 30 / 1000), refund text, tax collection on, PPP if offered, founding
+  discount code with an end date.
+- Analytics choice from D7 implemented, or explicitly declined.
+- Start the Google OAuth verification application now (needed by T3).
 - `PLAN.md` decision 4 rewritten to point here; `README.md` first line
-  changes from "free classroom tools" to "classroom tools, free to use, Pro
-  for the extras" or similar honest phrasing.
+  changes from "free classroom tools" to honest phrasing.
 
 **Accept when:** a test-mode purchase yields a key that activates in a fresh
-browser; going offline for a simulated 91 days reverts to Free without data
-loss; a Free teacher can create 3 classes and is stopped, politely, at the
-4th; Stack Splitter, Brain Breaks and every student page have no licence code
-path at all (grep for `ToolshedLicence` proves it); privacy page, terms and
-pricing page are all reachable from the site footer.
+browser; a simulated 91 days offline reverts to Free with no data loss; a
+Free teacher is stopped politely at the 3rd class and at each gate in D1a;
+`grep ToolshedLicence` matches nothing in `hexthinking.html` canvas code,
+`purewrite.html`, `brain-breaks.html` or `stack-splitter.*`; pricing, terms
+and privacy are reachable from the footer.
 
-### T2. Teaching material
+### T2. The Pro features that do not exist yet — ~6 days
 
-- Sample-class-based help page per tool with video facade.
-- Seven YouTube videos (six tools + overview), captions corrected.
-- "For your IT department" page.
-- Email list signup on landing page.
+- Session history + per-student view in Talk Tracker and Presentation
+  Tracker (query over what the store already holds).
+- Talk Tracker term participation report (print + CSV).
+- Seating constraints (keep apart, fixed seat, then generate).
+- Shared rubric library across the two trackers.
+- Hex activity library; PureWrite task library; integrity cover page.
+- Saved-chart history in Seating.
 
-**Accept when:** a teacher who has never seen the site can, from the help
-page alone, complete each tool's first task with the sample class; every
-video description links its help page; no real student name appears anywhere.
+**Accept when:** each feature works on the sample class, is gated per D1a,
+and survives export → clear site data → import.
 
-### T3. Pro sync to the teacher's own Drive / OneDrive
+### T3. Sync to the teacher's own Drive / OneDrive — ~5 days + verification wait
 
-- Google OAuth client (verification started in T1, since it takes weeks);
-  Microsoft app registration.
-- `js/toolshed-sync.js` behind the same async seam the store already
-  advertises: export on change (debounced), import on open, `updatedAt`
-  wins, a visible "Last synced …" on Class Lists, and a "Sync is off" state
-  that is the default.
+- `js/toolshed-sync.js` behind the store's async seam: export on change
+  (debounced), import on open, `updatedAt` wins, "Last synced …" on Class
+  Lists, off by default.
+- Google client (verification from T1), Microsoft app registration.
 - Help page section on blocked school accounts.
 
-**Accept when:** two browsers on one teacher's account converge within a
-minute; revoking the token at Google leaves local data intact; the privacy
-page's "we never see it" sentence is true by construction (no request to any
-origin but Google's/Microsoft's carries the payload — verify in DevTools).
+**Accept when:** two browsers converge within a minute; revoking the token at
+Google leaves local data intact; DevTools proves no request to any origin but
+Google's/Microsoft's carries the payload.
 
-### T4. School and department licences (only if asked for)
+### T4. Teaching material — ~4 days + recording time
 
-- Invoice/PO flow through the MoR; W-9 and VAT-number handling documented.
-- If per-seat management is needed, that is the first server-side code on
-  this site and gets its own privacy write-up before it is written.
+- Help page per tool with video facade; seven videos; email list signup.
 
-**Accept when:** one school has bought one and it did not require a phone call.
+**Accept when:** a teacher who has never seen the site can complete each
+tool's first task from the help page alone with the sample class; no real
+student name appears anywhere.
+
+### T5. School and department licences — only if asked for
+
+- Invoice/PO through the MoR; W-9 and VAT-number handling documented. If
+  per-seat admin is needed, that is the first server-side code on this site
+  and gets its own privacy write-up first (see D3).
+
+### Order and total
+
+T0 → T1 → T2 → T3 → T4, roughly **22 focused days** of build plus waits on
+MoR onboarding and Google verification. T2 and T3 can be swapped: launch with
+history gated behind "coming with sync" is dishonest, so if T3 slips, launch
+Pro on exports, libraries, constraints and the report, and add sync when it
+is ready.
 
 ---
 
-## 7. Open questions for the owner (answer before T1)
+## 7. Open questions for the owner
 
 1. Country of residence, and whether you sell as an individual or a local
-   entity. Determines MoR eligibility, imprint requirement, and the tax
-   conversation.
-2. Is Lemon Squeezy available for payouts where you live? If not, Paddle +
-   one function.
-3. The free limits (3 classes / 5 items / 2 rubrics): comfortable, or should
-   free be more generous at launch and tightened for *new* users later?
-4. Founding-teacher lifetime licence: yes or no? It is the fastest cash and
-   the loudest advocates, at the cost of some annual revenue in year three.
-5. Which two tools get videos first? (Suggestion: Stack Splitter, because it
+   entity (imprint, MoR account holder, tax conversation).
+2. Confirm Lemon Squeezy onboarding works from where you live.
+3. Plausible, Netlify analytics, or none.
+4. Which two tools get videos first? (Suggestion: Stack Splitter, because it
    is the one people cannot believe works, and Class Lists, because everything
    starts there.)
