@@ -24,18 +24,20 @@ A static site. No build step, no framework, no server, no npm. Plain HTML/CSS/JS
 index.html                landing page
 privacy.html              privacy page
 CLAUDE.md                 the rules that hold across sessions — read this first
+css/fonts.css + css/fonts/ self-hosted Playfair Display / Newsreader / Archivo (no Google Fonts request)
 css/theme.css             editorial tokens, reset, page frame — the base layer
 css/tools.css             shared tool chrome, layered on theme.css
 css/home.css              landing page sections
-js/                       shared modules: store, rubric builder, zip writer, PDF font
+js/                       shared modules: store, sample class, rubric builder, zip writer, PDF font
 teacher-tools/            one self-contained HTML page per tool (+ vendored libraries)
+_headers                  Netlify: cache lifetimes for fonts and vendored libraries, security headers, CSP
 ```
 
 **One design system.** The whole site runs an editorial print style — ink on paper, navy accent, Playfair Display / Newsreader / Archivo, hairline rules, square corners. `theme.css` holds the tokens and the page frame, `tools.css` the tool chrome, and each page's own `<style>` block is layout only. An earlier cream-and-gold system for the tool pages has been retired; new tools use the editorial system. See `TOOLS-REBUILD-PLAN.md` for the tool-page style guide.
 
 ## Privacy
 
-Everything is stored in the teacher's own browser (IndexedDB, via `js/toolshed-store.js`), with JSON export/import as the backup route. No accounts, no server, no analytics, and no network call ever carries roster or student data. The hex tool's student share links encode the activity in the URL fragment, so even sharing stays serverless. See `privacy.html` and the FERPA note in `PLAN.md`.
+Everything is stored in the teacher's own browser (IndexedDB, via `js/toolshed-store.js`), with JSON export/import as the backup route. No accounts, no server, no analytics, no cookies, and no outside request of any kind: fonts and libraries are served from the site itself, and no network call ever carries roster or student data. The hex tool's student share links encode the activity in the URL fragment, so even sharing stays serverless. See `privacy.html` and the FERPA note in `PLAN.md`.
 
 ## Working on it
 

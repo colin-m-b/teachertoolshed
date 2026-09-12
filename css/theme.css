@@ -135,6 +135,14 @@ a:hover {
   text-transform: uppercase;
 }
 
+.site-footer__promise {
+  flex-basis: 100%;
+  order: 3;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--meta, inherit);
+}
+
 .site-footer__links {
   display: flex;
   gap: 20px;

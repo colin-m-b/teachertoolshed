@@ -318,7 +318,7 @@ store, no API. The licence check hits the MoR, whose job is to scale.
 
 Estimates are for one person who knows the codebase, in focused days.
 
-### T0. Ground work (no visible change; do first) — ~2 days
+### T0. Ground work — BUILT 2026-09-12
 
 - Self-host fonts; remove Google Fonts `<link>`s from all pages.
 - Seating Chart Maker uses `vendor/jspdf.umd.min.js`.
@@ -329,9 +329,13 @@ Estimates are for one person who knows the codebase, in focused days.
   describes no longer exists).
 - Update `privacy.html` ("no outside requests"), `README.md`, footer line.
 
-**Accept when:** DevTools Network tab on every page shows zero third-party
-requests; sample class seeds and every tool can use it; footer line is
-literally true.
+**Accepted:** headless Chromium loaded all 11 pages with zero requests to any
+origin but the site's own, no console errors, the three families reported as
+loaded; the same pages loaded clean with the `_headers` CSP applied; the sample
+class seeds 24 students, shows a "Sample" tag, and reloading it replaces
+rather than duplicates; Seating Chart Maker builds its PDF from the vendored
+jsPDF. Not yet verified: behaviour on a real Netlify deploy (the `_headers`
+file only takes effect there) and Safari.
 
 ### T1. Licence module, gates, pricing — ~5 days + MoR setup
 

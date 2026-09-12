@@ -6,9 +6,7 @@
 <title>Privacy — Teacher Toolshed</title>
 <meta name="description" content="How Teacher Toolshed handles your data: everything stays in your browser, nothing is sent to a server, and there is no analytics.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/tools.css">
 <style>
@@ -48,17 +46,17 @@
       <li>No analytics, no tracking scripts, no advertising, no embedded third-party widgets.</li>
       <li>No network request ever carries student names, rosters, scores, or notes anywhere.</li>
     </ul>
-    <p>Pages do make two kinds of outside request, and neither one carries anything you've typed:</p>
-    <ul>
-      <li><strong>Google Fonts</strong>, on every page, for the typefaces used to render text.</li>
-      <li><strong>A PDF library</strong> (jsPDF, from the cdnjs.com public code archive) — fetched by the Seating Chart Maker only at the moment you click <em>Download PDF</em>, and not at all otherwise. It's the code that builds the file; your chart is assembled into a PDF inside your browser and saved straight to your device. The chart itself is never uploaded.</li>
-    </ul>
-    <p>Both requests ask for a file and receive it. No page content — no names, no rosters, no scores — is attached to either one.</p>
+    <p>Pages make <strong>no outside requests at all</strong>. The typefaces and every code library the tools use are served from this site, so your browser never contacts Google, a code archive, or anyone else while you use it. No cookies are set.</p>
 
     <h2 class="t-display">Backing up your data</h2>
     <p>Because everything lives only in one browser, it can be lost if you clear your browser's site data, switch devices, or reinstall your browser. Use <a href="teacher-tools/rosters.html">Export backup</a> on the class lists page regularly — it downloads a single file with everything saved across every tool, which you can re-import on this or any other device with Import backup.</p>
 
+    <p>On Chrome, Edge and Firefox the class lists page asks the browser to mark this site's storage as persistent, which stops it being cleared automatically when disk is short. Safari ignores that request.</p>
+
     <div class="notice notice--caution">Safari note: Safari can clear storage for sites you haven't visited in about a week. If you use Safari, export a backup after major changes — don't rely on it as the only copy.</div>
+
+    <h2 class="t-display">The sample class</h2>
+    <p>The class lists page can load a sample class so you can try every tool before entering a real one. Every name in it is invented. Like everything else, it is saved only in your browser.</p>
 
     <h2 class="t-display">Sharing a hexagonal thinking activity</h2>
     <p>When you create a link to share with students, the activity itself is encoded directly in the link (after the <code>#</code>) — not stored on a server. That's why the links are long. It also means we never see, receive, or store the activities you create.</p>
@@ -71,7 +69,7 @@
   </div>
 </main>
 
-<div class="tool-footer">Teacher Toolshed · <a href="/">Home</a></div>
+<div class="tool-footer">Teacher Toolshed · No cookies. No accounts. Nothing you type leaves your browser. · <a href="/">Home</a></div>
 
 </body>
 </html>

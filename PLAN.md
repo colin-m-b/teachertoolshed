@@ -31,10 +31,12 @@ privacy.html                    privacy page
 favicon.svg                     "tts" wordmark, navy ground
 CLAUDE.md                       the rules that hold across sessions — read first
 TOOLS-REBUILD-PLAN.md           tool-page style guide (ground truth for tools)
+css/fonts.css + css/fonts/      self-hosted Playfair Display / Newsreader / Archivo (variable, latin + latin-ext)
 css/theme.css                   editorial tokens, reset, page frame — the base layer
 css/tools.css                   shared tool chrome layered on theme.css
 css/home.css                    landing sections: masthead, tool grid, shelf, note
 js/toolshed-store.js            IndexedDB rosters + per-tool docs, JSON export/import
+js/toolshed-sample.js           the sample class (24 invented names, fixed id) for trying tools
 js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
 js/toolshed-zip.js              zip writer (stack splitter, purewrite)
 js/toolshed-pdf-font.js         embedded PDF font helper
@@ -49,8 +51,17 @@ teacher-tools/
   stack-splitter.html + .js
   talk-tracker.html
   vendor/                       jsQR, jsPDF, pdf-lib, pdf.js, qrcode-generator (+ licences)
+_headers                        Netlify: immutable cache on fonts + vendor, security headers, CSP
 ARCHITECTURE.md                 aspirational SaaS doc — superseded, see its own status note
 ```
+
+**No outside requests, anywhere (2026-09-12, `TIERS-PLAN.md` Phase T0).** Fonts are
+self-hosted from `css/fonts/`, the Seating Chart Maker loads jsPDF from `vendor/`
+like PureWrite does, and `_headers` sets a CSP of `default-src 'self'`. The
+privacy page now says pages make no outside request at all, and the landing
+footer carries the line "No cookies. No accounts. Nothing you type leaves your
+browser." Both sentences must stay true: never add a font, script, style or
+request to another origin without changing them first.
 
 **One system, everywhere.** Landing page, tool pages and privacy page all run
 the editorial print system: `theme.css` for tokens and frame, `tools.css` for
@@ -96,6 +107,11 @@ chance of a future change reviving it from this document.
 **Accept:** both files updated; nothing else touched.
 
 ## Phase 1 — Shared design system — DONE, then SUPERSEDED
+
+> **Historical.** Everything below describes `css/toolshed.css` and the cream + gold
+> tokens, which no longer exist anywhere in the repository. It is kept as the record
+> of what was built and why it was replaced. The live system is the editorial one in
+> `css/theme.css` and `css/tools.css`; do not rebuild anything from this section.
 
 *(This phase built `css/toolshed.css` and put every tool on it, which is what "the tools all share one style" refers to — one style as each other, cream and gold. Decision 1 was later reversed and that sheet retired in favour of `css/theme.css` + `css/tools.css`. Kept as history; do not execute.)*
 

@@ -23,6 +23,8 @@ The whole site — landing page, tool pages, privacy page — runs a single
 corners, no shadows.
 
 ```
+css/fonts.css   @font-face for the three families, served from css/fonts/.
+                No page may load a font, script or style from another origin.
 css/theme.css   tokens, reset, links, focus, utility bar, site footer.
                 Owns --ink/--paper/--rule/--accent, the three fonts,
                 .column, .t-display/.t-body/.t-meta. Never redefine these.
@@ -33,7 +35,7 @@ css/tools.css   shared tool chrome layered on theme.css: .app, .work,
 css/home.css    landing page sections only: masthead, tool grid, shelf, note.
 ```
 
-Load order in a tool page: Google Fonts → `theme.css` → `tools.css` → the page's
+Load order in a tool page: `fonts.css` (self-hosted; never Google Fonts) → `theme.css` → `tools.css` → the page's
 own `<style>`, which holds **layout only**. Reach for a `tools.css` component
 before writing your own; if you find yourself defining a button, a tab strip, a
 card or an alert colour in a page, it already exists.

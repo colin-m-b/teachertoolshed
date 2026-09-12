@@ -6,9 +6,7 @@
 <title>Class Lists — Teacher Toolshed</title>
 <meta name="description" content="Manage the class lists shared across every Teacher Toolshed tool. Saved in your browser only.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Archivo:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/fonts.css">
 <link rel="stylesheet" href="../css/theme.css">
 <link rel="stylesheet" href="../css/tools.css">
 <style>
@@ -61,6 +59,7 @@
   .blank-state{max-width:620px;margin:0 auto;text-align:center;padding-top:60px}
   .blank-state h2{font-family:var(--font-display);font-weight:500;font-size:22px;margin-bottom:8px}
   .blank-state p{font-family:var(--font-body);font-size:16px;color:var(--body-muted);line-height:1.6;margin-bottom:18px}
+  .blank-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
   @media (max-width:768px){
     .split{flex-direction:column}
@@ -107,7 +106,11 @@
     <div class="blank-state" id="blank-state">
       <h2>No class list selected</h2>
       <p>Class lists are shared across every tool — build one here and it shows up<br>in the Seating Chart Maker and Talk Tracker.</p>
-      <button class="btn btn--primary" onclick="newRoster()">+ New class list</button>
+      <div class="blank-actions">
+        <button class="btn btn--primary" onclick="newRoster()">+ New class list</button>
+        <button class="btn btn--secondary" onclick="loadSample()">Load a sample class</button>
+      </div>
+      <p class="hint" style="margin-top:12px">The sample is 24 invented names, so you can try every tool before entering a real class.</p>
     </div>
 
     <div class="editor" id="editor" style="display:none">
@@ -159,6 +162,7 @@
 <div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a></div>
 
 <script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-sample.js"></script>
 <script src="rosters-import.js"></script>
 <script>
 let currentId = null;   // null = unsaved new list
@@ -175,6 +179,9 @@ let lastParse = null;
 // ── BOOT ──
 (async function init() {
   await ToolshedStore.ready();
+  // Ask the browser not to evict this site's storage under disk pressure.
+  // Chrome, Edge and Firefox honour it; Safari ignores it (see privacy.html).
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { /* not supported */ }
   if (ToolshedStore.ephemeral) {
     const note = document.getElementById('storage-note');
     note.className = 'notice notice--error';
@@ -197,13 +204,14 @@ async function refreshList(selectId) {
   wrap.innerHTML = '';
 
   if (!summaries.length) {
-    wrap.innerHTML = '<div class="list-empty">No class lists yet.<br>Create one to get started.</div>';
+    wrap.innerHTML = '<div class="list-empty">No class lists yet.<br>Create one to get started, or <a href="#" onclick="loadSample();return false">load a sample class</a> to try the tools.</div>';
     return;
   }
   summaries.forEach(r => {
     const btn = document.createElement('button');
     btn.className = 'list-item' + (r.id === selectId ? ' row--selected' : '');
-    btn.innerHTML = `<div class="list-item-name"></div><div class="list-item-meta">${r.studentCount} student${r.studentCount === 1 ? '' : 's'}</div>`;
+    const sampleTag = ToolshedSample.isSample(r.id) ? ' <span class="tag">Sample</span>' : '';
+    btn.innerHTML = `<div class="list-item-name"></div><div class="list-item-meta">${r.studentCount} student${r.studentCount === 1 ? '' : 's'}${sampleTag}</div>`;
     btn.querySelector('.list-item-name').textContent = r.name;
     btn.onclick = () => openRoster(r.id);
     wrap.appendChild(btn);
@@ -235,6 +243,13 @@ function newRoster() {
   showEditor(true);
   markActive(null);
   document.getElementById('roster-name').focus();
+}
+
+async function loadSample() {
+  if (!confirmDiscard()) return;
+  const saved = await ToolshedSample.load();
+  await refreshList(saved.id);
+  await openRoster(saved.id);
 }
 
 async function openRoster(id) {
