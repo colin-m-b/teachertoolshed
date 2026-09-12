@@ -1,6 +1,6 @@
 # Teacher Toolshed — Free tier / Pro tier plan
 
-**Status: PROPOSAL, nothing built (revised 2026-09-12).** This document supersedes
+**Status: PROPOSAL. Phase T0 is BUILT on the `freemium_plan` branch (2026-09-12); T1 onward is not started.** This document supersedes
 decision 4 in `PLAN.md` ("Monetization: everything is free, no fake paywalls")
 *only once Phase T1 below lands on `main`*. Until then, decision 4 stands and the
 site stays free. Work in progress lives on the `freemium_plan` branch.
