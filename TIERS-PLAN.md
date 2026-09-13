@@ -1,6 +1,6 @@
 # Teacher Toolshed — Free tier / Pro tier plan
 
-**Status: PROPOSAL. Phases T0, T1 and T2 are BUILT on the `freemium_plan` branch (T0 2026-09-12, T1–T2 2026-09-13), with the merchant of record still unconfigured — nothing is on sale and the site stays free. T3 (sync) and T4 (teaching material) are not started.** This document supersedes
+**Status: PROPOSAL. Phases T0–T4 are BUILT on the `freemium_plan` branch (T0 2026-09-12, T1–T4 2026-09-13) as far as code goes; the merchant of record, the OAuth client ids and the videos are the owner's, and all three are missing — nothing is on sale, sync says "not switched on", and the help pages' video posters say "coming".** This document supersedes
 decision 4 in `PLAN.md` ("Monetization: everything is free, no fake paywalls")
 *only once Phase T1 below lands on `main`*. Until then, decision 4 stands and the
 site stays free. Work in progress lives on the `freemium_plan` branch.
@@ -415,7 +415,7 @@ link and loads no licence code. The shared rubric library already existed
 (both trackers list every `rubric` doc), so nothing was added there.
 Everything is a doc in the existing store, so export/import covers it.
 
-### T3. Sync to the teacher's own Drive / OneDrive — ~5 days + verification wait
+### T3. Sync to the teacher's own Drive / OneDrive — BUILT 2026-09-13, clients pending
 
 - `js/toolshed-sync.js` behind the store's async seam: export on change
   (debounced), import on open, `updatedAt` wins, "Last synced …" on Class
@@ -427,13 +427,35 @@ Everything is a doc in the existing store, so export/import covers it.
 Google leaves local data intact; DevTools proves no request to any origin but
 Google's/Microsoft's carries the payload.
 
-### T4. Teaching material — ~4 days + recording time
+**Built (2026-09-13).** `js/toolshed-sync.js`: Google implicit token flow
+and Microsoft PKCE code flow started from Class Lists only; Drive
+`appDataFolder` and Graph `approot` clients; pull → `importAll(merge)` →
+push on open, debounced push on every store change (`ToolshedStore.onChange`,
+new; autosave docs excluded), the licence record stripped from the synced
+file. "Last synced" line, Sync now, Disconnect and a Sign-in-again state on
+Class Lists; loaded on every teacher page, never on a student page. Verified
+against a mocked Drive in headless Chromium: redirect completes, URL is
+cleaned, remote class merges in, a local change pushes after the delay, a tool
+page pulls on open, an expired token shows Reconnect, disconnect leaves data.
+**Not verified:** the real providers (no client ids yet), CORS on Graph's
+content redirect, and two real browsers converging. Client ids go in
+`ToolshedSync.config`; the connect-src additions are listed in `_headers`.
+
+### T4. Teaching material — help pages BUILT 2026-09-13, videos pending
 
 - Help page per tool with video facade; seven videos; email list signup.
 
 **Accept when:** a teacher who has never seen the site can complete each
 tool's first task from the help page alone with the sample class; no real
 student name appears anywhere.
+
+**Built (2026-09-13).** `help/<tool>.html` for the six tools and Class
+Lists, generated from one template (`css/help.css` holds the layout):
+what it is for, the first task, things that go wrong, and a click-to-load
+video poster that contacts `youtube-nocookie.com` only when pressed
+(`frame-src` added to the CSP for that origin alone). Each tool header links
+to its page. Video ids are empty; the poster says "coming". Not done: the
+videos, the email list, per-tool landing pages.
 
 ### T5. School and department licences — only if asked for
 

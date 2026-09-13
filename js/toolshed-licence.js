@@ -83,7 +83,8 @@
     constraints: 'Seating constraints',
     integrityCover: 'Integrity cover page',
     brandedHeader: 'Class-branded export header',
-    hexSheets: 'Printable hexagon sheets'
+    hexSheets: 'Printable hexagon sheets',
+    sync: 'Sync through your own cloud drive'
   };
   var LABELS = {
     classes: 'class lists',

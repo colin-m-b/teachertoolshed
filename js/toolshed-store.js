@@ -209,6 +209,12 @@
     }).catch(function () { /* never block startup on migration */ });
   }
 
+  var changeListeners = [];
+  function changed(v) {
+    changeListeners.forEach(function (fn) { try { fn(); } catch (e) {} });
+    return v;
+  }
+
   var readyPromise = null;
   function ready() {
     if (readyPromise) return readyPromise;
@@ -255,13 +261,18 @@
       return ready().then(function () {
         var rec = normalizeRoster(roster || {});
         rec.updatedAt = now();
-        return backend().put('rosters', rec);
+        return backend().put('rosters', rec).then(changed);
       });
     },
 
     deleteRoster: function (id) {
-      return ready().then(function () { return backend().del('rosters', id); });
+      return ready().then(function () { return backend().del('rosters', id).then(changed); });
     },
+
+    /* Called after every write that changes what a backup would contain.
+       Autosave documents (tool '_autosave') are skipped: they are scratch.
+       Used by the optional sync module; nothing else listens today. */
+    onChange: function (fn) { changeListeners.push(fn); },
 
     // ---- per-tool documents ----
     // tool is one of 'seating' | 'tracker' | 'hex' | 'rubric' | 'presentation'
@@ -285,12 +296,18 @@
       return ready().then(function () {
         var rec = normalizeDoc(doc || {});
         rec.updatedAt = now();
-        return backend().put('docs', rec);
+        return backend().put('docs', rec).then(function (r) {
+          return r.tool === '_autosave' ? r : changed(r);
+        });
       });
     },
 
     deleteDoc: function (id) {
-      return ready().then(function () { return backend().del('docs', id); });
+      return ready().then(function () {
+        return backend().del('docs', id).then(function () {
+          return /^autosave-/.test(String(id)) ? undefined : changed();
+        });
+      });
     },
 
     // ---- meta (small keyed settings; the licence record lives here) ----
@@ -398,7 +415,10 @@
             }));
           });
 
-          return Promise.all(writes).then(function () { return counts; });
+          return Promise.all(writes).then(function () {
+            if (counts.rosters || counts.docs) changed();
+            return counts;
+          });
         });
       });
     }

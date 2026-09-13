@@ -15,6 +15,10 @@
 # key. Add the merchant of record's API origin to connect-src, e.g.
 #   connect-src 'self' blob: data: https://api.lemonsqueezy.com;
 # and update privacy.html and the landing-page footer line the same day.
+# When sync goes live (js/toolshed-sync.js client ids set), also add
+#   https://www.googleapis.com https://graph.microsoft.com https://login.microsoftonline.com
+# to connect-src. Those requests carry the teacher's backup to the
+# teacher's own drive, and only after the teacher connects it.
 
 # Long-lived, immutable assets. When a file here changes, change its name.
 /css/fonts/*

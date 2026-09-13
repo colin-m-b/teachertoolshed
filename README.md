@@ -31,7 +31,8 @@ css/fonts.css + css/fonts/ self-hosted Playfair Display / Newsreader / Archivo (
 css/theme.css             editorial tokens, reset, page frame — the base layer
 css/tools.css             shared tool chrome, layered on theme.css
 css/home.css              landing page sections
-js/                       shared modules: store, sample class, licence, rubric builder, zip writer, PDF font
+js/                       shared modules: store, sample class, licence, sync, rubric builder, zip writer, PDF font
+help/                     one help page per tool (what it is for, first task, what goes wrong)
 teacher-tools/            one self-contained HTML page per tool (+ vendored libraries)
 _headers                  Netlify: cache lifetimes for fonts and vendored libraries, security headers, CSP
 ```
@@ -44,7 +45,7 @@ Everything is stored in the teacher's own browser (IndexedDB, via `js/toolshed-s
 
 ## Free and Pro
 
-Every tool is free to run any lesson. `TIERS-PLAN.md` describes a Pro tier for the records afterwards (history, reports, exports, libraries, later sync through the teacher's own cloud drive) that keeps student data in the browser exactly as now. The gates and Pro features are built on the `freemium_plan` branch; no payment provider is configured, so nothing is on sale and the only outside request the site will ever make — a licence key check — does not yet exist.
+Every tool is free to run any lesson. `TIERS-PLAN.md` describes a Pro tier for the records afterwards (history, reports, exports, libraries, later sync through the teacher's own cloud drive) that keeps student data in the browser exactly as now. The gates, Pro features, help pages and the sync module are built on the `freemium_plan` branch; no payment provider or OAuth client is configured, so nothing is on sale, sync is off, and the site still makes no outside request.
 
 ## Working on it
 

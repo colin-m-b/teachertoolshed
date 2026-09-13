@@ -41,6 +41,8 @@ css/home.css                    landing sections: masthead, tool grid, shelf, no
 js/toolshed-store.js            IndexedDB rosters + per-tool docs + meta, JSON export/import
 js/toolshed-sample.js           the sample class (24 invented names, fixed id) for trying tools
 js/toolshed-licence.js          Free/Pro rules and the licence-key client (freemium_plan branch; MoR unconfigured)
+js/toolshed-sync.js             Pro sync to the teacher's own Drive/OneDrive (freemium_plan branch; client ids unset)
+css/help.css + help/            one help page per tool: purpose, first task, what goes wrong, video poster
 js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
 js/toolshed-zip.js              zip writer (stack splitter, purewrite)
 js/toolshed-pdf-font.js         embedded PDF font helper
@@ -77,7 +79,12 @@ table; a replace-import leaves it alone, a merge-import can bring one in.
 Until `ToolshedLicence.config.api` is set there is still no outside request
 of any kind, so the footer line and the privacy page stay true; the day it is
 set, `_headers` (connect-src), `privacy.html` and the footer line change
-together — see the comment in `_headers`.
+together — see the comment in `_headers`. The same goes for
+`ToolshedSync.config` client ids: sync is the one designed case of roster
+data leaving the browser, to the teacher's own drive, on the teacher's
+explicit say-so, and `ToolshedStore.onChange` exists only to feed it. Help
+pages make one outside request, to `youtube-nocookie.com`, only when Play is
+pressed.
 
 **One system, everywhere.** Landing page, tool pages and privacy page all run
 the editorial print system: `theme.css` for tokens and frame, `tools.css` for

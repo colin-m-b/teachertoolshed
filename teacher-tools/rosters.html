@@ -113,6 +113,28 @@
       <button class="btn btn--secondary btn--sm btn--full" id="plan-btn" onclick="openLicenceModal()" style="margin-top:8px">Enter licence key</button>
       <p class="hint"><a href="../pricing.html">What Pro adds →</a></p>
     </div>
+    <div class="backup" id="sync-box">
+      <div class="section-label" style="margin-bottom:8px">Sync <span class="tag tag--pro" data-pro-mark>Pro</span></div>
+      <div class="plan-line" id="sync-line">Off</div>
+      <div class="plan-meta" id="sync-meta"></div>
+      <div id="sync-off">
+        <div class="row-2" style="margin-top:8px">
+          <select id="sync-provider" aria-label="Cloud drive">
+            <option value="google">Google Drive</option>
+            <option value="microsoft">OneDrive</option>
+          </select>
+          <button class="btn btn--secondary btn--sm" onclick="connectSync()">Connect</button>
+        </div>
+        <p class="hint">Keeps a copy of your backup in your own drive's app folder and merges it on every device you connect. Nothing goes to us.</p>
+      </div>
+      <div id="sync-on" style="display:none">
+        <div class="row-2" style="margin-top:8px">
+          <button class="btn btn--secondary btn--sm" onclick="syncNow()">Sync now</button>
+          <button class="btn btn--ghost btn--sm" onclick="disconnectSync()">Disconnect</button>
+        </div>
+      </div>
+      <div id="sync-gate" style="margin-top:8px" hidden></div>
+    </div>
   </aside>
 
   <main class="editor-wrap">
@@ -204,6 +226,7 @@
 <script src="../js/toolshed-store.js"></script>
 <script src="../js/toolshed-sample.js"></script>
 <script src="../js/toolshed-licence.js"></script>
+<script src="../js/toolshed-sync.js"></script>
 <script src="rosters-import.js"></script>
 <script>
 let currentId = null;   // null = unsaved new list
@@ -239,8 +262,56 @@ let lastParse = null;
   await refreshList();
   await ToolshedLicence.ready();
   renderPlan();
-  ToolshedLicence.onChange(() => { renderPlan(); refreshList(currentId); });
+  ToolshedLicence.onChange(() => { renderPlan(); refreshList(currentId); renderSync(); });
+  await ToolshedSync.ready();
+  renderSync();
+  ToolshedSync.onChange(() => { renderSync(); refreshList(currentId); });
 })();
+
+// ── SYNC (Pro) ──
+function renderSync() {
+  const st = ToolshedSync.status();
+  const line = document.getElementById('sync-line');
+  const meta = document.getElementById('sync-meta');
+  const on = st.enabled;
+  document.getElementById('sync-off').style.display = on ? 'none' : '';
+  document.getElementById('sync-on').style.display = on ? '' : 'none';
+  const provider = st.provider === 'microsoft' ? 'OneDrive' : 'Google Drive';
+  const words = {
+    off: 'Off', ok: provider, syncing: 'Syncing…', reconnect: provider + ' · sign in again',
+    error: provider + ' · problem', unavailable: provider + ' · not switched on'
+  };
+  line.textContent = on ? (words[st.state] || provider) : 'Off';
+  if (!on) meta.textContent = (st.available.google || st.available.microsoft) ? '' : 'not switched on yet';
+  else if (st.error) meta.textContent = st.error;
+  else meta.textContent = st.lastSyncedAt ? 'last synced ' + new Date(st.lastSyncedAt).toLocaleString() : 'not synced yet';
+  if (on && st.state === 'reconnect') {
+    document.getElementById('sync-on').innerHTML =
+      '<div class="row-2" style="margin-top:8px"><button class="btn btn--secondary btn--sm" onclick="reconnectSync()">Sign in again</button>' +
+      '<button class="btn btn--ghost btn--sm" onclick="disconnectSync()">Disconnect</button></div>';
+  }
+}
+async function connectSync() {
+  if (!ToolshedLicence.guard('sync', 0, document.getElementById('sync-gate'),
+    'Sync through your own Google Drive or OneDrive is part of Pro. Export and Import do the same job by hand.')) return;
+  try { await ToolshedSync.connect(document.getElementById('sync-provider').value); }
+  catch (e) { showToast(e.message || 'Could not connect', 5000); }
+}
+async function reconnectSync() {
+  const p = ToolshedSync.status().provider;
+  await ToolshedSync.disconnect();
+  try { await ToolshedSync.connect(p); } catch (e) { showToast(e.message || 'Could not connect', 5000); renderSync(); }
+}
+async function syncNow() {
+  const st = await ToolshedSync.syncNow({ force: true });
+  showToast(st.state === 'ok' ? 'Synced' : (st.error || 'Sync did not finish'), 3000);
+}
+async function disconnectSync() {
+  if (!confirm('Disconnect sync? Your data stays here and the copy stays in your drive; they just stop updating each other.')) return;
+  await ToolshedSync.disconnect();
+  renderSync();
+  showToast('Sync is off');
+}
 
 // ── PLAN / LICENCE ──
 // Sample class never counts toward the Free limit — it is there to try things.
