@@ -9,24 +9,33 @@
   var EXPORT_VERSION = 1;
 
   var DEFAULT_EXERCISES = [
-    // Machines
+    // Programme lifts (GreySkull LP). `key` is what the day templates refer to.
+    { key: 'ohp', name: 'Overhead Press', type: 'weights', program: true, scheme: '3x5+', increment: 2.5, barbell: true },
+    { key: 'bench', name: 'Bench Press (Machine)', type: 'weights', program: true, scheme: '3x5+', increment: 2.5, barbell: false },
+    { key: 'squat', name: 'Squat', type: 'weights', program: true, scheme: '3x5+', increment: 5, barbell: true },
+    { key: 'deadlift', name: 'Deadlift', type: 'weights', program: true, scheme: '1x5+', increment: 5, barbell: true },
+    // Accessories
     { name: 'Pec Deck', type: 'weights' },
     { name: 'Leg Press', type: 'weights' },
     { name: 'Leg Curl', type: 'weights' },
-    { name: 'Bench Press (Machine)', type: 'weights' },
-    // Free weights
-    { name: 'Squat', type: 'weights' },
-    { name: 'Deadlift', type: 'weights' },
     { name: 'Bicep Curl', type: 'weights' },
-    { name: 'Incline Press', type: 'weights' },
-    { name: 'Overhead Press', type: 'weights' },
-    { name: 'Bench Press', type: 'weights' },
+    { name: 'Incline Press', type: 'weights', barbell: true },
+    { name: 'Bench Press', type: 'weights', barbell: true },
     { name: "Farmer's Carry", type: 'weights' },
-    { name: 'Zercher Carry', type: 'weights' },
+    { name: 'Zercher Carry', type: 'weights', barbell: true },
     // Cardio
     { name: 'Treadmill', type: 'cardio' },
     { name: 'Elliptical', type: 'cardio' }
   ];
+
+  var DEFAULT_SETTINGS = {
+    unit: 'kg',
+    distanceUnit: 'km',
+    bar: 20,
+    plates: [25, 20, 15, 10, 5, 2.5, 1.25, 1, 0.5],
+    restSeconds: 90,
+    restSeconds2: 180
+  };
 
   function uid() {
     try {
@@ -107,22 +116,33 @@
   }
 
   function normalizeExercise(e) {
-    return {
+    var out = {
       id: e.id || uid(),
       name: String(e.name == null ? '' : e.name).trim(),
       type: e.type === 'cardio' ? 'cardio' : 'weights',
       order: typeof e.order === 'number' ? e.order : 0,
-      archived: !!e.archived
+      archived: !!e.archived,
+      program: !!e.program,
+      barbell: !!e.barbell
     };
+    if (e.key) out.key = String(e.key);
+    if (out.program) {
+      out.scheme = e.scheme === '1x5+' ? '1x5+' : '3x5+';
+      out.increment = num(e.increment) || 2.5;
+    }
+    return out;
   }
 
   function normalizeEntry(en) {
     var out = { id: en.id || uid(), exerciseId: en.exerciseId };
     if (Array.isArray(en.sets)) {
       out.sets = en.sets.map(function (s) {
-        return { weight: num(s.weight), reps: num(s.reps) };
+        var o = { weight: num(s.weight), reps: num(s.reps) };
+        if (s.warmup) o.warmup = true;
+        return o;
       });
     }
+    if (en.target != null) out.target = num(en.target);
     if (en.cardio && typeof en.cardio === 'object') {
       out.cardio = {
         minutes: num(en.cardio.minutes),
@@ -130,6 +150,7 @@
         speed: num(en.cardio.speed),
         incline: num(en.cardio.incline)
       };
+      if (en.cardio.warmup) out.cardio.warmup = true;
     }
     return out;
   }
@@ -139,6 +160,7 @@
       id: w.id || uid(),
       date: w.date || now().slice(0, 10),
       note: String(w.note == null ? '' : w.note),
+      dayKey: w.dayKey || null,
       entries: Array.isArray(w.entries) ? w.entries.map(normalizeEntry) : [],
       createdAt: w.createdAt || now(),
       updatedAt: w.updatedAt || now()
@@ -150,13 +172,33 @@
   var Store = {
     uid: uid,
 
+    DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+
     async init() {
       var ex = await getAll('exercises');
       if (ex.length === 0) {
         for (var i = 0; i < DEFAULT_EXERCISES.length; i++) {
           await put('exercises', normalizeExercise(Object.assign({ order: i }, DEFAULT_EXERCISES[i])));
         }
+        return;
       }
+      /* Older installs: attach programme metadata to lifts that match by name. */
+      for (var j = 0; j < ex.length; j++) {
+        if (ex[j].key || ex[j].program) continue;
+        for (var k = 0; k < DEFAULT_EXERCISES.length; k++) {
+          var d = DEFAULT_EXERCISES[k];
+          if (d.program && d.name === ex[j].name) {
+            await put('exercises', normalizeExercise(Object.assign({}, ex[j], d, { id: ex[j].id, order: ex[j].order })));
+          }
+        }
+      }
+    },
+
+    async getSettings() {
+      var rows = await getAll('settings');
+      var out = Object.assign({}, DEFAULT_SETTINGS);
+      rows.forEach(function (r) { if (r && r.key in out) out[r.key] = r.value; });
+      return out;
     },
 
     async listExercises() {

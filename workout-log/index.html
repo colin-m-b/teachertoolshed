@@ -14,10 +14,20 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="sticky-top">
   <header class="top">
     <h1 id="title">Today</h1>
     <span id="unit-badge" class="badge">kg</span>
   </header>
+
+  <div id="timer" class="timer" hidden>
+    <span id="timer-text">Rest 0:00</span>
+    <span class="row">
+      <button id="timer-restart" class="btn btn-sm" type="button">Restart</button>
+      <button id="timer-stop" class="btn btn-ghost btn-sm" type="button" aria-label="Dismiss">×</button>
+    </span>
+  </div>
+  </div>
 
   <main id="view" class="view"></main>
 
