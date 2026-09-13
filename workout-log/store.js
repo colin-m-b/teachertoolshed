@@ -9,15 +9,23 @@
   var EXPORT_VERSION = 1;
 
   var DEFAULT_EXERCISES = [
-    { name: 'Squat', type: 'weights' },
-    { name: 'Bench Press', type: 'weights' },
-    { name: 'Deadlift', type: 'weights' },
-    { name: 'Overhead Press', type: 'weights' },
-    { name: 'Barbell Row', type: 'weights' },
-    { name: 'Lat Pulldown', type: 'weights' },
+    // Machines
+    { name: 'Pec Deck', type: 'weights' },
     { name: 'Leg Press', type: 'weights' },
-    { name: 'Dumbbell Curl', type: 'weights' },
-    { name: 'Treadmill', type: 'cardio' }
+    { name: 'Leg Curl', type: 'weights' },
+    { name: 'Bench Press (Machine)', type: 'weights' },
+    // Free weights
+    { name: 'Squat', type: 'weights' },
+    { name: 'Deadlift', type: 'weights' },
+    { name: 'Bicep Curl', type: 'weights' },
+    { name: 'Incline Press', type: 'weights' },
+    { name: 'Overhead Press', type: 'weights' },
+    { name: 'Bench Press', type: 'weights' },
+    { name: "Farmer's Carry", type: 'weights' },
+    { name: 'Zercher Carry', type: 'weights' },
+    // Cardio
+    { name: 'Treadmill', type: 'cardio' },
+    { name: 'Elliptical', type: 'cardio' }
   ];
 
   function uid() {
