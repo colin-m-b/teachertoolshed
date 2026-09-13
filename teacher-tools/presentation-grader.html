@@ -120,7 +120,21 @@
   .gs-member-scores .edited{color:var(--accent);font-weight:700}
   .gs-member-feedback{font-family:var(--font-body);font-size:14px;color:var(--body-muted);white-space:pre-wrap}
 
+  /* PAST SESSIONS / STUDENT HISTORY */
+  .row-actions{display:flex;gap:8px;flex-shrink:0}
+  .report-controls{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px}
+  .report-controls .field{margin:0;min-width:220px}
+  .report-wrap{overflow-x:auto}
+  table.report{width:100%;border-collapse:collapse;font-family:var(--font-body);font-size:14px}
+  table.report th,table.report td{border-bottom:var(--hairline);padding:7px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  table.report th{font-family:var(--font-meta);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);vertical-align:bottom}
+  table.report th:first-child,table.report td:first-child{text-align:left;position:sticky;left:0;background:var(--paper)}
+  table.report td.total{font-weight:600;color:var(--ink)}
+  table.report td.none{color:var(--meta)}
+  .gate-slot{margin-bottom:16px}
+
   @media print {
+    .report-controls, .gate-slot,
     .tool-header, .order-sidebar, .present-timer-wrap, .tool-footer, button { display: none !important; }
   }
 
@@ -228,6 +242,17 @@
       </div>
     </div>
 
+    <!-- Past sessions -->
+    <div class="card" id="past-card" style="display:none">
+      <div class="card__title">Past Sessions</div>
+      <div class="rows" id="past-list"></div>
+      <div class="gate-slot" id="history-gate" style="margin-top:14px" hidden></div>
+      <div class="actions" style="margin-top:14px">
+        <span class="actions__spacer"></span>
+        <button class="btn btn--secondary btn--sm" id="student-history-btn">Student history <span class="tag tag--pro" data-pro-mark>Pro</span></button>
+      </div>
+    </div>
+
     <!-- Rubric -->
     <div class="card">
       <div class="card__title">Rubric <span class="label-optional" style="text-transform:none;letter-spacing:0">(optional)</span></div>
@@ -245,6 +270,7 @@
         </div>
         <div id="rubric-criteria-container"></div>
         <button class="btn btn--secondary btn--sm" style="margin-top:12px" id="save-rubric-btn">Save rubric</button>
+        <div class="gate-slot" id="rubric-gate" style="margin-top:12px" hidden></div>
         <p class="hint" style="margin-top:6px">Saved rubrics are shared across every tool.</p>
       </div>
     </div>
@@ -332,16 +358,46 @@
       </div>
     </div>
 
+    <div class="gate-slot" id="csv-gate" hidden></div>
     <div class="stat-row" id="sum-stats"></div>
 
     <div id="sum-groups"></div>
   </div></div>
 </div>
 
-<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+<!-- ═══════════════════════════════ STUDENT HISTORY SCREEN ═══════════════════════════════ -->
+<div class="screen" id="screen-history">
+  <div class="summary-body"><div class="summary-body-inner" style="max-width:960px">
+    <div class="summary-header">
+      <div>
+        <div class="summary-title">Student History</div>
+        <div class="summary-meta" id="history-meta">Every saved session, one row per student, rubric totals per session.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn--secondary btn--sm" onclick="window.print()">Print</button>
+        <button class="btn btn--secondary btn--sm" id="history-csv-btn">Export CSV</button>
+        <button class="btn btn--secondary btn--sm" id="history-back-btn">← Back</button>
+      </div>
+    </div>
+    <div class="gate-slot" id="report-gate" hidden></div>
+    <div id="history-body">
+      <div class="report-controls">
+        <div class="field">
+          <label>Class</label>
+          <select id="history-class"></select>
+        </div>
+        <p class="hint" style="margin:0 0 10px">Students are matched by name within a class. A dash means the student did not present in that session; “fb” means feedback only, no rubric.</p>
+      </div>
+      <div class="card"><div class="report-wrap" id="history-table"></div></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a> &nbsp;·&nbsp; <a href="../pricing.html">Pro</a></div>
 
 <script src="../js/toolshed-store.js"></script>
 <script src="../js/toolshed-rubric.js"></script>
+<script src="../js/toolshed-licence.js"></script>
 <script>
 'use strict';
 
@@ -394,11 +450,14 @@ function nextId(prefix) { return prefix + (++localId); }
 // ── BOOT ──
 (async function init() {
   await ToolshedStore.ready();
+  await ToolshedLicence.ready();
+  ToolshedLicence.onChange(() => { renderPastSessions(); });
   if (ToolshedStore.ephemeral) {
     showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
   }
   await renderRosterList();
   await renderRubricSelect();
+  await renderPastSessions();
   wireSetupEvents();
   wireLiveEvents();
   wireSummaryEvents();
@@ -661,6 +720,10 @@ async function onRubricSelectChange() {
 async function saveRubricFromEditor() {
   const name = $('rubric-name-input').value.trim();
   if (!name) { showToast('Give the rubric a name first'); $('rubric-name-input').focus(); return; }
+  if (!selectedRubric.id) {
+    const existing = (await ToolshedStore.listDocs('rubric')).length;
+    if (!ToolshedLicence.guard('rubrics', existing, $('rubric-gate'))) return;
+  }
   selectedRubric.name = name;
   const saved = await ToolshedStore.saveDoc({
     id: selectedRubric.id || undefined,
@@ -1232,6 +1295,7 @@ function csvField(v) {
 function exportCsv() {
   const s = session;
   if (!s || !s.students.length) { showToast('No session data to export'); return; }
+  if (!ToolshedLicence.guard('csv', 0, $('csv-gate'), 'CSV export of a session is part of Pro. Print is always free.')) return;
   const criteria = s.rubric ? s.rubric.criteria : [];
   const header = ['Session Name', 'Class Name', 'Class Date', 'Group', 'Time', 'Student']
     .concat(criteria.map(c => c.name || 'Criterion'))
@@ -1287,11 +1351,161 @@ function newSession() {
   setMode('individual');
   renderGroupDefs();
   refreshAssignList();
+  renderPastSessions();
   switchScreen('setup');
+}
+
+// ── PAST SESSIONS ──
+async function renderPastSessions() {
+  let docs = await ToolshedStore.listDocs('presentation');
+  const card = $('past-card');
+  const list = $('past-list');
+  card.style.display = docs.length ? '' : 'none';
+  list.innerHTML = '';
+
+  /* Free shows the most recent session; the rest stay in the store (and in
+     every backup) and reappear the moment Pro is active. Nothing is deleted. */
+  const limit = ToolshedLicence.LIMITS.sessions;
+  const hidden = ToolshedLicence.can('history') ? 0 : Math.max(0, docs.length - limit);
+  ToolshedLicence.guard('history', docs.length - hidden, $('history-gate'),
+    hidden ? `${hidden} earlier session${hidden === 1 ? ' is' : 's are'} kept but hidden on Free. Pro shows the whole term.` : undefined);
+  if (hidden) docs = docs.slice(0, limit);
+
+  docs.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const when = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
+    row.innerHTML = `<div class="row__main"><div class="row__name"></div><div class="row__meta">${when}</div></div>
+      <div class="row-actions">
+        <button class="btn btn--secondary btn--sm">Open</button>
+        <button class="btn btn--ghost btn--sm">Delete</button>
+      </div>`;
+    row.querySelector('.row__name').textContent = d.name;
+    const btns = row.querySelectorAll('button');
+    btns[0].onclick = () => openPastSession(d.id);
+    btns[1].onclick = () => deletePastSession(d.id, d.name);
+    list.appendChild(row);
+  });
+}
+
+async function openPastSession(id) {
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !doc.data || !Array.isArray(doc.data.students)) { showToast('That session could not be found'); await renderPastSessions(); return; }
+  stopPresentTimerInterval();
+  presentTimerRunning = false;
+  session = doc.data;
+  savedSessionId = id;
+  buildSummary();
+  switchScreen('summary');
+  $('header-end-btn').style.display = 'none';
+}
+
+async function deletePastSession(id, name) {
+  if (!confirm(`Delete the saved session "${name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteDoc(id);
+  if (savedSessionId === id) savedSessionId = null;
+  await renderPastSessions();
+  showToast(`Deleted ${name}`);
+}
+
+// ── STUDENT HISTORY (Pro) ──
+// A read-only query over saved sessions: per class, one row per student,
+// the rubric total they earned in each session. Totals are recomputed from
+// the saved data with the same rule the summary uses (override beats group).
+let historySessions = [];
+
+function savedTotal(s, sid) {
+  if (!s.rubric) return null;
+  const g = s.groups.find(gr => gr.memberIds.includes(sid));
+  if (!g) return null;
+  const gd = s.groupData[g.id] || { criteria: {} };
+  const ov = (s.studentData[sid] || {}).overrides || {};
+  let sum = 0, any = false;
+  s.rubric.criteria.filter(ToolshedRubric.isScored).forEach(c => {
+    const v = (ov[c.id] !== undefined && ov[c.id] !== null) ? ov[c.id] : gd.criteria[c.id];
+    if (v != null) { sum += v; any = true; }
+  });
+  return any ? sum : null;
+}
+
+async function openHistory() {
+  switchScreen('history');
+  const ok = ToolshedLicence.guard('perStudent', 0, $('report-gate'),
+    'Student history across sessions is part of Pro.');
+  $('history-body').hidden = !ok;
+  if (!ok) return;
+  const docs = await ToolshedStore.listDocs('presentation');
+  historySessions = (await Promise.all(docs.map(d => ToolshedStore.getDoc(d.id))))
+    .filter(d => d && d.data && Array.isArray(d.data.students))
+    .map(d => Object.assign({ docId: d.id }, d.data, { className: (d.data.className || '').trim() || '(no class)' }))
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const classes = [...new Set(historySessions.map(s => s.className))].sort();
+  const sel = $('history-class');
+  const prev = sel.value;
+  sel.innerHTML = classes.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if (classes.includes(prev)) sel.value = prev;
+  renderHistory();
+}
+
+function historyRows() {
+  const cls = $('history-class').value;
+  const sessions = historySessions.filter(s => s.className === cls);
+  const byName = new Map();
+  sessions.forEach((s, i) => {
+    s.students.forEach(st => {
+      const key = st.name.trim().toLowerCase();
+      if (!byName.has(key)) byName.set(key, { name: st.name.trim(), cells: new Array(sessions.length).fill(undefined) });
+      const t = savedTotal(s, st.id);
+      byName.get(key).cells[i] = t == null ? (s.rubric ? null : 'fb') : t;
+    });
+  });
+  const rows = [...byName.values()].map(r => {
+    const nums = r.cells.filter(c => typeof c === 'number');
+    r.presented = r.cells.filter(c => c !== undefined).length;
+    r.avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+    return r;
+  }).sort((a, b) => a.name.localeCompare(b.name));
+  return { sessions, rows };
+}
+
+function renderHistory() {
+  const { sessions, rows } = historyRows();
+  $('history-meta').textContent = `${sessions.length} session${sessions.length === 1 ? '' : 's'} · ${rows.length} student${rows.length === 1 ? '' : 's'} · ${$('history-class').value}`;
+  const head = ['Student'].concat(sessions.map(s => {
+    const d = s.date ? new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+    return `<span title="${esc(s.name)}">${esc(d || s.name)}</span>`;
+  })).concat(['Presented', 'Avg total']);
+  const body = rows.map(r => {
+    const cells = r.cells.map(c => c === undefined ? '<td class="none">—</td>' : c === null ? '<td class="none">·</td>' : `<td>${esc(c)}</td>`).join('');
+    return `<tr><td>${esc(r.name)}</td>${cells}<td>${r.presented}/${sessions.length}</td><td class="total">${r.avg == null ? '—' : r.avg.toFixed(1)}</td></tr>`;
+  }).join('');
+  $('history-table').innerHTML = rows.length
+    ? `<table class="report"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`
+    : '<p class="hint">No saved sessions for this class yet. Sessions are saved automatically when you end them.</p>';
+}
+
+function exportHistoryCsv() {
+  if (!ToolshedLicence.can('perStudent')) return;
+  const { sessions, rows } = historyRows();
+  if (!rows.length) { showToast('Nothing to export yet'); return; }
+  const cls = $('history-class').value;
+  const header = ['Student'].concat(sessions.map(s => `${s.name} (${s.date ? new Date(s.date).toLocaleDateString() : ''})`)).concat(['Presented', 'Average total']);
+  const lines = [header].concat(rows.map(r => [r.name].concat(r.cells.map(c => c === undefined ? '' : c === null ? '' : c)).concat([r.presented, r.avg == null ? '' : r.avg.toFixed(2)])));
+  const csv = lines.map(row => row.map(csvField).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `presentation-history-${(cls || 'class').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'class'}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ── EVENT WIRING ──
 function wireSetupEvents() {
+  $('student-history-btn').addEventListener('click', openHistory);
+  $('history-class').addEventListener('change', renderHistory);
+  $('history-csv-btn').addEventListener('click', exportHistoryCsv);
+  $('history-back-btn').addEventListener('click', () => switchScreen('setup'));
   $('mode-tab-individual').addEventListener('click', () => setMode('individual'));
   $('mode-tab-groups').addEventListener('click', () => setMode('groups'));
   $('add-group-btn').addEventListener('click', () => addGroupDef());

@@ -44,6 +44,24 @@
   </div>
 
   <div class="card">
+    <div class="card__title">Saved Tasks</div>
+    <div class="row-2" style="align-items:end">
+      <div class="field">
+        <label>Load a saved task</label>
+        <select id="task-select">
+          <option value="">— Saved tasks —</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;gap:8px">
+        <button class="btn btn--secondary" id="save-task-btn">Save this task</button>
+        <button class="btn btn--ghost" id="delete-task-btn">Delete</button>
+      </div>
+    </div>
+    <div id="task-gate" style="margin-top:12px" hidden></div>
+    <p class="hint">Prompts, passages, timing and conditions, kept in this browser so a task can be reused with another class. Nothing about students is saved here.</p>
+  </div>
+
+  <div class="card">
     <div class="card__title">Task Details</div>
     <div class="row-2">
       <div class="field">
@@ -121,6 +139,23 @@
     <p class="hint">Turning off spellcheck/autocorrect suppresses the browser's own checking and most extensions — it can't guarantee a device has no other assistance installed.</p>
   </div>
 
+  <div class="card">
+    <div class="card__title">Export Extras <span class="tag tag--pro" data-pro-mark>Pro</span></div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-row__label">Integrity cover page</div>
+        <div class="toggle-row__hint">A final page in the student's export listing the writing conditions: time taken, word count, how many times the tab lost focus, blocked paste attempts. The tool already counts these; this prints them.</div>
+      </div>
+      <button class="toggle" id="cfg-cover" role="switch" aria-checked="false" aria-label="Integrity cover page"></button>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>Branded header line <span class="label-optional">(optional)</span></label>
+      <input type="text" id="cfg-brand" placeholder="e.g. Northfield Academy · MYP 4 English" maxlength="80"/>
+      <p class="hint">Printed top-left of every page of the export, opposite the MLA running header.</p>
+    </div>
+    <div id="extras-gate" style="margin-top:12px" hidden></div>
+  </div>
+
   <div class="actions">
     <button class="btn btn--ghost" id="clear-btn">Clear</button>
     <button class="btn btn--primary" id="generate-btn">Generate link →</button>
@@ -138,10 +173,12 @@
 
 </main>
 
-<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a></div>
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a></div>
 
 <div id="print-sheet"></div>
 
+<script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-licence.js"></script>
 <script>
 'use strict';
 
@@ -192,6 +229,21 @@ function generateLink() {
     softLock: $('cfg-softlock').getAttribute('aria-checked') === 'true'
   };
 
+  // Export extras ride in the link only when Pro is active here. The student
+  // page never checks a licence — it just honours what the link says.
+  const wantCover = $('cfg-cover').getAttribute('aria-checked') === 'true';
+  const wantBrand = $('cfg-brand').value.trim();
+  if (wantCover || wantBrand) {
+    const ok = ToolshedLicence.guard('integrityCover', 0, $('extras-gate'),
+      'The integrity cover page and branded header are part of Pro. The link was made without them.');
+    if (ok) {
+      if (wantCover) config.cover = true;
+      if (wantBrand) config.brand = wantBrand;
+    }
+  } else {
+    $('extras-gate').hidden = true;
+  }
+
   const json = JSON.stringify(config);
   const encoded = LZString.compressToEncodedURIComponent(json);
   const url = new URL('purewrite.html', location.href).href + '#c=' + encoded;
@@ -226,11 +278,86 @@ function clearForm() {
   if (!confirm('Clear the form?')) return;
   document.querySelectorAll('.setup-body input[type=text], .setup-body input[type=number], .setup-body textarea').forEach(el => el.value = '');
   ['cfg-blockpaste'].forEach(id => $(id).setAttribute('aria-checked', 'true'));
-  ['cfg-showhints', 'cfg-softlock'].forEach(id => $(id).setAttribute('aria-checked', 'false'));
+  ['cfg-showhints', 'cfg-softlock', 'cfg-cover'].forEach(id => $(id).setAttribute('aria-checked', 'false'));
   $('link-card').style.display = 'none';
+  $('task-select').value = '';
+}
+
+/* ── Saved tasks ───────────────────────────────────────────
+   The form, minus nothing student-related (there is nothing student-related
+   in it), saved as a 'purewrite-task' document. Free keeps one. */
+function readForm() {
+  return {
+    task: $('cfg-task').value, title: $('cfg-title').value, class: $('cfg-class').value,
+    teacherName: $('cfg-teacher').value, prompt: $('cfg-prompt').value, stimulus: $('cfg-stimulus').value,
+    minutes: $('cfg-minutes').value, wordTarget: $('cfg-wordtarget').value,
+    blockPaste: $('cfg-blockpaste').getAttribute('aria-checked') === 'true',
+    showHints: $('cfg-showhints').getAttribute('aria-checked') === 'true',
+    softLock: $('cfg-softlock').getAttribute('aria-checked') === 'true',
+    cover: $('cfg-cover').getAttribute('aria-checked') === 'true',
+    brand: $('cfg-brand').value
+  };
+}
+function writeForm(d) {
+  $('cfg-task').value = d.task || ''; $('cfg-title').value = d.title || ''; $('cfg-class').value = d.class || '';
+  $('cfg-teacher').value = d.teacherName || ''; $('cfg-prompt').value = d.prompt || ''; $('cfg-stimulus').value = d.stimulus || '';
+  $('cfg-minutes').value = d.minutes || ''; $('cfg-wordtarget').value = d.wordTarget || '';
+  $('cfg-blockpaste').setAttribute('aria-checked', d.blockPaste === false ? 'false' : 'true');
+  $('cfg-showhints').setAttribute('aria-checked', d.showHints ? 'true' : 'false');
+  $('cfg-softlock').setAttribute('aria-checked', d.softLock ? 'true' : 'false');
+  $('cfg-cover').setAttribute('aria-checked', d.cover ? 'true' : 'false');
+  $('cfg-brand').value = d.brand || '';
+}
+async function renderTaskList(selectedId) {
+  const sel = $('task-select');
+  sel.innerHTML = '<option value="">— Saved tasks —</option>';
+  (await ToolshedStore.listDocs('purewrite-task')).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.id; o.textContent = d.name;
+    sel.appendChild(o);
+  });
+  sel.value = selectedId || '';
+}
+async function saveTask() {
+  const form = readForm();
+  if (!form.task.trim()) { showToast('Give the task a name first'); $('cfg-task').focus(); return; }
+  const all = await ToolshedStore.listDocs('purewrite-task');
+  const selectedId = $('task-select').value;
+  const selected = selectedId ? all.find(d => d.id === selectedId) : null;
+  const name = (prompt('Save this task as:', selected ? selected.name : form.task.trim()) || '').trim();
+  if (!name) return;
+  const existing = all.find(d => d.name.toLowerCase() === name.toLowerCase());
+  if (existing && !confirm(`Replace the saved task "${existing.name}"?`)) return;
+  if (!existing && !ToolshedLicence.guard('tasks', all.length, $('task-gate'))) return;
+  const saved = await ToolshedStore.saveDoc({ id: existing ? existing.id : undefined, tool: 'purewrite-task', name, data: form });
+  await renderTaskList(saved.id);
+  showToast(`Saved task "${name}"`);
+}
+async function loadTask() {
+  const id = $('task-select').value;
+  if (!id) return;
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !doc.data) { showToast('That task could not be found'); await renderTaskList(); return; }
+  writeForm(doc.data);
+  $('link-card').style.display = 'none';
+  showToast(`Loaded ${doc.name}`);
+}
+async function deleteTask() {
+  const id = $('task-select').value;
+  if (!id) { showToast('Choose a saved task first'); return; }
+  const doc = await ToolshedStore.getDoc(id);
+  if (!doc || !confirm(`Delete the saved task "${doc.name}"? This can't be undone.`)) return;
+  await ToolshedStore.deleteDoc(id);
+  await renderTaskList();
+  showToast(`Deleted ${doc.name}`);
 }
 
 $('generate-btn').addEventListener('click', generateLink);
+$('task-select').addEventListener('change', loadTask);
+$('save-task-btn').addEventListener('click', saveTask);
+$('delete-task-btn').addEventListener('click', deleteTask);
+wireToggle('cfg-cover');
+ToolshedLicence.ready().then(() => renderTaskList());
 $('copy-link-btn').addEventListener('click', copyLink);
 $('clear-btn').addEventListener('click', clearForm);
 $('print-btn').addEventListener('click', () => window.print());

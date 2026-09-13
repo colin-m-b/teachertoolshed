@@ -304,6 +304,20 @@
     return (PRO_ONLY[feature] || 'This') + ' is part of Pro.';
   }
 
+  /* Render a gate into a container (replacing whatever is there) and
+     return false, or clear the container and return true when allowed.
+     The one-liner tools use at each gate:
+       if (!ToolshedLicence.guard('csv', 0, box)) return; */
+  function guard(feature, count, container, copy) {
+    var ok = can(feature, count);
+    if (container) {
+      container.innerHTML = '';
+      container.hidden = ok;
+      if (!ok) container.appendChild(gate(feature, copy));
+    }
+    return ok;
+  }
+
   /* Show/hide every element marked data-pro="feature" and fill every
      element marked data-pro-gate="feature" with a gate notice. Tools call
      this once after ready() and again after any change. */
@@ -367,6 +381,7 @@
     can: can,
     assertCan: assertCan,
     gate: gate,
+    guard: guard,
     apply: apply,
     onChange: onChange,
     pricingUrl: pricingUrl

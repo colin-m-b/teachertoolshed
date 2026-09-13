@@ -166,6 +166,22 @@
       </div>
     </div>
 
+    <!-- Constraints (Pro) -->
+    <div class="s-section">
+      <div class="s-label">Constraints <span class="tag tag--pro" data-pro-mark>Pro</span></div>
+      <div class="field">
+        <label>Front row</label>
+        <textarea id="front-input" placeholder="One name per line" style="min-height:56px" oninput="scheduleAutosave()"></textarea>
+        <p class="hint">Seated in the first row, first island, or first seats of the circle.</p>
+      </div>
+      <div class="field">
+        <label>Keep apart</label>
+        <textarea id="apart-input" placeholder="Ada Lovelace &amp; Grace Hopper&#10;one pair per line" style="min-height:56px" oninput="scheduleAutosave()"></textarea>
+        <p class="hint">Pairs never sit side by side, in front of, or behind each other.</p>
+      </div>
+      <div id="constraints-gate" hidden></div>
+    </div>
+
     <!-- Generate -->
     <div class="s-section">
       <button class="btn btn--primary btn--full" onclick="generate()">Randomize Seats</button>
@@ -196,6 +212,7 @@
         <button class="btn btn--secondary btn--sm" onclick="saveChart()">Save chart</button>
         <button class="btn btn--secondary btn--sm" onclick="deleteChart()">Delete</button>
       </div>
+      <div id="charts-gate" style="margin-top:8px" hidden></div>
       <p class="hint">Your work in progress is kept automatically until you clear it.</p>
     </div>
 
@@ -203,6 +220,7 @@
 
   <!-- MAIN CANVAS -->
   <main class="main">
+    <div id="pdf-gate" style="margin:0" hidden></div>
     <div class="canvas-toolbar">
       <div class="toolbar-left">
         <span class="toolbar-info" id="toolbar-info">Add students and click Randomize Seats</span>
@@ -227,6 +245,7 @@
 <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
 
 <script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-licence.js"></script>
 <script>
 let template = 'rows';
 let desks = [];
@@ -314,7 +333,9 @@ function chartState() {
     studentsRaw: document.getElementById('student-input').value,
     rowCount: document.getElementById('row-count').value,
     colCount: document.getElementById('col-count').value,
-    islandSize: document.getElementById('island-size').value
+    islandSize: document.getElementById('island-size').value,
+    front: document.getElementById('front-input').value,
+    apart: document.getElementById('apart-input').value
   };
 }
 
@@ -324,6 +345,8 @@ function applyChartState(d) {
   if (d.rowCount) document.getElementById('row-count').value = d.rowCount;
   if (d.colCount) document.getElementById('col-count').value = d.colCount;
   if (d.islandSize) document.getElementById('island-size').value = d.islandSize;
+  document.getElementById('front-input').value = d.front || '';
+  document.getElementById('apart-input').value = d.apart || '';
   setTemplate(d.template || 'rows');
   desks = Array.isArray(d.desks) ? d.desks : [];
   updateCount();
@@ -363,9 +386,11 @@ async function saveChart() {
   const name = (prompt('Name this chart:', selected ? selected.name : '') || '').trim();
   if (!name) return;
 
-  const existing = (await ToolshedStore.listDocs('seating'))
-    .find(d => d.name.toLowerCase() === name.toLowerCase());
+  const all = await ToolshedStore.listDocs('seating');
+  const existing = all.find(d => d.name.toLowerCase() === name.toLowerCase());
   if (existing && !confirm(`Replace the saved chart "${existing.name}"?`)) return;
+  // Replacing a saved chart is always fine; a new one counts toward the Free limit.
+  if (!existing && !ToolshedLicence.guard('charts', all.length, document.getElementById('charts-gate'))) return;
 
   const saved = await ToolshedStore.saveDoc({
     id: existing ? existing.id : undefined,
@@ -423,14 +448,63 @@ function generate() {
   const students = getStudents();
   if (!students.length) { showToast('Add some student names first'); return; }
 
-  const shuffled = [...students].sort(() => Math.random() - .5);
-  desks = buildLayout(shuffled);
+  const c = readConstraints(students);
+  let shuffled, attempt = 0, best = null, bestBad = Infinity;
+  // Front-row names go first in the order, which is the front of every layout.
+  // Keep-apart is checked on the placed desks; reshuffle until it holds.
+  do {
+    const front = shuffle(c.front), rest = shuffle(students.filter(n => !c.front.includes(n)));
+    shuffled = front.concat(rest);
+    const trial = buildLayout(shuffled);
+    const bad = apartViolations(trial, c.apart);
+    if (bad < bestBad) { bestBad = bad; best = trial; }
+    attempt++;
+  } while (bestBad > 0 && attempt < 400);
+  desks = best;
+  if (bestBad > 0) showToast(`Could not keep every pair apart in this layout — ${bestBad} still adjacent. Try again or swap by hand.`, 4200);
   // Desk ids are stable across a reshuffle, so a pending swap selection would
   // survive and point at a desk that now holds someone else. Drop it.
   swapFirst = null;
   renderDesks();
   document.getElementById('toolbar-info').textContent =
     `${students.length} students · ${template} layout · desks numbered from the front · drag names to swap, or use Swap Names`;
+}
+
+function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
+
+// ── CONSTRAINTS (Pro) ──
+// Read the two boxes against the current class. Names that are not in the
+// class are ignored. On Free the boxes are read but not applied, and the gate
+// explains why — the chart still generates.
+function readConstraints(students) {
+  const norm = s => s.trim().toLowerCase();
+  const byNorm = {};
+  students.forEach(n => { byNorm[norm(n)] = n; });
+  const frontRaw = document.getElementById('front-input').value.split('\n').map(norm).filter(Boolean);
+  const apartRaw = document.getElementById('apart-input').value.split('\n').map(l => l.trim()).filter(Boolean);
+  const wanted = frontRaw.length || apartRaw.length;
+  const allowed = ToolshedLicence.guard('constraints', 0, document.getElementById('constraints-gate'),
+    'Front-row and keep-apart constraints are part of Pro. Seats were randomised without them.');
+  if (!wanted) document.getElementById('constraints-gate').hidden = true;
+  if (!wanted || !allowed) return { front: [], apart: [] };
+  const front = frontRaw.map(n => byNorm[n]).filter(Boolean);
+  const apart = apartRaw.map(l => l.split(/\s*(?:&|,|\/|\band\b)\s*/i).map(norm).map(n => byNorm[n]).filter(Boolean))
+    .filter(p => p.length >= 2).map(p => [p[0], p[1]]);
+  return { front, apart };
+}
+
+function adjacent(a, b) {
+  const dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+  return (dy < DH && dx <= DW + 16) || (dx < DW && dy <= DH + 24);
+}
+
+function apartViolations(list, pairs) {
+  let bad = 0;
+  pairs.forEach(([p, q]) => {
+    const a = list.find(d => d.name === p), b = list.find(d => d.name === q);
+    if (a && b && adjacent(a, b)) bad++;
+  });
+  return bad;
 }
 
 function buildLayout(names) {
@@ -858,6 +932,8 @@ function registerPdfFont(doc) {
 }
 
 async function downloadPDF() {
+  if (!ToolshedLicence.guard('pdf', 0, document.getElementById('pdf-gate'),
+    'PDF download is part of Pro. Print is always free — choose “Save as PDF” in the print dialog.')) return;
   const occupied = desks.filter(d => d.name);
   if (!occupied.length) { showToast('Generate a chart first'); return; }
 
@@ -938,6 +1014,7 @@ function showToast(msg, dur = 2200) {
 // ── BOOT ──
 (async function init() {
   await ToolshedStore.ready();
+  await ToolshedLicence.ready();
   if (ToolshedStore.ephemeral) {
     showToast('This browser is blocking saved data — nothing will be kept after you close the tab.', 5000);
   }

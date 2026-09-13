@@ -345,6 +345,8 @@ input[aria-invalid=true], textarea[aria-invalid=true] { border-color: var(--flag
 
 /* The small "Pro" mark on a control that opens a gated feature. */
 .tag--pro { color: var(--paper); background: var(--accent); border-color: var(--accent); }
+/* The mark disappears once Pro is active (ToolshedLicence.apply sets data-tier). */
+[data-tier="pro"] [data-pro-mark] { display: none; }
 
 /* Small inline status tag (QR / MANUAL / 3 PAGES). */
 .tag {

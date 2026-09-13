@@ -76,6 +76,11 @@ function downloadPdf(model) {
     doc.setFont(FONT, 'normal');
     doc.setFontSize(FONT_SIZE);
     doc.text(`${model.lastName} ${pageNum}`, pageW - margin, 0.5, { align: 'right' });
+    if (model.brand) {
+      doc.setFontSize(9);
+      doc.text(model.brand, margin, 0.5);
+      doc.setFontSize(FONT_SIZE);
+    }
   }
   function ensureRoom() {
     if (y + lineHeight > pageH - margin) {
@@ -112,7 +117,38 @@ function downloadPdf(model) {
     restLines.forEach(line => drawLine(line, margin));
   });
 
+  if (model.cover) {
+    doc.addPage();
+    pageNum++;
+    drawHeader();
+    y = margin;
+    doc.setFontSize(14);
+    drawLine('Writing conditions', margin);
+    doc.setFontSize(FONT_SIZE);
+    coverLines(model.cover).forEach(([k, v]) => drawLine(`${k}: ${v}`, margin));
+    doc.setFontSize(9);
+    doc.text(doc.splitTextToSize(COVER_NOTE, contentW), margin, y);
+  }
+
   doc.save(buildFilename('pdf'));
+}
+
+/* The integrity cover page (Pro): the counts the writing page already keeps,
+   printed as a final page. Shared by the PDF and the docx. */
+const COVER_NOTE = 'Counts were recorded by the writing page in the student\'s browser during the task. ' +
+  'A focus loss is the tab or window losing focus once; a paste attempt is a blocked paste. ' +
+  'They describe conditions, not conduct.';
+function coverLines(c) {
+  return [
+    ['Task', c.task], ['Class', c.className], ['Instructor', c.teacherName],
+    ['Student', `${c.studentName} (${c.studentId})`],
+    ['Started', c.started], ['Exported', c.exported],
+    ['Time on task', c.minutes === '—' ? '—' : c.minutes + ' min'], ['Time limit', c.timeLimit],
+    ['Word count', c.words], ['Word target', c.wordTarget],
+    ['Tab lost focus', c.focusLosses + (c.focusLosses === '1' ? ' time' : ' times')],
+    ['Blocked paste attempts', c.pasteAttempts],
+    ['Paste blocking', c.blockPaste], ['Spellcheck / autocorrect', c.spellcheck]
+  ];
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -162,9 +198,12 @@ function buildStylesXml() {
 </w:styles>`;
 }
 function buildHeaderXml(model) {
+  const brand = model.brand
+    ? `<w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr><w:r><w:rPr><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">${xmlEscape(model.brand)}</w:t></w:r></w:p>`
+    : '';
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-<w:p>
+${brand}<w:p>
 <w:pPr><w:pStyle w:val="Header"/><w:jc w:val="right"/></w:pPr>
 ${wRun(model.lastName + ' ')}
 <w:r><w:fldChar w:fldCharType="begin"/></w:r>
@@ -187,12 +226,19 @@ function buildDocumentXml(model) {
     `<w:p><w:pPr><w:ind w:firstLine="720"/></w:pPr>${wRun(p)}</w:p>`
   ).join('\n');
 
+  const coverParas = model.cover
+    ? `<w:p><w:r><w:br w:type="page"/></w:r></w:p>\n<w:p>${wRun('Writing conditions')}</w:p>\n` +
+      coverLines(model.cover).map(([k, v]) => `<w:p>${wRun(k + ': ' + v)}</w:p>`).join('\n') +
+      `\n<w:p><w:r><w:rPr><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">${xmlEscape(COVER_NOTE)}</w:t></w:r></w:p>`
+    : '';
+
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <w:body>
 ${headingLines}
 ${titlePara}
 ${bodyParas}
+${coverParas}
 <w:sectPr>
 <w:headerReference w:type="default" r:id="rId2"/>
 <w:pgSz w:w="12240" w:h="15840"/>

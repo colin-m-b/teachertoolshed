@@ -521,7 +521,34 @@ function buildEssayModel() {
     className: config.class || '',
     dateStr: mlaDate(new Date()),
     title: config.title || config.task,
-    paragraphs: paragraphsFrom($('editor').value)
+    paragraphs: paragraphsFrom($('editor').value),
+    // Export extras set by the teacher's link (Pro). Purely descriptive:
+    // the counts already exist; this just prints them.
+    brand: config.brand || '',
+    cover: config.cover ? buildCoverModel() : null
+  };
+}
+
+function buildCoverModel() {
+  const text = $('editor').value;
+  const started = session && session.startedAt ? new Date(session.startedAt) : null;
+  const mins = started ? Math.round((Date.now() - started.getTime()) / 60000) : null;
+  return {
+    task: config.task || '',
+    className: config.class || '',
+    teacherName: config.teacherName || '',
+    studentName: student.name,
+    studentId: student.id,
+    started: started ? started.toLocaleString() : '—',
+    exported: new Date().toLocaleString(),
+    minutes: mins == null ? '—' : String(mins),
+    words: String(countWords(text)),
+    wordTarget: config.wordTarget ? String(config.wordTarget) : '—',
+    timeLimit: config.minutes ? config.minutes + ' min' : 'none',
+    focusLosses: String((session && session.focusLossCount) || 0),
+    pasteAttempts: String((session && session.pasteAttempts) || 0),
+    blockPaste: config.blockPaste ? 'on' : 'off',
+    spellcheck: config.showHints ? 'allowed' : 'off'
   };
 }
 

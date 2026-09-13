@@ -67,6 +67,17 @@ body{display:flex;flex-direction:column}
 }
 .char-warning.visible { display: block; }
 
+/* Printable hexagon sheet (Pro). Screen: hidden. Print: the only thing shown. */
+.hex-sheet { display: none; }
+@media print {
+  .hex-sheet.is-printing { display: flex; flex-wrap: wrap; gap: 6mm; padding: 8mm; }
+  .hex-sheet.is-printing ~ *, body.printing-sheet > :not(.hex-sheet) { display: none !important; }
+  .hex-tile { width: 52mm; height: 60mm; display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 10mm 8mm; font-family: var(--font-body); font-size: 13pt; line-height: 1.25; color: #000; word-break: break-word;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .hex-sheet__title { flex-basis: 100%; font-family: var(--font-display); font-size: 16pt; margin-bottom: 2mm; }
+}
+
 /* Preview */
 .preview-area {
   display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 14px;
@@ -217,6 +228,14 @@ body{display:flex;flex-direction:column}
           <button class="btn btn--secondary btn--sm" id="saveActivityBtn">Save</button>
           <button class="btn btn--secondary btn--sm" id="deleteActivityBtn">Delete</button>
         </div>
+        <div id="activity-gate" style="margin-top:10px" hidden></div>
+      </div>
+
+      <div class="card">
+        <div class="card__title"><span class="step-num">4</span>Paper Version <span class="tag tag--pro" data-pro-mark>Pro</span></div>
+        <p class="desc">A printable sheet of the same hexagons, for cutting out and arranging on a desk.</p>
+        <button class="btn btn--secondary btn--sm" id="printSheetBtn">Print hexagon sheet</button>
+        <div id="sheet-gate" style="margin-top:10px" hidden></div>
       </div>
 
       <div class="create-actions">
@@ -224,7 +243,8 @@ body{display:flex;flex-direction:column}
       </div>
     </div>
   </div>
-  <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a></div>
+  <div class="tool-footer">Teacher Toolshed &nbsp;·&nbsp; <a href="../privacy.html">Privacy</a> &nbsp;·&nbsp; <a href="../pricing.html">Pro</a></div>
+  <div id="hex-sheet" class="hex-sheet"></div>
 </div>
 
 <!-- ===== STUDENT VIEW ===== -->
@@ -297,6 +317,7 @@ body{display:flex;flex-direction:column}
 </div>
 
 <script src="../js/toolshed-store.js"></script>
+<script src="../js/toolshed-licence.js"></script>
 
 <!-- ===== LZ-STRING COMPRESSION ===== -->
 <script>
@@ -731,9 +752,11 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     const name = (prompt('Name this activity:', selected ? selected.name : '') || '').trim();
     if (!name) return;
 
-    const existing = (await ToolshedStore.listDocs('hex'))
-      .find(d => d.name.toLowerCase() === name.toLowerCase());
+    const all = await ToolshedStore.listDocs('hex');
+    const existing = all.find(d => d.name.toLowerCase() === name.toLowerCase());
     if (existing && !confirm(`Replace the saved activity "${existing.name}"?`)) return;
+    // Replacing is always fine; a new saved activity counts toward the Free limit.
+    if (!existing && !ToolshedLicence.guard('hexActivities', all.length, $('activity-gate'))) return;
 
     const saved = await ToolshedStore.saveDoc({
       id: existing ? existing.id : undefined,
@@ -771,11 +794,41 @@ var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
     await renderActivityList();
   }
 
+  // ====== PRINTABLE SHEET (Pro) ======
+  // Same hexagons as the digital canvas, tinted with the group colour, six
+  // to a page. Print is a browser action: nothing leaves the page.
+  function printSheet() {
+    const { terms } = getAllTerms();
+    if (!terms.length) { alert('Add some terms first.'); return; }
+    if (!ToolshedLicence.guard('hexSheets', 0, $('sheet-gate'),
+      'Printable hexagon sheets are part of Pro. The digital canvas and share link stay free.')) return;
+    const sheet = $('hex-sheet');
+    sheet.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'hex-sheet__title';
+    title.textContent = 'Hexagonal thinking — ' + terms.length + ' hexagons';
+    sheet.appendChild(title);
+    terms.forEach(t => {
+      const tile = document.createElement('div');
+      tile.className = 'hex-tile';
+      tile.style.background = t.color + '33';
+      tile.style.border = 'none';
+      tile.textContent = t.text;
+      sheet.appendChild(tile);
+    });
+    sheet.classList.add('is-printing');
+    document.body.classList.add('printing-sheet');
+    const done = () => { sheet.classList.remove('is-printing'); document.body.classList.remove('printing-sheet'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+  }
+
   // ====== EVENTS ======
   $('addGroupBtn').addEventListener('click',addGroup);
   $('createBtn').addEventListener('click',createActivity);
   $('activitySelect').addEventListener('change',loadActivity);
   $('saveActivityBtn').addEventListener('click',saveActivity);
+  $('printSheetBtn').addEventListener('click',printSheet);
   $('deleteActivityBtn').addEventListener('click',deleteActivity);
   ToolshedStore.ready().then(()=>renderActivityList());
   $('copyBtn').addEventListener('click',function(){
