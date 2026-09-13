@@ -11,7 +11,7 @@ The phases are kept as the record of *why* the site is shaped the way it is — 
 1. **Design system:** ~~the cream + gold system already shared by `seating-chart-maker.html` and `talk-tracker.html`… becomes the system for the tools~~ — **superseded, 2026-09-07.** The site now runs a single design system: the landing page's editorial print system (ink `#0D1116` / paper `#FFFFFF`, Playfair Display + Newsreader + Archivo, hairline-ruled grid, square — tokens in `css/theme.css`) extends to every tool page via `css/tools.css`. `css/toolshed.css` (cream, gold, Lora/DM Sans, radii, shadows) is being retired tool by tool per `TOOLS-REBUILD-PLAN.md`, which is the ground truth for tool-page style. Do not re-introduce the cream/gold system anywhere.
 2. **Architecture:** stays a static HTML site. No frameworks, no build step, no npm. Shared code goes in plain `.css` and `.js` files.
 3. **Persistence:** local-first. A shared roster/data store in the browser (IndexedDB) used by all tools, with JSON export/import as backup. **No accounts, no server, no analytics.** The store is written behind an async interface so a cloud backend could be swapped in later — but no cloud code is written now.
-4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls. *(Under review: `TIERS-PLAN.md` proposes a Free / Pro split that keeps every byte of student data in the browser. This decision stands until that plan's Phase T1 lands on `main`.)*
+4. **Monetization:** all Pro/pricing/upgrade UI is removed. Everything is free. No fake paywalls. *(Under review: `TIERS-PLAN.md` proposes a Free / Pro split that keeps every byte of student data in the browser. Its Phases T0–T2 are built on the `freemium_plan` branch — licence module, gates, Pro features, pricing/terms/IT pages — with no merchant of record configured, so the site is still free everywhere and the pricing page says so. This decision stands until that branch lands on `main` and a store exists.)*
 
 ### FERPA posture (informs several phases)
 
@@ -28,6 +28,9 @@ Because all data stays in the teacher's own browser and no data is ever transmit
 ```
 index.html                      landing page
 privacy.html                    privacy page
+pricing.html                    Free vs Pro, honest about not being on sale (freemium_plan branch)
+terms.html                      terms, with owner placeholders highlighted (freemium_plan branch)
+for-your-it-department.html     one-page technical/legal summary (freemium_plan branch)
 favicon.svg                     "tts" wordmark, navy ground
 CLAUDE.md                       the rules that hold across sessions — read first
 TOOLS-REBUILD-PLAN.md           tool-page style guide (ground truth for tools)
@@ -35,8 +38,9 @@ css/fonts.css + css/fonts/      self-hosted Playfair Display / Newsreader / Arch
 css/theme.css                   editorial tokens, reset, page frame — the base layer
 css/tools.css                   shared tool chrome layered on theme.css
 css/home.css                    landing sections: masthead, tool grid, shelf, note
-js/toolshed-store.js            IndexedDB rosters + per-tool docs, JSON export/import
+js/toolshed-store.js            IndexedDB rosters + per-tool docs + meta, JSON export/import
 js/toolshed-sample.js           the sample class (24 invented names, fixed id) for trying tools
+js/toolshed-licence.js          Free/Pro rules and the licence-key client (freemium_plan branch; MoR unconfigured)
 js/toolshed-rubric.js           shared rubric builder (presentation grader, talk tracker)
 js/toolshed-zip.js              zip writer (stack splitter, purewrite)
 js/toolshed-pdf-font.js         embedded PDF font helper
@@ -62,6 +66,18 @@ privacy page now says pages make no outside request at all, and the landing
 footer carries the line "No cookies. No accounts. Nothing you type leaves your
 browser." Both sentences must stay true: never add a font, script, style or
 request to another origin without changing them first.
+
+**Free / Pro on the `freemium_plan` branch (2026-09-13, `TIERS-PLAN.md` T1–T2).**
+Every gate is a `.notice--pro` built by `ToolshedLicence.gate()`: one line,
+one "See Pro" button, never a modal. Free limits hide, never delete: older
+tracker sessions stay in the store and in every backup. Student-facing pages
+(`purewrite.html`, `brain-breaks.html`, the hex canvas path) load or call no
+licence code. The licence record is the only thing in the store's `meta`
+table; a replace-import leaves it alone, a merge-import can bring one in.
+Until `ToolshedLicence.config.api` is set there is still no outside request
+of any kind, so the footer line and the privacy page stay true; the day it is
+set, `_headers` (connect-src), `privacy.html` and the footer line change
+together — see the comment in `_headers`.
 
 **One system, everywhere.** Landing page, tool pages and privacy page all run
 the editorial print system: `theme.css` for tokens and frame, `tools.css` for

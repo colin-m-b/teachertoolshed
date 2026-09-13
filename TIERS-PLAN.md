@@ -1,6 +1,6 @@
 # Teacher Toolshed — Free tier / Pro tier plan
 
-**Status: PROPOSAL. Phase T0 is BUILT on the `freemium_plan` branch (2026-09-12); T1 onward is not started.** This document supersedes
+**Status: PROPOSAL. Phases T0, T1 and T2 are BUILT on the `freemium_plan` branch (T0 2026-09-12, T1–T2 2026-09-13), with the merchant of record still unconfigured — nothing is on sale and the site stays free. T3 (sync) and T4 (teaching material) are not started.** This document supersedes
 decision 4 in `PLAN.md` ("Monetization: everything is free, no fake paywalls")
 *only once Phase T1 below lands on `main`*. Until then, decision 4 stands and the
 site stays free. Work in progress lives on the `freemium_plan` branch.
@@ -337,7 +337,7 @@ rather than duplicates; Seating Chart Maker builds its PDF from the vendored
 jsPDF. Not yet verified: behaviour on a real Netlify deploy (the `_headers`
 file only takes effect there) and Safari.
 
-### T1. Licence module, gates, pricing — ~5 days + MoR setup
+### T1. Licence module, gates, pricing — BUILT 2026-09-13, MoR pending
 
 - `js/toolshed-licence.js`: `status()` → `{tier, plan, validUntil, checkedAt,
   activations}`; `activate(key)`; `deactivate()`; `assertCan(feature,
@@ -365,7 +365,31 @@ Free teacher is stopped politely at the 3rd class and at each gate in D1a;
 `purewrite.html`, `brain-breaks.html` or `stack-splitter.*`; pricing, terms
 and privacy are reachable from the footer.
 
-### T2. The Pro features that do not exist yet — ~6 days
+**Built (2026-09-13).** `js/toolshed-licence.js` with the API above plus
+`can()`, `guard()`, `gate()`, `apply()`, `reload()` and `preview(days)`; the
+record lives in a new IndexedDB `meta` store (`DB_VERSION` 2) and rides in
+backups (`EXPORT_VERSION` 2). Activation UI and the 2-class limit on Class
+Lists (the sample class never counts). `pricing.html`, `terms.html`,
+`for-your-it-department.html`; privacy page and footers updated. Headless
+checks pass: the third class, second rubric, chart, activity and task are
+gated; CSV, PDF, history, report, constraints and export extras are gated;
+91 days unverified reverts to Free with every roster intact; a backup
+carries the licence and import restores it; `ToolshedLicence` is undefined
+on `purewrite.html`, `brain-breaks.html` and `stack-splitter.*` and never
+called from the hex canvas code.
+
+**Not done, because it needs the owner:** the merchant-of-record store
+(`config.api` and `config.checkoutUrl` are `null`, so `activate()` says "not
+on sale yet" and the buy button is inert); the connect-src line in
+`_headers`; the seller, country and contact placeholders on `terms.html`,
+`for-your-it-department.html` and `privacy.html`; the analytics choice
+(nothing added); the Google OAuth application; the `README.md` first line
+(still "free classroom tools", which is still true). Free keeps CSV import
+of class lists, which already existed on `main` — taking it away would be a
+regression, so D1a is amended: CSV import is Free. Stack Splitter is
+entirely Free for the same reason (its filename scheme shipped free).
+
+### T2. The Pro features that do not exist yet — BUILT 2026-09-13
 
 - Session history + per-student view in Talk Tracker and Presentation
   Tracker (query over what the store already holds).
@@ -377,6 +401,19 @@ and privacy are reachable from the footer.
 
 **Accept when:** each feature works on the sample class, is gated per D1a,
 and survives export → clear site data → import.
+
+**Built (2026-09-13).** Talk Tracker: past-session list limited on Free,
+term participation report (per class, one row per student, print + CSV),
+sessions now record `rosterId` and `date`. Presentation Tracker: past
+sessions list (new), student history across sessions with rubric totals
+recomputed from saved data, print + CSV. Seating: front-row and keep-apart
+constraints applied by Randomize (up to 400 reshuffles, then an honest
+toast), saved with the chart. Hex: printable hexagon sheet. PureWrite:
+saved-task library on the setup page, integrity cover page and branded
+header line in both PDF and docx; the student page reads them from the
+link and loads no licence code. The shared rubric library already existed
+(both trackers list every `rubric` doc), so nothing was added there.
+Everything is a doc in the existing store, so export/import covers it.
 
 ### T3. Sync to the teacher's own Drive / OneDrive — ~5 days + verification wait
 

@@ -23,12 +23,15 @@ A static site. No build step, no framework, no server, no npm. Plain HTML/CSS/JS
 ```
 index.html                landing page
 privacy.html              privacy page
+pricing.html              Free vs Pro (Pro is not on sale; the page says so)
+terms.html                terms of use, draft until a seller exists
+for-your-it-department.html  one page for a school's IT / data-protection lead
 CLAUDE.md                 the rules that hold across sessions — read this first
 css/fonts.css + css/fonts/ self-hosted Playfair Display / Newsreader / Archivo (no Google Fonts request)
 css/theme.css             editorial tokens, reset, page frame — the base layer
 css/tools.css             shared tool chrome, layered on theme.css
 css/home.css              landing page sections
-js/                       shared modules: store, sample class, rubric builder, zip writer, PDF font
+js/                       shared modules: store, sample class, licence, rubric builder, zip writer, PDF font
 teacher-tools/            one self-contained HTML page per tool (+ vendored libraries)
 _headers                  Netlify: cache lifetimes for fonts and vendored libraries, security headers, CSP
 ```
@@ -38,6 +41,10 @@ _headers                  Netlify: cache lifetimes for fonts and vendored librar
 ## Privacy
 
 Everything is stored in the teacher's own browser (IndexedDB, via `js/toolshed-store.js`), with JSON export/import as the backup route. No accounts, no server, no analytics, no cookies, and no outside request of any kind: fonts and libraries are served from the site itself, and no network call ever carries roster or student data. The hex tool's student share links encode the activity in the URL fragment, so even sharing stays serverless. See `privacy.html` and the FERPA note in `PLAN.md`.
+
+## Free and Pro
+
+Every tool is free to run any lesson. `TIERS-PLAN.md` describes a Pro tier for the records afterwards (history, reports, exports, libraries, later sync through the teacher's own cloud drive) that keeps student data in the browser exactly as now. The gates and Pro features are built on the `freemium_plan` branch; no payment provider is configured, so nothing is on sale and the only outside request the site will ever make — a licence key check — does not yet exist.
 
 ## Working on it
 
