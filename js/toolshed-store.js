@@ -16,9 +16,9 @@
   'use strict';
 
   var DB_NAME = 'teachertoolshed';
-  var DB_VERSION = 1;
+  var DB_VERSION = 2;   // 2: added the 'meta' store (licence record)
   var LEGACY_ROSTER_KEY = 'toolshed:rosters';
-  var EXPORT_VERSION = 1;
+  var EXPORT_VERSION = 2;   // 2: backups may carry a 'meta' array
 
   // ── helpers ──────────────────────────────────────────────
 
@@ -130,7 +130,7 @@
   /* Used when IndexedDB is unavailable — private-mode Safari, browsers with
      site data blocked, some embedded webviews. The tools still work for the
      length of the page visit; ToolshedStore.ephemeral tells them to warn. */
-  var memData = { rosters: {}, docs: {} };
+  var memData = { rosters: {}, docs: {}, meta: {} };
   var memBackend = {
     getAll: function (name) {
       return Promise.resolve(Object.keys(memData[name]).map(function (k) { return memData[name][k]; }));
@@ -141,7 +141,7 @@
       });
     },
     get: function (name, id) { return Promise.resolve(memData[name][id] || null); },
-    put: function (name, record) { memData[name][record.id] = record; return Promise.resolve(record); },
+    put: function (name, record) { memData[name][record.id || record.key] = record; return Promise.resolve(record); },
     del: function (name, id) { delete memData[name][id]; return Promise.resolve(); },
     clear: function (name) { memData[name] = {}; return Promise.resolve(); }
   };
@@ -165,6 +165,12 @@
         if (!db.objectStoreNames.contains('docs')) {
           var docs = db.createObjectStore('docs', { keyPath: 'id' });
           docs.createIndex('tool', 'tool', { unique: false });
+        }
+        /* Small keyed settings that are not rosters or tool documents —
+           today only the licence record. Kept in IndexedDB rather than
+           localStorage so a backup round-trips it. */
+        if (!db.objectStoreNames.contains('meta')) {
+          db.createObjectStore('meta', { keyPath: 'key' });
         }
       };
       request.onsuccess = function () { resolve(request.result); };
@@ -287,17 +293,35 @@
       return ready().then(function () { return backend().del('docs', id); });
     },
 
+    // ---- meta (small keyed settings; the licence record lives here) ----
+
+    getMeta: function (key) {
+      return ready().then(function () { return backend().get('meta', key); })
+        .then(function (m) { return m ? m.value : null; });
+    },
+
+    setMeta: function (key, value) {
+      return ready().then(function () {
+        return backend().put('meta', { key: String(key), value: value, updatedAt: now() });
+      });
+    },
+
+    deleteMeta: function (key) {
+      return ready().then(function () { return backend().del('meta', key); });
+    },
+
     // ---- backup ----
 
     exportAll: function () {
       return ready().then(function () {
-        return Promise.all([backend().getAll('rosters'), backend().getAll('docs')]);
+        return Promise.all([backend().getAll('rosters'), backend().getAll('docs'), backend().getAll('meta')]);
       }).then(function (results) {
         return JSON.stringify({
           version: EXPORT_VERSION,
           exportedAt: now(),
           rosters: results[0],
-          docs: results[1]
+          docs: results[1],
+          meta: results[2]
         }, null, 2);
       });
     },
@@ -314,13 +338,15 @@
         try { parsed = typeof json === 'string' ? JSON.parse(json) : json; }
         catch (e) { throw new Error('That file is not valid JSON.'); }
 
-        var rosters, docs;
+        var rosters, docs, meta;
         if (Array.isArray(parsed)) {           // legacy class-lists.json
           rosters = parsed;
           docs = [];
+          meta = [];
         } else if (parsed && typeof parsed === 'object') {
           rosters = Array.isArray(parsed.rosters) ? parsed.rosters : [];
           docs = Array.isArray(parsed.docs) ? parsed.docs : [];
+          meta = Array.isArray(parsed.meta) ? parsed.meta : [];
         } else {
           throw new Error('That file is not a Teacher Toolshed backup.');
         }
@@ -331,6 +357,8 @@
         var clear = merge
           ? Promise.resolve()
           : Promise.all([backend().clear('rosters'), backend().clear('docs')]);
+        // 'meta' is deliberately not cleared on replace: a licence is
+        // this device's, not the backup's.
 
         return clear.then(function () {
           return Promise.all([backend().getAll('rosters'), backend().getAll('docs')]);
@@ -357,6 +385,17 @@
             if (prev && (prev.updatedAt || '') >= (rec.updatedAt || '')) { counts.skipped++; return; }
             writes.push(backend().put('docs', rec));
             counts.docs++;
+          });
+
+          /* Meta rides along so a licence survives a move to a new device.
+             It never replaces a newer record on this one, and a merge
+             never removes it. */
+          meta.forEach(function (m) {
+            if (!m || typeof m.key !== 'string') return;
+            writes.push(backend().get('meta', m.key).then(function (prev) {
+              if (prev && (prev.updatedAt || '') >= (m.updatedAt || '')) return;
+              return backend().put('meta', { key: m.key, value: m.value, updatedAt: m.updatedAt || now() });
+            }));
           });
 
           return Promise.all(writes).then(function () { return counts; });

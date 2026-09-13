@@ -7,6 +7,12 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self' blob:; connect-src 'self' blob: data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'
 
+# When Pro goes on sale (js/toolshed-licence.js config.api set), the licence
+# check is the ONE outside request the site makes, and it carries only the
+# key. Add the merchant of record's API origin to connect-src, e.g.
+#   connect-src 'self' blob: data: https://api.lemonsqueezy.com;
+# and update privacy.html and the landing-page footer line the same day.
+
 # Long-lived, immutable assets. When a file here changes, change its name.
 /css/fonts/*
   Cache-Control: public, max-age=31536000, immutable

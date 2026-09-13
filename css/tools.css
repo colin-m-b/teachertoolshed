@@ -328,6 +328,24 @@ input[aria-invalid=true], textarea[aria-invalid=true] { border-color: var(--flag
 .notice--done { border-left-color: var(--ok); background: var(--ok-wash); }
 .notice--done .notice__title { color: var(--ok); }
 
+/* A Pro gate: one line of copy and one button, sitting where the feature
+   would be. Built by ToolshedLicence.gate(); never a modal, never on open. */
+.notice--pro {
+  border-left-color: var(--accent);
+  background: var(--accent-wash);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  flex-wrap: wrap;
+}
+.notice--pro .notice__text { flex: 1; min-width: 200px; }
+.notice--pro .btn { flex-shrink: 0; }
+[hidden] { display: none !important; }
+
+/* The small "Pro" mark on a control that opens a gated feature. */
+.tag--pro { color: var(--paper); background: var(--accent); border-color: var(--accent); }
+
 /* Small inline status tag (QR / MANUAL / 3 PAGES). */
 .tag {
   display: inline-block;

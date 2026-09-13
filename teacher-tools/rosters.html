@@ -28,6 +28,9 @@
   .backup{padding:14px 16px;border-top:var(--hairline)}
   .backup .row-2{gap:8px;margin-bottom:8px}
 
+  .plan-line{font-family:var(--font-display);font-weight:500;font-size:18px;color:var(--ink)}
+  .plan-meta{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);margin-top:3px;min-height:1em}
+
   /* EDITOR */
   .editor-wrap{flex:1;overflow-y:auto;padding:32px 28px 60px}
   .editor{max-width:620px;margin:0 auto}
@@ -100,10 +103,18 @@
       <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackup(event)"/>
       <p class="hint">Exports every class list and everything saved in the other tools.</p>
     </div>
+    <div class="backup" id="plan-box">
+      <div class="section-label" style="margin-bottom:8px">Plan</div>
+      <div class="plan-line" id="plan-line">Free</div>
+      <div class="plan-meta" id="plan-meta"></div>
+      <button class="btn btn--secondary btn--sm btn--full" id="plan-btn" onclick="openLicenceModal()" style="margin-top:8px">Enter licence key</button>
+      <p class="hint"><a href="../pricing.html">What Pro adds →</a></p>
+    </div>
   </aside>
 
   <main class="editor-wrap">
     <div class="blank-state" id="blank-state">
+      <div id="class-gate" style="text-align:left;margin-bottom:24px"></div>
       <h2>No class list selected</h2>
       <p>Class lists are shared across every tool — build one here and it shows up<br>in the Seating Chart Maker and Talk Tracker.</p>
       <div class="blank-actions">
@@ -159,10 +170,37 @@
   </main>
 </div>
 
-<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a></div>
+<div class="modal-bd" id="licence-modal">
+  <div class="modal" role="dialog" aria-labelledby="licence-title">
+    <div class="modal__title" id="licence-title">Licence key</div>
+    <div id="licence-free">
+      <div class="field">
+        <label>Key from your receipt</label>
+        <input type="text" class="mono" id="licence-key" placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" autocomplete="off" spellcheck="false"/>
+        <p class="hint">Only the key is sent — to the payment provider, to check it is real. No email, no class lists, nothing else. It is then kept in this browser and re-checked about once a month.</p>
+      </div>
+      <div id="licence-error" class="notice notice--error" style="display:none"></div>
+      <div class="modal__btns">
+        <button class="btn btn--secondary" onclick="closeLicenceModal()">Cancel</button>
+        <button class="btn btn--primary" id="licence-activate-btn" onclick="activateLicence()">Activate</button>
+      </div>
+    </div>
+    <div id="licence-pro" style="display:none">
+      <p class="t-body" id="licence-pro-line" style="margin-bottom:12px"></p>
+      <p class="hint" id="licence-pro-meta"></p>
+      <div class="modal__btns">
+        <button class="btn btn--ghost" onclick="deactivateLicence()">Remove from this device</button>
+        <button class="btn btn--primary" onclick="closeLicenceModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a></div>
 
 <script src="../js/toolshed-store.js"></script>
 <script src="../js/toolshed-sample.js"></script>
+<script src="../js/toolshed-licence.js"></script>
 <script src="rosters-import.js"></script>
 <script>
 let currentId = null;   // null = unsaved new list
@@ -196,7 +234,92 @@ let lastParse = null;
     runParse();
   });
   await refreshList();
+  await ToolshedLicence.ready();
+  renderPlan();
+  ToolshedLicence.onChange(() => { renderPlan(); refreshList(currentId); });
 })();
+
+// ── PLAN / LICENCE ──
+// Sample class never counts toward the Free limit — it is there to try things.
+function realRosterCount() {
+  return summaries.filter(r => !ToolshedSample.isSample(r.id)).length;
+}
+
+async function renderPlan() {
+  const st = await ToolshedLicence.status();
+  const line = document.getElementById('plan-line');
+  const meta = document.getElementById('plan-meta');
+  const btn = document.getElementById('plan-btn');
+  if (st.tier === 'pro') {
+    line.textContent = st.source === 'preview' ? 'Pro (preview)' : 'Pro';
+    meta.textContent = st.validUntil ? 'until ' + new Date(st.validUntil).toLocaleDateString() : 'active';
+    btn.textContent = 'Manage licence';
+  } else {
+    line.textContent = 'Free';
+    const n = realRosterCount();
+    meta.textContent = `${n} of ${ToolshedLicence.LIMITS.classes} class lists`;
+    btn.textContent = st.status === 'expired' ? 'Licence expired' : 'Enter licence key';
+  }
+  const gate = document.getElementById('class-gate');
+  gate.innerHTML = '';
+  if (!ToolshedLicence.can('classes', realRosterCount())) {
+    gate.appendChild(ToolshedLicence.gate('classes',
+      `Free keeps ${ToolshedLicence.LIMITS.classes} class lists on this device. Pro keeps every class you teach.`));
+  }
+}
+
+function openLicenceModal() {
+  ToolshedLicence.status().then(st => {
+    const pro = st.tier === 'pro';
+    document.getElementById('licence-free').style.display = pro ? 'none' : '';
+    document.getElementById('licence-pro').style.display = pro ? '' : 'none';
+    document.getElementById('licence-error').style.display = 'none';
+    if (pro) {
+      document.getElementById('licence-pro-line').textContent =
+        (st.source === 'preview' ? 'Pro preview on this browser' : 'Pro is active on this device') +
+        (st.validUntil ? ' until ' + new Date(st.validUntil).toLocaleDateString() + '.' : '.');
+      const bits = [];
+      if (st.keyHint) bits.push('Key ' + st.keyHint);
+      if (st.activations && st.activations.limit) bits.push(`${st.activations.used} of ${st.activations.limit} devices`);
+      if (st.checkedAt) bits.push('Last checked ' + new Date(st.checkedAt).toLocaleDateString());
+      document.getElementById('licence-pro-meta').textContent = bits.join(' · ');
+    } else if (!st.onSale) {
+      const err = document.getElementById('licence-error');
+      err.className = 'notice notice--caution';
+      err.textContent = 'Pro is not on sale yet. Everything here stays free until it is — there is nothing to enter.';
+      err.style.display = '';
+    }
+    document.getElementById('licence-modal').classList.add('is-open');
+    if (!pro) document.getElementById('licence-key').focus();
+  });
+}
+function closeLicenceModal() { document.getElementById('licence-modal').classList.remove('is-open'); }
+
+async function activateLicence() {
+  const key = document.getElementById('licence-key').value.trim();
+  const err = document.getElementById('licence-error');
+  const btn = document.getElementById('licence-activate-btn');
+  err.style.display = 'none';
+  btn.disabled = true;
+  try {
+    await ToolshedLicence.activate(key);
+    closeLicenceModal();
+    showToast('Pro is active on this device');
+  } catch (e) {
+    err.className = 'notice notice--error';
+    err.textContent = e.message || 'Could not activate that key';
+    err.style.display = '';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deactivateLicence() {
+  if (!confirm('Remove Pro from this device? Your class lists and saved work stay exactly as they are.')) return;
+  await ToolshedLicence.deactivate();
+  closeLicenceModal();
+  showToast('Back to Free on this device');
+}
 
 async function refreshList(selectId) {
   summaries = await ToolshedStore.listRosters();
@@ -232,6 +355,12 @@ function showEditor(show) {
 
 function newRoster() {
   if (!confirmDiscard()) return;
+  if (!ToolshedLicence.can('classes', realRosterCount())) {
+    showEditor(false);
+    renderPlan();
+    showToast(`Free keeps ${ToolshedLicence.LIMITS.classes} class lists — see Pro for more`, 3200);
+    return;
+  }
   currentId = null;
   manualRoles = null;
   manualHeader = null;
@@ -494,6 +623,7 @@ async function saveCurrent() {
   document.getElementById('editor-title').textContent = saved.name;
   document.getElementById('delete-btn').style.visibility = '';
   await refreshList(saved.id);
+  renderPlan();
   snapshot();
   showToast(`Saved ${saved.name} — ${saved.students.length} students`);
 }
@@ -507,6 +637,7 @@ async function deleteCurrent() {
   clearDirty();
   showEditor(false);
   await refreshList();
+  renderPlan();
   showToast(`Deleted ${name}`);
 }
 
@@ -565,6 +696,7 @@ function importBackup(e) {
     );
     try {
       const counts = await ToolshedStore.importAll(reader.result, { merge });
+      await ToolshedLicence.reload();
       currentId = null;
       clearDirty();
       showEditor(false);
