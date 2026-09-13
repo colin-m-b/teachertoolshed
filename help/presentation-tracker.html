@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Presentation Tracker — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Presentation Tracker: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Presentation Tracker</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/presentation-grader.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">No. 02</p>
+    <h1 class="page-title">Presentation Tracker</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>The Presentation Tracker is a scoring sheet for a day of presentations. You set up the running order — individuals, or groups you assign by tapping names — attach a rubric, and set a time limit per presentation. While each group presents you score the rubric once for the group, and override any criterion for one member whose contribution was clearly different, so a group grade stays honest without a second rubric. A timer counts the presentation; feedback boxes hold what you'd say aloud. At the end, the summary lays out every group and every student with totals, and prints. Rubrics are shared with the Talk Tracker, so one MYP rubric serves both.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>Name the session and load a class. Choose <strong>Individual</strong> or <strong>Groups</strong>; for groups, add the group names, then tap students to put them in the active group. Auto-split fills groups evenly if you don't care who is with whom.</li>
+      <li>Attach a rubric from the dropdown, or make one: a criterion name, an optional description, and a score range. Leave the range blank for a comment-only criterion.</li>
+      <li>Set a time limit and press <strong>Start Session</strong>. For each group: start the timer, score the criteria, add group feedback, and open a member's card to override a score or add individual feedback. <strong>Next</strong> moves along the running order.</li>
+      <li>Press <strong>End Session</strong> in the header. The summary shows every group, every member and every total; Print gives you a paper record. The session is saved under Past Sessions.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>A student isn&#x27;t in the running order.</dt><dd>In group mode a student who wasn't assigned to a group or marked “presenting solo” is left out; the tool warns before starting. Go back and assign them.</dd></div>
+      <div><dt>I scored the group, but one member did nothing.</dt><dd>Open that member's card under the group and set their score for the criterion. The override shows as such on the summary and in the CSV.</dd></div>
+      <div><dt>The timer didn&#x27;t start on its own.</dt><dd>It never does — presentations begin when you say so. Press Start when the group starts talking.</dd></div>
+      <div><dt>Where did last week&#x27;s session go?</dt><dd>Free shows the latest saved session; older ones are kept and come back with Pro, along with Student History: each student's totals across every session.</dd></div>
+      <div><dt>I want the same rubric in the Talk Tracker.</dt><dd>It is already there. Saved rubrics are one shared list.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html">Class Lists</a>
+    <a href="talk-tracker.html">Talk Tracker</a>
+    <a href="presentation-tracker.html" aria-current="page">Presentation Tracker</a>
+    <a href="seating-chart.html">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Presentation Tracker';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

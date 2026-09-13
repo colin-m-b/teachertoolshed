@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Talk Tracker — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Talk Tracker: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Talk Tracker</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/talk-tracker.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">No. 04</p>
+    <h1 class="page-title">Talk Tracker</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>The Talk Tracker turns a seminar, debate or discussion into a record. Set up the session, start it, and the class appears as a grid of names; tap a name each time that student contributes. A tag on the tap says what kind of contribution it was, a note button holds anything you noticed, a timer runs in the sidebar, and talking points can be ticked off as the class reaches them. End the session and you get a summary: who spoke how often against the target you set, which topics were covered, rubric scores if you attached one, and a print view. The point is to leave a discussion with evidence rather than an impression — and to notice, from the summary, who never spoke.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>Name the session, pick a saved class from the dropdown (or paste names), and set a target — three contributions per student is a sensible default.</li>
+      <li>Optionally add talking points: the questions or ideas you want the discussion to reach.</li>
+      <li>Press <strong>Start Session</strong>. Start the timer if you want a duration recorded. Tap a name when that student speaks; long-press or use the tag popup for the kind of contribution; the corner button on each card takes a private note.</li>
+      <li>Press <strong>End Session</strong>. The summary shows the bars, the talking points covered, and a notes box per student. Press <strong>Print</strong> for a paper copy. The session is saved automatically and reappears under Past Sessions next time.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>I refreshed mid-discussion and lost the tally.</dt><dd>You didn't — the live session is autosaved every few seconds. Reopen the tool and it picks up where you left off.</dd></div>
+      <div><dt>A student tapped twice by mistake.</dt><dd>Right-click (or long-press) a card to take one contribution off.</dd></div>
+      <div><dt>My names came in as one long line.</dt><dd>Paste one name per line, or comma-separated on a single line. A mix of both confuses it.</dd></div>
+      <div><dt>I can only see my most recent session.</dt><dd>Free shows the latest saved session; the earlier ones are kept, are in every backup, and reappear with Pro. Pro also adds the term report: one row per student across every session.</dd></div>
+      <div><dt>The rubric scores aren&#x27;t on the summary.</dt><dd>A rubric is scored after the session, on the summary screen, not live. If no rubric card appears, none was attached at setup.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html">Class Lists</a>
+    <a href="talk-tracker.html" aria-current="page">Talk Tracker</a>
+    <a href="presentation-tracker.html">Presentation Tracker</a>
+    <a href="seating-chart.html">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Talk Tracker';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

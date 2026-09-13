@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Hexagonal Activity Creator — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Hexagonal Activity Creator: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Hexagonal Activity Creator</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/hexthinking.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">No. 06</p>
+    <h1 class="page-title">Hexagonal Activity Creator</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>Hexagonal thinking gives students a set of terms on hexagons and asks them to arrange them so that touching edges mean something — then to justify the connections. The Creator makes the digital version: you type terms into colour groups (characters, themes, quotations, whatever fits), press Create, and get a link. Every student who opens the link gets their own canvas with the same hexagons, drags them into a shape, and exports the result as an image for their notebook or your feedback. The activity is encoded in the link itself, so there is no server, no account and nothing for a student to sign into; a class of thirty can work from one line in Google Classroom.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>Add a group, give it a name and a colour, and type terms one per line. Add another group for a second kind of term. The preview shows the hexagons as they will appear.</li>
+      <li>Press <strong>Create &amp; Get Link</strong>. Copy the link and post it where your class will find it.</li>
+      <li>Open the link yourself to see the student view: drag hexagons from the tray, snap them edge to edge, and press Export for a PNG.</li>
+      <li>To reuse the activity, press <strong>Save</strong> under Saved Activities. With Pro, <strong>Print hexagon sheet</strong> gives a paper version to cut out.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>The link is enormous.</dt><dd>That's the activity inside the link. It's meant to be pasted, not read aloud. A shortener works if you need one.</dd></div>
+      <div><dt>A student&#x27;s canvas reset.</dt><dd>Each browser keeps its own canvas for that link. A different device, a cleared browser or a private window starts fresh — export before leaving.</dd></div>
+      <div><dt>Students can see each other&#x27;s work.</dt><dd>They can't. Every canvas is independent and nothing is shared between them; if you want to compare, have them export and hand in the image.</dd></div>
+      <div><dt>There&#x27;s a limit on hexagons?</dt><dd>No. Add as many terms as the activity needs.</dd></div>
+      <div><dt>I can only save one activity.</dt><dd>Free keeps one saved activity on a device; the share link always works regardless. Pro keeps a library.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html">Class Lists</a>
+    <a href="talk-tracker.html">Talk Tracker</a>
+    <a href="presentation-tracker.html">Presentation Tracker</a>
+    <a href="seating-chart.html">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html" aria-current="page">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Hexagonal Activity Creator';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

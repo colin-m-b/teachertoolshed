@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Stack Splitter — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Stack Splitter: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Stack Splitter</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/stack-splitter.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">No. 03</p>
+    <h1 class="page-title">Stack Splitter</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>Stack Splitter is for handwritten work that has to be digitised. Before the task, print a coversheet per student: each carries a QR code naming the class, the assignment and the student. Students put the coversheet on top of their pages. Afterwards, feed the whole pile through the copier's scanner as one PDF, drop that PDF onto the tool, and it reads the QR codes, cuts the scan at each coversheet, and gives you one named PDF per student — as a zip, or straight into a folder you choose. The filename scheme is yours to set. Nothing is uploaded: the scan is read and split in your browser.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>On the <strong>Coversheets</strong> tab, pick the class and name the assignment. Press Generate and print the PDF, one sheet per student.</li>
+      <li>Hand them out with the task. Each student's sheet goes on top of their own pages.</li>
+      <li>Scan the collected pile to one PDF. Any copier does this; use the document feeder.</li>
+      <li>On the <strong>Split</strong> tab, drop the scan in. Review the groups it found — a page with an unreadable code is flagged and can be reassigned by hand — then press Export.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>A QR code wasn&#x27;t read.</dt><dd>Usually a light scan or a skewed page. The review screen shows the orphan pages; drag them to the right student. Scanning at 300 dpi and keeping coversheets flat fixes most of it.</dd></div>
+      <div><dt>The order came out wrong.</dt><dd>Pages belong to the coversheet above them. If a student put their coversheet on the bottom, their pages will be attributed to the student before. Reassign on the review screen.</dd></div>
+      <div><dt>It&#x27;s slow on a big pile.</dt><dd>Reading QR codes from images is real work for a browser; a hundred pages takes a minute or two. Leave the tab open.</dd></div>
+      <div><dt>Where do the files go?</dt><dd>Export gives a zip, or, in Chrome and Edge, writes straight into a folder you pick. Nothing is sent anywhere.</dd></div>
+      <div><dt>The filenames don&#x27;t suit how I file.</dt><dd>Open the filename scheme on the Split tab and choose which parts, in which order.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html">Class Lists</a>
+    <a href="talk-tracker.html">Talk Tracker</a>
+    <a href="presentation-tracker.html">Presentation Tracker</a>
+    <a href="seating-chart.html">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html" aria-current="page">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Stack Splitter';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

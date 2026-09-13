@@ -56,13 +56,22 @@ accounts, no server, no analytics. **Never add a network call that carries
 roster or student data.** The hex tool shares activities through the URL
 fragment specifically to stay serverless — keep it that way.
 
+The one designed exception is `js/toolshed-sync.js` (TIERS-PLAN T3): a Pro
+teacher can opt in to keeping a copy of their backup in *their own* Google
+Drive or OneDrive app folder, written from the browser with their own OAuth
+token. Off by default, never to a server we run, and the student-facing pages
+never load it. Do not widen it.
+
 ## Documents
 
 - `CLAUDE.md` (this file) — the rules that hold across sessions.
 - `PLAN.md` — what was built and why: decisions, phase history, current state.
 - `TOOLS-REBUILD-PLAN.md` — the tool-page style guide.
-- `TIERS-PLAN.md` — the Free / Pro tier proposal, on branch `freemium_plan`. Not built; `PLAN.md` decision 4
-  (everything free) still stands until its Phase T1 lands on `main`.
+- `TIERS-PLAN.md` — the Free / Pro tier plan. Phases T0–T3 are built on branch
+  `freemium_plan` (licence module, gates, Pro features, pricing/terms/IT pages,
+  help pages, sync module) but nothing is on sale: the merchant of record and
+  OAuth client ids are unset. `PLAN.md` decision 4 (everything free) still
+  stands until that branch lands on `main` and a store exists.
 - `ARCHITECTURE.md` — an aspirational SaaS future. **Not** being built.
 
 Keep `PLAN.md` and `README.md` true when you change the site. They have drifted

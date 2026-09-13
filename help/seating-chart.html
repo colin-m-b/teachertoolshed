@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Seating Chart Maker — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Seating Chart Maker: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Seating Chart Maker</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/seating-chart-maker.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">No. 05</p>
+    <h1 class="page-title">Seating Chart Maker</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>The Seating Chart Maker draws your room and puts students in it. Choose rows, islands or a circle, set the size, and Randomize fills the desks; drag a name onto another to swap, or use Swap Names for tap-tap swapping on a touch screen. Desk numbers count from the front so a substitute can read the chart without knowing the room. Print gives a clean sheet with the teacher's desk at the bottom. Charts can be saved and reloaded, and the work in progress is kept automatically between visits. With Pro, constraints — who sits in the front row, which pairs are never adjacent — are honoured by Randomize, and the chart downloads as a PDF.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>Pick a class from the dropdown, or paste names in. The count badge shows how many you have.</li>
+      <li>Choose an arrangement: Rows (set columns, let rows fit automatically), Islands (set the size of each), or Circle.</li>
+      <li>Press <strong>Randomize Seats</strong>. Press it again for a different draw. Drag a name onto another desk to swap the two.</li>
+      <li>Press <strong>Print</strong> in the header. To keep the chart, press <strong>Save chart</strong> and name it.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>Names are cut off on the desk.</dt><dd>Long names wrap to two lines; very long ones are trimmed with an ellipsis on screen but print in full on the sheet.</dd></div>
+      <div><dt>There are more students than desks.</dt><dd>With a fixed row count the tool adds rows at the back rather than dropping anyone, and says so.</dd></div>
+      <div><dt>I want two students apart every time.</dt><dd>That is a Pro constraint: type the pair in Keep apart, one per line, and Randomize keeps them from sitting side by side, in front of, or behind each other. Front row works the same way.</dd></div>
+      <div><dt>Download PDF is asking for Pro.</dt><dd>Print is always free: choose “Save as PDF” in the print dialog and you get the same sheet.</dd></div>
+      <div><dt>It&#x27;s cramped on my phone.</dt><dd>Dragging desks needs room. Use a laptop or a tablet in landscape.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html">Class Lists</a>
+    <a href="talk-tracker.html">Talk Tracker</a>
+    <a href="presentation-tracker.html">Presentation Tracker</a>
+    <a href="seating-chart.html" aria-current="page">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Seating Chart Maker';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help: Class Lists — Teacher Toolshed</title>
+<meta name="description" content="How to use the Teacher Toolshed Class Lists: what it is for, the first task step by step, and what to do when something goes wrong.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="../css/tools.css">
+<link rel="stylesheet" href="../css/help.css">
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="../">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Help · Class Lists</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="../teacher-tools/rosters.html">Open the tool</a>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">Start here</p>
+    <h1 class="page-title">Class Lists</h1>
+    <p class="page-sub">What it is for, the first task, and the things that go wrong. Every screenshot and video uses the sample class — no real student appears anywhere.</p>
+  </div>
+
+  <div class="help-body">
+    <h2 class="t-display">What it is for</h2>
+    <p>Class Lists is where every other tool gets its students. You build a class once — paste names from anywhere, or import the CSV your school system exports — and the Talk Tracker, Presentation Tracker, Seating Chart Maker and Stack Splitter all offer it from a dropdown. It is also the backup point: Export writes one JSON file holding every class list and everything saved in every tool, and Import reads it back on this or another device. Nothing here is sent anywhere. The lists live in this browser's own storage, which is why the backup matters. If you buy Pro, this is also where the licence key goes.</p>
+
+    <h2 class="t-display">Watch it</h2>
+    <div class="video" data-video-id="">
+      <span class="video__soon">Video coming — the steps below cover the same ground</span>
+    </div>
+    <p class="video-note">When a video exists it will load only when you press Play, from the cookie-free YouTube player.</p>
+
+    <h2 class="t-display">The first task</h2>
+    <ol>
+      <li>Open Class Lists and press <strong>Load a sample class</strong>. Twenty-four invented students appear, tagged “Sample”, so you can try every tool before typing a real name.</li>
+      <li>Press <strong>+ New</strong>, give the class a name, and paste the students in — one per line, or straight from a spreadsheet with ID numbers in a second column. The preview under the box shows how the paste was read; fix the column roles if it guessed wrong.</li>
+      <li>Press <strong>Save class list</strong>. Open the Talk Tracker in another tab: the class is already in its “Saved classes” dropdown.</li>
+      <li>Come back and press <strong>Export</strong> under Backup. Keep that file somewhere safe; it is the only copy that exists outside this browser.</li>
+    </ol>
+
+    <h2 class="t-display">Things that go wrong</h2>
+    <dl class="gone-wrong">
+      <div><dt>My class list vanished.</dt><dd>Browser storage was cleared — by you, by a district policy, or (on Safari) by a week of not visiting. Import your last backup. On Chrome, Edge and Firefox the page asks the browser to keep this site's storage; Safari ignores that, so export after any big change.</dd></div>
+      <div><dt>The paste put ID numbers where names should be.</dt><dd>Under the box, each column has a small dropdown: set the one holding numbers to ID and the other to Name. Tick “First row is a header” if your spreadsheet's column titles came along.</dd></div>
+      <div><dt>Two students have the same name.</dt><dd>Give them ID numbers. The tools key everything off an internal id, so two students with the same name and no ID become one student in the Talk Tracker's tallies.</dd></div>
+      <div><dt>The list is on my laptop but not my classroom PC.</dt><dd>Storage is per browser, per device. Export on one, Import on the other. Pro will add sync through your own Google Drive or OneDrive so this happens by itself.</dd></div>
+      <div><dt>I can&#x27;t add a third class.</dt><dd>Free keeps two class lists on a device (the sample never counts). Delete one, or see the Pro page. Nothing is deleted when a limit is hit.</dd></div>
+    </dl>
+  </div>
+
+  <nav class="help-nav" aria-label="Help pages">
+    <a href="class-lists.html" aria-current="page">Class Lists</a>
+    <a href="talk-tracker.html">Talk Tracker</a>
+    <a href="presentation-tracker.html">Presentation Tracker</a>
+    <a href="seating-chart.html">Seating Chart Maker</a>
+    <a href="hexagonal-activity.html">Hexagonal Activity Creator</a>
+    <a href="pure-writer.html">Pure Writer</a>
+    <a href="stack-splitter.html">Stack Splitter</a>
+  </nav>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="../privacy.html">Privacy</a> · <a href="../pricing.html">Pro</a> · <a href="../">Home</a></div>
+
+<script>
+  // Click-to-load video. Until the button is pressed the page makes no
+  // request to YouTube; when it is, the privacy-enhanced embed is used.
+  (function () {
+    var box = document.querySelector('.video');
+    var btn = box.querySelector('.video__play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var id = box.getAttribute('data-video-id');
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.title = 'Video: Class Lists';
+      box.innerHTML = '';
+      box.appendChild(f);
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+/* ══════════════════════════════════════════════════════════
+   Teacher Toolshed — help pages (help/*.html)
+   Layered on theme.css + tools.css. Layout for the four fixed
+   sections every help page has, plus the click-to-load video poster.
+   ══════════════════════════════════════════════════════════ */
+
+.help-body h2 { margin: 34px 0 10px; font-size: 24px; }
+.help-body h2:first-of-type { margin-top: 0; }
+.help-body p, .help-body li { font-family: var(--font-body); font-size: 16.5px; line-height: 1.55; color: var(--body-muted); }
+.help-body p { margin-bottom: 12px; max-width: 66ch; text-wrap: pretty; }
+.help-body strong { color: var(--ink); font-weight: 600; }
+.help-body ol { margin: 0 0 12px 22px; }
+.help-body ol li { margin-bottom: 8px; padding-left: 4px; }
+.help-body ul { margin: 0 0 12px 20px; }
+.help-body ul li { margin-bottom: 6px; }
+
+/* Things that go wrong: question in ink, answer muted. */
+.gone-wrong { border-top: var(--hairline); }
+.gone-wrong > div { padding: 14px 0; border-bottom: var(--hairline); }
+.gone-wrong dt { font-family: var(--font-body); font-size: 17px; color: var(--ink); margin-bottom: 4px; }
+.gone-wrong dd { font-family: var(--font-body); font-size: 16px; line-height: 1.5; color: var(--body-muted); max-width: 66ch; }
+
+/* Video poster. Nothing is loaded from YouTube until it is pressed. */
+.video { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: var(--ink); border: var(--hairline); margin: 4px 0 8px; display: flex; align-items: center; justify-content: center; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video__play { appearance: none; background: none; border: 1px solid var(--on-dark-muted); color: var(--paper); font-family: var(--font-meta); font-size: 11.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; padding: 12px 22px; cursor: pointer; }
+.video__play:hover { border-color: var(--accent-on-dark); color: var(--accent-on-dark); }
+.video__soon { color: var(--on-dark-muted); font-family: var(--font-meta); font-size: 11.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+.video-note { font-family: var(--font-body); font-size: 14px; color: var(--meta); margin-bottom: 20px; }
+
+.help-nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 40px; padding-top: 16px; border-top: var(--hairline); font-family: var(--font-meta); font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.help-nav a { color: var(--meta); }
+.help-nav a:hover, .help-nav a[aria-current] { color: var(--accent); }
