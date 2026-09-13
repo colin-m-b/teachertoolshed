@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro — Teacher Toolshed</title>
+<meta name="description" content="Teacher Toolshed is free to run any lesson. Pro keeps your records for the year: history, reports, exports and libraries. Student data still never leaves your browser.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/tools.css">
+<style>
+  .lede { font-family: var(--font-body); font-size: 19px; line-height: 1.5; color: var(--body-muted); max-width: 62ch; margin-bottom: 28px; text-wrap: pretty; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); border-top: var(--hairline); border-left: var(--hairline); margin-bottom: 36px; }
+  .plan { border-right: var(--hairline); border-bottom: var(--hairline); padding: 26px 26px 28px; display: flex; flex-direction: column; }
+  .plan--pro { background: var(--accent-wash); }
+  .plan__name { font-family: var(--font-meta); font-size: 10.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .plan__price { font-family: var(--font-display); font-weight: 500; font-size: 40px; line-height: 1; }
+  .plan__price small { font-family: var(--font-meta); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--meta); margin-left: 6px; }
+  .plan__alt { font-family: var(--font-body); font-size: 15px; color: var(--meta); margin-top: 8px; }
+  .plan__line { font-family: var(--font-body); font-size: 17px; line-height: 1.45; color: var(--ink); margin: 18px 0 14px; }
+  .plan ul { list-style: none; margin: 0 0 22px; }
+  .plan li { font-family: var(--font-body); font-size: 15.5px; line-height: 1.5; color: var(--body-muted); padding: 5px 0; border-bottom: 1px dashed var(--rule); }
+  .plan li:last-child { border-bottom: none; }
+  .plan .btn { margin-top: auto; }
+  .plan__note { font-family: var(--font-body); font-size: 14px; color: var(--meta); margin-top: 10px; line-height: 1.5; }
+
+  table.data th:nth-child(n+2), table.data td:nth-child(n+2) { width: 30%; vertical-align: top; }
+  table.data td { font-size: 15px; line-height: 1.45; }
+  table.data td strong { font-weight: 600; color: var(--ink); }
+  .tools-wrap { overflow-x: auto; margin-bottom: 36px; }
+
+  .qa h3 { font-family: var(--font-display); font-weight: 500; font-size: 20px; margin: 26px 0 6px; }
+  .qa p { font-family: var(--font-body); font-size: 16.5px; line-height: 1.55; color: var(--body-muted); max-width: 66ch; text-wrap: pretty; }
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0; border-top: var(--hairline); border-left: var(--hairline); margin: 8px 0 36px; }
+  .rules > div { border-right: var(--hairline); border-bottom: var(--hairline); padding: 18px 20px; }
+  .rules strong { display: block; font-family: var(--font-display); font-weight: 500; font-size: 19px; margin-bottom: 6px; }
+  .rules span { font-family: var(--font-body); font-size: 15px; line-height: 1.5; color: var(--body-muted); }
+</style>
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="./">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">Pro</span>
+  </div>
+  <div class="tool-header__right">
+    <a class="tool-header__action" href="teacher-tools/rosters.html">Enter a licence key</a>
+  </div>
+</header>
+
+<main class="work">
+  <div class="page-head">
+    <p class="page-eyebrow">Free and Pro</p>
+    <h1 class="page-title">Free runs the lesson. Pro keeps the records.</h1>
+    <p class="page-sub">Every tool is free to use with any class, today, on this device. Pro is for the moment after the lesson — when you want the history, the report, the export, or the same setup on another device.</p>
+  </div>
+
+  <div class="notice notice--caution" id="not-on-sale">
+    <span class="notice__title">Pro is not on sale yet.</span>
+    This page describes what it will be. Until a way to buy it exists, nothing here is charged for and the limits below are the only difference — and every limit only hides, never deletes.
+  </div>
+
+  <p class="lede">The one thing Pro does not change: <strong>student data never leaves your browser.</strong> Buying Pro tells the payment provider who you are. It tells nobody anything about your students. <a href="for-your-it-department.html">The page for your IT department</a> explains the mechanics.</p>
+
+  <div class="plans">
+    <div class="plan">
+      <div class="plan__name">Free</div>
+      <div class="plan__price">$0<small>forever</small></div>
+      <div class="plan__alt">No card, no sign-up, no account.</div>
+      <p class="plan__line">Run any lesson, with any tool, today, on this device.</p>
+      <ul>
+        <li>All seven tools, every live feature: timers, tapping, scoring, randomising, printing</li>
+        <li>2 class lists, plus the sample class</li>
+        <li>Your most recent saved session in each tracker</li>
+        <li>1 saved rubric, seating chart, hexagon activity and writing task</li>
+        <li>Everything students see, including PureWrite's PDF and Word export</li>
+        <li>JSON backup of all your data, always</li>
+      </ul>
+      <a class="btn btn--secondary" href="teacher-tools/rosters.html">Start with a class list</a>
+    </div>
+
+    <div class="plan plan--pro">
+      <div class="plan__name">Pro</div>
+      <div class="plan__price">$29<small>per year</small></div>
+      <div class="plan__alt">or $4 a month · one key works on 3 devices</div>
+      <p class="plan__line">Your records, kept for the year, on every device.</p>
+      <ul>
+        <li>Unlimited class lists, rubrics, charts, activities and tasks</li>
+        <li>Full session history in both trackers, and a per-student view across sessions</li>
+        <li>Term participation report from the Talk Tracker — print or CSV</li>
+        <li>CSV export of any session; PDF download of seating charts</li>
+        <li>Seating constraints: front row, keep apart, then randomise</li>
+        <li>PureWrite integrity cover page and branded header; printable hexagon sheets</li>
+        <li>Coming after launch: sync through your own Google Drive or OneDrive</li>
+      </ul>
+      <a class="btn btn--primary" id="buy-btn" href="#" aria-disabled="true">Not on sale yet</a>
+      <p class="plan__note" id="buy-note">Founding year: the first six months of sales are $19 for the first year, renewing at $29. 30-day no-questions refund.</p>
+    </div>
+
+    <div class="plan">
+      <div class="plan__name">Department and school</div>
+      <div class="plan__price">$149<small>per year</small></div>
+      <div class="plan__alt">up to 10 teachers · school-wide $399 a year</div>
+      <p class="plan__line">One key for the whole department, one invoice for the office.</p>
+      <ul>
+        <li>Everything in Pro, for every teacher on the key</li>
+        <li>Invoice or purchase order; W-9 or VAT number on request</li>
+        <li>Still no accounts and still no student data on any server</li>
+        <li>A one-page privacy write-up your data-protection lead can file</li>
+      </ul>
+      <a class="btn btn--secondary" href="for-your-it-department.html">Read the IT page first</a>
+    </div>
+  </div>
+
+  <div class="section-label">Tool by tool</div>
+  <div class="tools-wrap">
+    <table class="data">
+      <thead><tr><th>Tool</th><th>Free</th><th>Pro adds</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Class Lists</strong></td><td>2 classes, paste or CSV in, JSON export and import</td><td>Unlimited classes; later, sync through your own Drive or OneDrive</td></tr>
+        <tr><td><strong>Talk Tracker</strong></td><td>Setup, live tapping, talking points, target, summary, print, most recent saved session, 1 saved rubric</td><td>CSV export, full session history, term participation report per student, unlimited rubrics</td></tr>
+        <tr><td><strong>Presentation Tracker</strong></td><td>Session, timer, rubric scoring, per-student overrides, print, most recent saved session, 1 saved rubric</td><td>CSV export, session history, per-student view across sessions, unlimited rubrics shared with the Talk Tracker</td></tr>
+        <tr><td><strong>Seating Chart Maker</strong></td><td>All layouts, randomise, swap, print, 1 saved chart</td><td>Unlimited saved charts, PDF download, constraints (front row, keep apart)</td></tr>
+        <tr><td><strong>Hexagonal Activity</strong></td><td>Create, share link, students build and export their canvas, 1 saved activity</td><td>Saved activity library, printable hexagon sheets</td></tr>
+        <tr><td><strong>Pure Writer</strong></td><td>Everything students touch, including PDF and Word export, 1 saved task</td><td>Task library, integrity cover page, branded header line</td></tr>
+        <tr><td><strong>Stack Splitter</strong></td><td>The whole thing: coversheets, split, zip, filename scheme</td><td>Nothing yet</td></tr>
+        <tr><td><strong>Brain Breaks</strong></td><td>Everything</td><td>Nothing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label">Three rules that hold everywhere</div>
+  <div class="rules">
+    <div><strong>Nothing a student sees is gated.</strong><span>The hexagon canvas, the writing page and its exports, brain breaks. A student's browser has no licence and never will.</span></div>
+    <div><strong>Nothing that fires during a lesson is gated.</strong><span>Timers, tapping, scoring, randomising, printing. Free never gets in the way in front of a class.</span></div>
+    <div><strong>Your own data is never held hostage.</strong><span>Export is always free. A Free limit hides older records; it never deletes them, and they come back the moment Pro is active.</span></div>
+  </div>
+
+  <div class="qa">
+    <h3>Why is history a paid feature?</h3>
+    <p>Because a browser's local storage is reliable for a lesson and unreliable for a year. Safari clears it after a week idle, school laptops are reimaged over the summer, and a district policy push can wipe it without warning. A "term view" is only an honest promise once it comes with a way to keep the data alive across devices — which is what Pro is paying for, and what the Drive and OneDrive sync will finish.</p>
+
+    <h3>What does buying Pro tell you about me?</h3>
+    <p>The payment provider (the merchant of record) knows your name, email, card and billing country, and issues a licence key. When you paste the key into Class Lists, your browser sends <em>only the key</em> to the provider to check it is real, then keeps the answer locally and re-checks it about once a month. There is no account, no password and no login. We never see a roster.</p>
+
+    <h3>What if my school blocks the licence check?</h3>
+    <p>A key that has been checked once keeps working offline for 90 days. If it cannot be re-checked in that time it falls back to Free — and every record you made is still there, still exportable.</p>
+
+    <h3>Can I just edit the page and unlock it?</h3>
+    <p>Yes. The check runs in your browser and a determined person can flip it. We are not going to build a server to stop a teacher paying $3 a month from doing that, because the server would need accounts, and accounts are where student data starts leaking.</p>
+  </div>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="for-your-it-department.html">For your IT department</a> · <a href="./">Home</a></div>
+
+<script src="js/toolshed-store.js"></script>
+<script src="js/toolshed-licence.js"></script>
+<script>
+  // The buy button is live only once a merchant of record exists. Until then
+  // it says so, honestly, rather than leading to a dead checkout.
+  (function () {
+    var cfg = ToolshedLicence.config;
+    var btn = document.getElementById('buy-btn');
+    var note = document.getElementById('not-on-sale');
+    if (cfg.checkoutUrl) {
+      btn.href = cfg.checkoutUrl;
+      btn.textContent = 'Buy Pro — $29 a year';
+      btn.removeAttribute('aria-disabled');
+      note.hidden = true;
+    } else {
+      btn.addEventListener('click', function (e) { e.preventDefault(); });
+    }
+    ToolshedLicence.status().then(function (st) {
+      if (st.tier === 'pro') {
+        btn.textContent = st.source === 'preview' ? 'Pro preview is active on this browser' : 'Pro is active on this device';
+        btn.className = 'btn btn--secondary';
+        btn.href = 'teacher-tools/rosters.html';
+        btn.removeAttribute('aria-disabled');
+      }
+    });
+  })();
+</script>
+</body>
+</html>

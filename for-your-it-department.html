@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For your IT department — Teacher Toolshed</title>
+<meta name="description" content="The one-page technical and legal summary of Teacher Toolshed for a school's IT or data-protection lead: what is stored where, what is transmitted, FERPA and GDPR reasoning, sub-processors.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/tools.css">
+<style>
+  .it-body h2 { margin: 32px 0 10px; }
+  .it-body h2:first-of-type { margin-top: 0; }
+  .it-body p, .it-body li { font-family: var(--font-body); font-size: 16.5px; line-height: 1.55; color: var(--body-muted); }
+  .it-body p { margin-bottom: 12px; max-width: 70ch; text-wrap: pretty; }
+  .it-body ul { margin: 0 0 12px 20px; }
+  .it-body li { margin-bottom: 4px; }
+  .it-body strong { color: var(--ink); font-weight: 600; }
+  .it-body code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 14px; background: var(--field); padding: 1px 5px; }
+  .tbl-wrap { overflow-x: auto; margin: 6px 0 16px; }
+  table.data td { font-size: 15px; line-height: 1.45; vertical-align: top; }
+  .fill { background: var(--note-wash); color: var(--note); padding: 0 4px; }
+</style>
+</head>
+<body class="app">
+
+<header class="tool-header">
+  <div class="tool-header__left">
+    <a class="tool-header__brand" href="./">Teacher Toolshed</a>
+    <span class="tool-header__rule"></span>
+    <span class="tool-header__name">For your IT department</span>
+  </div>
+  <div class="tool-header__right">
+    <button class="tool-header__action" onclick="window.print()">Print</button>
+  </div>
+</header>
+
+<main class="work work--narrow">
+  <div class="page-head">
+    <p class="page-eyebrow">Technical and legal summary</p>
+    <h1 class="page-title">One page for the person who has to approve this</h1>
+    <p class="page-sub">Everything a vendor review normally asks, answered once. The short version: the site runs in the teacher's browser, keeps student data there, and has no server that could receive it.</p>
+  </div>
+
+  <div class="it-body">
+    <h2 class="t-display">What it is</h2>
+    <p>Teacher Toolshed is a static website: HTML, CSS and JavaScript files served from a content host. There is no application server, no database, no user accounts, no sign-in and no analytics. Every tool runs entirely in the browser that loaded it.</p>
+
+    <h2 class="t-display">Where data lives</h2>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Data</th><th>Lives where</th><th>Who can see it</th></tr></thead>
+        <tbody>
+          <tr><td>Class lists, student names and IDs, participation tallies, scores, notes, seating charts, students' writing</td><td>The teacher's browser (IndexedDB), on that device only</td><td>The teacher, on that device</td></tr>
+          <tr><td>Hexagonal-thinking activities shared with students</td><td>Encoded in the share link itself (URL fragment), never on a server</td><td>Whoever has the link</td></tr>
+          <tr><td>A student's writing in Pure Writer</td><td>The student's own browser (local storage) until exported to PDF or Word on that device</td><td>The student, then whoever they hand the file to</td></tr>
+          <tr><td>Pro purchase: teacher's name, email, card, billing country</td><td>The merchant of record (payment provider)</td><td>The provider, and the site's author as its customer</td></tr>
+          <tr><td>Pro licence key and its validity</td><td>The provider, and a copy in the teacher's browser</td><td>Same</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The first three rows never touch a server operated by the site. The last two contain no student data and exist only for teachers who buy Pro.</p>
+
+    <h2 class="t-display">What is transmitted</h2>
+    <ul>
+      <li><strong>Page loads only.</strong> Every page, font, stylesheet and code library is served from the site's own origin. A page makes no request to any other domain. This is enforced by a Content-Security-Policy header of <code>default-src 'self'</code>.</li>
+      <li><strong>The one exception, Pro only:</strong> when a teacher enters a licence key, the browser sends <em>that key</em> to the merchant of record's licence endpoint to confirm it is valid, and repeats the check roughly every 30 days. The request contains the key and a device label such as "Chrome on Windows". It never contains an email, a roster, or anything typed into a tool. A key that cannot be re-checked keeps working for 90 days, then the tools fall back to the free tier without touching any data.</li>
+      <li><strong>Nothing else.</strong> No telemetry, no crash reporting, no error beacons, no cookies.</li>
+    </ul>
+
+    <h2 class="t-display">Student-facing pages</h2>
+    <p>Two pages are opened by students: the hexagonal-thinking canvas and the Pure Writer writing page. They load no licence code, make no network request after loading, and set no cookies. A student never creates an account or enters anything beyond the name and ID their teacher asked for, which stays on their device.</p>
+
+    <h2 class="t-display">FERPA</h2>
+    <p>Because no education record is transmitted to, stored by, or accessible to the site's operator, the operator does not receive or maintain education records and is not a "school official" with access to them under 34 CFR 99.31. The data never leaves the teacher's device, so the teacher's own school policy on device storage is the governing one. State student-privacy laws that regulate operators who <em>collect</em> student data (for example NY Education Law 2-d, Illinois SOPPA, California SOPIPA) are, for the same reason, not triggered: there is no collection.</p>
+
+    <h2 class="t-display">GDPR and UK GDPR</h2>
+    <p>For the free tools the site processes no personal data at all: no request carries any, no cookie is set, and the fonts and libraries are self-hosted so no IP address reaches a third party. For Pro, the site's author is a data controller for one category of data subject, the purchasing teacher, on the basis of the contract of sale, with the merchant of record as the processor and seller. No child's data is processed in any role. Data-subject requests are handled by email: the author deletes the correspondence and asks the merchant of record to delete the customer record.</p>
+
+    <h2 class="t-display">Sub-processors</h2>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Who</th><th>What for</th><th>Sees student data?</th></tr></thead>
+        <tbody>
+          <tr><td>Static hosting provider (<span class="fill">[named before launch, e.g. Netlify]</span>)</td><td>Serves the files; standard server logs (IP, URL, user agent) for the request</td><td>No</td></tr>
+          <tr><td>Merchant of record (<span class="fill">[named before the first sale]</span>)</td><td>Payment, tax, receipts, licence keys — Pro only</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>That is the whole list. There is no email service, analytics vendor, CDN for scripts, or support desk platform.</p>
+
+    <h2 class="t-display">Planned: sync through the teacher's own cloud drive</h2>
+    <p>A later Pro feature will let a teacher keep a copy of their data in their <em>own</em> Google Drive or OneDrive. The design is fixed now so it can be reviewed early: the browser obtains an OAuth token directly from Google or Microsoft (scope <code>drive.appdata</code> / <code>Files.ReadWrite.AppFolder</code>, both app-private folders), writes the same JSON file the Export button already produces, and reads it back on another device. The token and the file never pass through a server operated by the site. School-managed Google or Microsoft accounts fall under the school's existing Workspace or 365 agreement; a school that blocks third-party OAuth simply keeps using JSON export.</p>
+
+    <h2 class="t-display">Things you can verify yourself</h2>
+    <ul>
+      <li>Open any tool with the browser's developer tools on the Network tab: after the page's own files, there are no requests.</li>
+      <li>Read the response headers: <code>Content-Security-Policy: default-src 'self' …</code>.</li>
+      <li>The full source is the site. There is no server-side code to ask about.</li>
+    </ul>
+
+    <h2 class="t-display">Contact</h2>
+    <p><span class="fill">[Author's name or entity, country, contact email — filled before launch.]</span> Vendor questionnaires are welcome; most rows are answered by this page.</p>
+    <p><em>Last changed: 2026-09-13 (draft).</em></p>
+  </div>
+</main>
+
+<div class="tool-footer">Teacher Toolshed · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="pricing.html">Pro</a> · <a href="./">Home</a></div>
+
+</body>
+</html>
