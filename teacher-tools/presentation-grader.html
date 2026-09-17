@@ -23,28 +23,41 @@
   .setup-body-inner{max-width:760px;margin:0 auto;width:100%}
   .card + .card{margin-top:16px}
 
-  /* group-def rows in setup — click to make the "active" tap-assign target */
-  .group-def-row{display:flex;align-items:center;gap:8px;min-height:44px;padding:7px 9px;border:1px solid var(--rule);cursor:pointer;transition:background .12s,border-color .12s}
-  .group-def-row:hover{border-color:var(--meta)}
-  .group-def-row.active{background:var(--accent-wash);border-color:var(--accent)}
-  .group-def-dot{width:8px;height:8px;flex-shrink:0;background:var(--rule)}
-  .group-def-row.active .group-def-dot{background:var(--accent)}
-  .group-def-row input{flex:1;background:none;border:none;padding:2px 4px;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
-  .group-def-row input:focus{outline:none;background:var(--paper)}
-  .group-def-count{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--meta);flex-shrink:0;white-space:nowrap}
-  .group-def-solo-label{flex:1;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
-  .group-def-remove{background:none;border:none;color:var(--meta);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
-  .group-def-remove:hover{color:var(--flag)}
+  /* ─── GROUP BUILDER (setup) ───
+     Name a group in the text field, then drag student chips into it.
+     Colours and controls come from tools.css; this is layout only. */
+  .group-add-row{display:flex;gap:8px;align-items:center}
+  .group-add-row input{flex:1;min-width:0}
+  .group-add-row .btn{flex-shrink:0}
 
-  /* per-student assignment rows — click to assign to the active group */
-  .assign-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:9px 6px;border-bottom:var(--hairline);cursor:pointer;transition:background .12s}
-  .assign-row:hover{background:var(--paper-hover)}
-  .assign-row:last-child{border-bottom:none}
-  .assign-name{font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
-  .assign-badge{display:inline-flex;align-items:center;font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border:1px dashed var(--rule);color:var(--meta);background:var(--paper);white-space:nowrap;flex-shrink:0}
-  .assign-badge.assigned{border:1px solid var(--accent);background:var(--accent-wash);color:var(--accent)}
-  .unassigned-note{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-top:8px;font-weight:600}
-  .unassigned-ok{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);margin-top:8px;font-weight:600}
+  .dnd-board{display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,1.5fr);gap:12px;align-items:stretch}
+  .dnd-groups{display:flex;flex-direction:column;gap:10px}
+
+  .drop-zone{border:var(--hairline);background:var(--paper);padding:10px 12px 12px;transition:border-color .12s,background .12s}
+  .drop-zone.is-target{border-style:dashed;border-color:var(--accent)}
+  .drop-zone:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .drop-zone.is-over{border-style:solid;border-color:var(--accent);background:var(--accent-wash)}
+  .drop-zone.is-solo{border-style:dashed}
+  .zone-head{display:flex;align-items:center;gap:8px;min-height:34px;margin-bottom:8px}
+  .zone-title{flex:1;min-width:0;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink)}
+  input.zone-title{width:auto;min-height:34px;padding:4px 7px;border:1px solid transparent;background:none;font-weight:600}
+  input.zone-title:hover{border-color:var(--rule);background:var(--field)}
+  .zone-count{font-family:var(--font-meta);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--meta);white-space:nowrap;flex-shrink:0}
+  .zone-remove{background:none;border:none;color:var(--meta);font-size:20px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color .15s}
+  .zone-remove:hover{color:var(--flag)}
+  .chip-well{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;min-height:44px}
+  .chip-well-empty{font-family:var(--font-meta);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--meta);align-self:center}
+
+  .chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:5px 11px;border:1px solid var(--rule);background:var(--paper);font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .12s,background .12s}
+  .chip:hover{border-color:var(--ink);background:var(--paper-hover)}
+  .chip.is-held{border-color:var(--accent);background:var(--accent-wash);color:var(--accent)}
+  .chip.is-dragging{opacity:.3}
+  .chip__grip{font-size:12px;line-height:1;color:var(--meta);flex-shrink:0}
+  .chip.is-held .chip__grip{color:var(--accent)}
+  .chip-ghost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-50%);border-color:var(--accent);background:var(--paper);cursor:grabbing}
+
+  .unassigned-note{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);margin-top:10px;font-weight:600}
+  .unassigned-ok{font-family:var(--font-meta);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);margin-top:10px;font-weight:600}
 
   /* ─── LIVE ─── */
   .live-layout{flex:1;display:flex;overflow:hidden}
@@ -131,6 +144,10 @@
     .order-sidebar { width: 100%; max-height: 32vh; border-right: none; border-bottom: var(--hairline); }
     .present-header { flex-wrap: wrap; }
   }
+
+  @media (max-width: 640px) {
+    .dnd-board { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body class="app">
@@ -200,14 +217,16 @@
 
       <div id="groups-builder" style="display:none">
         <div class="field">
-          <label>Groups</label>
-          <div id="group-defs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-          <button class="btn btn--add" id="add-group-btn">+ Add group</button>
-          <p class="hint" style="margin-top:8px">Click a group — or "Presenting solo" below, for students going on their own today — to make it the active target, then click students below to assign them.</p>
+          <label for="group-name-input">Name a group</label>
+          <div class="group-add-row">
+            <input type="text" id="group-name-input" placeholder="e.g. The Macbeth Crew" maxlength="60" autocomplete="off"/>
+            <button class="btn btn--secondary" id="add-group-btn">+ Add group</button>
+          </div>
+          <p class="hint">Type a name and press Enter. Add one box per group, then drag students into them.</p>
         </div>
         <div class="row-2">
           <div class="field">
-            <label>Auto-split unassigned into groups of</label>
+            <label>Auto-split the ungrouped into groups of</label>
             <select id="auto-split-size">
               <option value="2">2</option>
               <option value="3" selected>3</option>
@@ -222,9 +241,18 @@
           </div>
         </div>
         <div class="field">
-          <label>Assign students to groups</label>
-          <p class="hint" style="margin-bottom:8px">Click a student to assign them to the active group. Click an assigned student again to remove them.</p>
-          <div id="assign-list"></div>
+          <label>Drag students into groups</label>
+          <p class="hint" style="margin-bottom:10px">Drag a name into a group box — or drag it back to Ungrouped to take them out. On a touchscreen you can also tap a name to pick it up, then tap the group you want it in.</p>
+          <div class="dnd-board">
+            <div class="drop-zone" id="pool-zone" data-zone="">
+              <div class="zone-head">
+                <span class="zone-title">Ungrouped</span>
+                <span class="zone-count" id="pool-count"></span>
+              </div>
+              <div class="chip-well" id="pool-well"></div>
+            </div>
+            <div class="dnd-groups" id="group-boxes"></div>
+          </div>
           <p id="unassigned-status"></p>
         </div>
       </div>
@@ -352,7 +380,7 @@ let session = null;
 let mode = 'individual';           // setup-time only
 let groupDefs = [];                 // [{id, name}] — setup-time group shells
 let assignment = {};                // {studentName: groupDefId|null} — setup-time
-let activeGroupId = null;           // setup-time: which group tapping a student assigns them to
+let heldName = null;                // setup-time: a student picked up by tap/keyboard, awaiting a zone
 const SOLO_ID = '__solo__';         // reserved pseudo-group id: "presenting on their own today"
 let groupDefCounter = 0;
 
@@ -407,7 +435,7 @@ function nextId(prefix) { return prefix + (++localId); }
   const resumed = await restoreLiveSession();
   if (!resumed) {
     setMode('individual');
-    refreshAssignList();
+    refreshGrouping();
   }
 })();
 
@@ -430,11 +458,15 @@ async function loadRoster() {
   $('students-input').value = r.students.map(s => s.name).join('\n');
   const classField = $('class-name');
   if (!classField.value.trim()) classField.value = r.name;
-  refreshAssignList();
+  refreshGrouping();
   showToast(`Loaded ${r.name} — ${r.students.length} students`);
 }
 
 // ── GROUPING (setup screen) ──
+// Teachers name a group in the text field above, then drag student chips into
+// it. Dragging runs on Pointer Events so mouse, pen and touch all work; a plain
+// tap (no movement) picks a student up instead, and the next tap on a zone
+// drops them there — the same path keyboard users take with Enter/Space.
 function setMode(m) {
   mode = m;
   $('mode-tab-individual').setAttribute('aria-selected', m === 'individual' ? 'true' : 'false');
@@ -442,102 +474,49 @@ function setMode(m) {
   $('groups-builder').style.display = m === 'groups' ? '' : 'none';
   $('mode-hint').textContent = m === 'individual'
     ? 'Each student presents on their own — one entry per student, no grouping needed.'
-    : 'Create groups below and assign students. Anyone you leave unassigned won\'t be in today\'s session.';
+    : 'Name your groups, then drag students into them. Anyone left ungrouped won\'t be in today\'s session.';
+  // Leaving Groups mode drops anything picked up, so a stale highlight can't
+  // greet the teacher when they come back.
+  if (m !== 'groups' && heldName) { heldName = null; renderGrouping(); }
 }
 
 function addGroupDef(name) {
-  const g = { id: nextId('g'), name: name || `Group ${groupDefs.length + 1}` };
+  const clean = (name || '').trim();
+  const g = { id: nextId('g'), name: clean || `Group ${groupDefs.length + 1}` };
   groupDefs.push(g);
-  activeGroupId = g.id; // a freshly added group becomes the tap-assign target
-  renderGroupDefs();
-  renderAssignList();
+  renderGrouping();
+  return g;
+}
+function addGroupFromField() {
+  const field = $('group-name-input');
+  const g = addGroupDef(field.value);
+  field.value = '';
+  field.focus();
+  showToast(`Added "${g.name}" — now drag students into it`);
 }
 function removeGroupDef(id) {
-  groupDefs = groupDefs.filter(g => g.id !== id);
-  Object.keys(assignment).forEach(name => { if (assignment[name] === id) assignment[name] = null; });
-  if (activeGroupId === id) activeGroupId = groupDefs.length ? groupDefs[groupDefs.length - 1].id : null;
-  renderGroupDefs();
-  renderAssignList();
+  const g = groupDefs.find(x => x.id === id);
+  const freed = currentStudentNames().filter(n => assignment[n] === id);
+  groupDefs = groupDefs.filter(x => x.id !== id);
+  freed.forEach(n => { assignment[n] = null; });
+  renderGrouping();
+  if (freed.length) showToast(`Removed "${g ? g.name : 'group'}" — ${freed.length} student${freed.length === 1 ? '' : 's'} moved back to Ungrouped`);
 }
-function setActiveGroup(id) {
-  activeGroupId = id;
-  renderGroupDefs();
-  renderAssignList();
+
+// Move one student into a zone: a group id, SOLO_ID, or null for Ungrouped.
+function assignTo(name, zoneId) {
+  if (!(name in assignment)) return;
+  assignment[name] = zoneId || null;
+  heldName = null;
+  renderGrouping({ focusName: name });
 }
-function renderGroupDefs() {
-  const wrap = $('group-defs-list');
-  wrap.innerHTML = '';
-  const names = currentStudentNames();
-  groupDefs.forEach(g => {
-    const count = names.filter(n => assignment[n] === g.id).length;
-
-    const row = document.createElement('div');
-    row.className = 'group-def-row' + (g.id === activeGroupId ? ' active' : '');
-    row.dataset.groupId = g.id;
-    row.title = 'Click to make this the active group';
-    row.addEventListener('click', () => setActiveGroup(g.id));
-
-    const dot = document.createElement('span');
-    dot.className = 'group-def-dot';
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = g.name;
-    // Renaming happens in-place — activating a group via mousedown (not the row's
-    // click handler, which re-renders and would kill focus mid-click) keeps this
-    // input alive so typing actually sticks.
-    input.addEventListener('mousedown', () => {
-      if (g.id !== activeGroupId) {
-        activeGroupId = g.id;
-        document.querySelectorAll('.group-def-row').forEach(r => r.classList.toggle('active', r.dataset.groupId === activeGroupId));
-      }
-    });
-    input.addEventListener('click', e => e.stopPropagation());
-    input.addEventListener('input', () => { g.name = input.value; renderAssignList(); });
-
-    const countEl = document.createElement('span');
-    countEl.className = 'group-def-count';
-    countEl.textContent = count ? `${count} assigned` : '';
-
-    const rm = document.createElement('button');
-    rm.className = 'group-def-remove';
-    rm.textContent = '×';
-    rm.title = 'Remove group';
-    rm.addEventListener('click', (e) => { e.stopPropagation(); removeGroupDef(g.id); });
-
-    row.appendChild(dot);
-    row.appendChild(input);
-    row.appendChild(countEl);
-    row.appendChild(rm);
-    wrap.appendChild(row);
-  });
-
-  // Permanent target for students presenting on their own today — always
-  // available, not removable, not editable. Anyone tapped in here becomes
-  // their own one-person group when the session starts.
-  const soloCount = names.filter(n => assignment[n] === SOLO_ID).length;
-  const soloRow = document.createElement('div');
-  soloRow.className = 'group-def-row' + (activeGroupId === SOLO_ID ? ' active' : '');
-  soloRow.dataset.groupId = SOLO_ID;
-  soloRow.title = 'Click to make this the active target for students presenting solo';
-  soloRow.addEventListener('click', () => setActiveGroup(SOLO_ID));
-
-  const soloDot = document.createElement('span');
-  soloDot.className = 'group-def-dot';
-
-  const soloLabel = document.createElement('span');
-  soloLabel.className = 'group-def-solo-label';
-  soloLabel.textContent = 'Presenting solo';
-
-  const soloCountEl = document.createElement('span');
-  soloCountEl.className = 'group-def-count';
-  soloCountEl.textContent = soloCount ? `${soloCount} assigned` : '';
-
-  soloRow.appendChild(soloDot);
-  soloRow.appendChild(soloLabel);
-  soloRow.appendChild(soloCountEl);
-  wrap.appendChild(soloRow);
+function holdStudent(name) {
+  heldName = heldName === name ? null : name;
+  renderGrouping({ focusName: name });
+  if (heldName) showToast(`${name} picked up — now tap the group to put them in`);
 }
+
+function countLabel(n) { return `${n} student${n === 1 ? '' : 's'}`; }
 
 function currentStudentNames() {
   const seen = new Set();
@@ -549,83 +528,282 @@ function currentStudentNames() {
   });
 }
 
-function refreshAssignList() {
+// Re-sync assignment with whatever is in the class-list box, then redraw.
+function refreshGrouping() {
   const names = currentStudentNames();
   const namesSet = new Set(names.map(n => n.toLowerCase()));
   Object.keys(assignment).forEach(n => { if (!namesSet.has(n.toLowerCase())) delete assignment[n]; });
   names.forEach(n => { if (!(n in assignment)) assignment[n] = null; });
-  renderGroupDefs();
-  renderAssignList();
+  if (heldName && !(heldName in assignment)) heldName = null;
+  renderGrouping();
 }
 
-function renderAssignList() {
-  const wrap = $('assign-list');
-  wrap.innerHTML = '';
+function makeChip(name) {
+  // A real <button>: native keyboard semantics, and the theme's focus ring.
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip' + (name === heldName ? ' is-held' : '');
+  chip.dataset.name = name;
+  chip.setAttribute('aria-pressed', name === heldName ? 'true' : 'false');
+  chip.setAttribute('aria-label', `${name} — drag into a group, or press Enter to pick up`);
+  chip.title = 'Drag into a group — or tap to pick up, then tap a group';
+
+  const grip = document.createElement('span');
+  grip.className = 'chip__grip';
+  grip.textContent = '⠿';
+  grip.setAttribute('aria-hidden', 'true');
+
+  const label = document.createElement('span');
+  label.textContent = name;
+
+  chip.appendChild(grip);
+  chip.appendChild(label);
+  chip.addEventListener('pointerdown', onChipPointerDown);
+  chip.addEventListener('click', e => e.stopPropagation()); // a tap on a chip is never a drop on its zone
+  chip.addEventListener('keydown', e => {
+    // Stop the key here: a chip sits inside a zone, and the zone's own key
+    // handler would otherwise catch the same press and drop the student
+    // straight back where they already were.
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); holdStudent(name); }
+    else if (e.key === 'Escape' && heldName) { e.stopPropagation(); heldName = null; renderGrouping({ focusName: name }); }
+  });
+  return chip;
+}
+
+function fillWell(well, names, emptyText) {
+  well.innerHTML = '';
+  if (!names.length) {
+    const hint = document.createElement('span');
+    hint.className = 'chip-well-empty';
+    hint.textContent = emptyText;
+    well.appendChild(hint);
+    return;
+  }
+  names.forEach(n => well.appendChild(makeChip(n)));
+}
+
+// Zones accept a drop from the pointer drag and from a tap/keypress while a
+// student is held. Listeners go on once — group boxes are rebuilt every render,
+// but the Ungrouped pool is a fixed element, so it is wired at startup and only
+// re-marked afterwards.
+function wireZone(zone) {
+  zone.addEventListener('click', () => { if (heldName) assignTo(heldName, zone.dataset.zone); });
+  zone.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && heldName) { e.preventDefault(); assignTo(heldName, zone.dataset.zone); }
+  });
+}
+// Only a held student makes a zone a keyboard stop, so that state is per-render.
+function markZone(zone) {
+  if (heldName) {
+    zone.tabIndex = 0;
+    zone.setAttribute('aria-label', `Put ${heldName} in ${zone.dataset.zoneLabel || 'this group'}`);
+  } else {
+    zone.removeAttribute('tabindex');
+    zone.removeAttribute('aria-label');
+  }
+  zone.classList.toggle('is-target', !!heldName);
+}
+
+function renderGrouping(opts) {
   const names = currentStudentNames();
-  let notPresenting = 0;
 
-  names.forEach(name => {
-    const row = document.createElement('div');
-    row.className = 'assign-row';
-    row.title = activeGroupId ? 'Click to assign to the active group' : 'Click a group above first';
+  // Ungrouped pool.
+  const pool = names.filter(n => !assignment[n]);
+  const poolZone = $('pool-zone');
+  poolZone.dataset.zoneLabel = 'Ungrouped';
+  $('pool-count').textContent = pool.length ? countLabel(pool.length) : '';
+  fillWell($('pool-well'), pool, 'Everyone is grouped');
+  markZone(poolZone);
 
-    const label = document.createElement('span');
-    label.className = 'assign-name';
-    label.textContent = name;
+  // One box per group, plus the permanent "Presenting solo" box.
+  const boxes = $('group-boxes');
+  boxes.innerHTML = '';
+  groupDefs.forEach(g => {
+    const members = names.filter(n => assignment[n] === g.id);
 
-    const groupId = assignment[name];
-    let badgeText = '— Not presenting —';
-    let isAssigned = false;
-    if (groupId === SOLO_ID) {
-      badgeText = 'Solo';
-      isAssigned = true;
-    } else {
-      const group = groupDefs.find(g => g.id === groupId);
-      if (group) { badgeText = group.name; isAssigned = true; }
-    }
-    if (!isAssigned) notPresenting++;
-    const badge = document.createElement('span');
-    badge.className = 'assign-badge' + (isAssigned ? ' assigned' : '');
-    badge.textContent = badgeText;
+    const box = document.createElement('div');
+    box.className = 'drop-zone';
+    box.dataset.zone = g.id;
+    box.dataset.zoneLabel = g.name;
 
-    row.addEventListener('click', () => {
-      if (!activeGroupId) { showToast('Click a group above first, then tap students to assign them'); return; }
-      assignment[name] = assignment[name] === activeGroupId ? null : activeGroupId;
-      renderGroupDefs();
-      renderAssignList();
+    const head = document.createElement('div');
+    head.className = 'zone-head';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'zone-title';
+    input.value = g.name;
+    input.maxLength = 60;
+    input.setAttribute('aria-label', 'Group name');
+    input.title = 'Rename this group';
+    // Renaming only writes to state — no re-render, so focus survives typing.
+    input.addEventListener('click', e => e.stopPropagation());
+    input.addEventListener('input', () => { g.name = input.value; box.dataset.zoneLabel = input.value; });
+    input.addEventListener('blur', () => {
+      if (!input.value.trim()) { g.name = `Group ${groupDefs.indexOf(g) + 1}`; renderGrouping(); }
     });
 
-    row.appendChild(label);
-    row.appendChild(badge);
-    wrap.appendChild(row);
+    const count = document.createElement('span');
+    count.className = 'zone-count';
+    count.textContent = members.length ? countLabel(members.length) : '';
+
+    const rm = document.createElement('button');
+    rm.className = 'zone-remove';
+    rm.type = 'button';
+    rm.textContent = '×';
+    rm.title = 'Remove this group';
+    rm.setAttribute('aria-label', `Remove group ${g.name}`);
+    rm.addEventListener('click', e => { e.stopPropagation(); removeGroupDef(g.id); });
+
+    head.appendChild(input);
+    head.appendChild(count);
+    head.appendChild(rm);
+
+    const well = document.createElement('div');
+    well.className = 'chip-well';
+    fillWell(well, members, 'Drag students here');
+
+    box.appendChild(head);
+    box.appendChild(well);
+    wireZone(box);
+    markZone(box);
+    boxes.appendChild(box);
   });
 
+  // Anyone dropped in here becomes their own one-person group when the session
+  // starts — for students going on their own on a group-work day.
+  const soloMembers = names.filter(n => assignment[n] === SOLO_ID);
+  const soloBox = document.createElement('div');
+  soloBox.className = 'drop-zone is-solo';
+  soloBox.dataset.zone = SOLO_ID;
+  soloBox.dataset.zoneLabel = 'Presenting solo';
+
+  const soloHead = document.createElement('div');
+  soloHead.className = 'zone-head';
+  const soloTitle = document.createElement('span');
+  soloTitle.className = 'zone-title';
+  soloTitle.textContent = 'Presenting solo';
+  const soloCount = document.createElement('span');
+  soloCount.className = 'zone-count';
+  soloCount.textContent = soloMembers.length ? countLabel(soloMembers.length) : '';
+  soloHead.appendChild(soloTitle);
+  soloHead.appendChild(soloCount);
+
+  const soloWell = document.createElement('div');
+  soloWell.className = 'chip-well';
+  fillWell(soloWell, soloMembers, 'Drag anyone presenting on their own here');
+
+  soloBox.appendChild(soloHead);
+  soloBox.appendChild(soloWell);
+  wireZone(soloBox);
+  markZone(soloBox);
+  boxes.appendChild(soloBox);
+
+  // Running count under the board.
   const status = $('unassigned-status');
   if (!names.length) {
     status.textContent = '';
-  } else if (notPresenting > 0) {
+    status.className = '';
+  } else if (pool.length) {
     status.className = 'unassigned-note';
-    status.textContent = `${names.length - notPresenting} presenting today · ${notPresenting} not assigned — they won't present unless you assign them`;
+    status.textContent = `${names.length - pool.length} presenting today · ${pool.length} ungrouped — they won't present unless you drag them into a group`;
   } else {
     status.className = 'unassigned-ok';
     status.textContent = 'Everyone is presenting today';
   }
+
+  if (opts && opts.focusName) {
+    const chip = Array.from(document.querySelectorAll('#groups-builder .chip'))
+      .find(c => c.dataset.name === opts.focusName);
+    if (chip) chip.focus();
+  }
+}
+
+// ── DRAG (pointer events: mouse, pen and touch) ──
+const DRAG_THRESHOLD = 6;   // px of travel before a press counts as a drag, not a tap
+
+function zoneFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  return el ? el.closest('#groups-builder .drop-zone') : null;
+}
+
+function onChipPointerDown(e) {
+  if (e.button != null && e.button !== 0) return;
+  const chip = e.currentTarget;
+  const name = chip.dataset.name;
+  const startX = e.clientX, startY = e.clientY;
+  let dragging = false, ghost = null, hoverZone = null;
+
+  try { chip.setPointerCapture(e.pointerId); } catch (_) {}
+
+  function beginDrag() {
+    dragging = true;
+    heldName = null;
+    document.querySelectorAll('#groups-builder .chip.is-held').forEach(c => {
+      c.classList.remove('is-held');
+      c.setAttribute('aria-pressed', 'false');
+    });
+    chip.classList.add('is-dragging');
+    ghost = chip.cloneNode(true);
+    ghost.classList.add('chip-ghost');
+    ghost.classList.remove('is-dragging', 'is-held');
+    ghost.removeAttribute('tabindex');
+    document.body.appendChild(ghost);
+    document.querySelectorAll('#groups-builder .drop-zone').forEach(z => z.classList.add('is-target'));
+  }
+  function hover(x, y) {
+    const zone = zoneFromPoint(x, y);
+    if (zone === hoverZone) return;
+    if (hoverZone) hoverZone.classList.remove('is-over');
+    hoverZone = zone;
+    if (hoverZone) hoverZone.classList.add('is-over');
+  }
+  function onMove(ev) {
+    if (!dragging) {
+      if (Math.abs(ev.clientX - startX) < DRAG_THRESHOLD && Math.abs(ev.clientY - startY) < DRAG_THRESHOLD) return;
+      beginDrag();
+    }
+    ghost.style.left = ev.clientX + 'px';
+    ghost.style.top = ev.clientY + 'px';
+    hover(ev.clientX, ev.clientY);
+  }
+  function onUp(ev) {
+    const wasDragging = dragging;
+    const zone = wasDragging ? zoneFromPoint(ev.clientX, ev.clientY) : null;
+    cleanup();
+    if (!wasDragging) { holdStudent(name); return; }
+    if (zone) assignTo(name, zone.dataset.zone);
+    else renderGrouping();   // dropped outside the board — leave them where they were
+  }
+  function onCancel() { cleanup(); renderGrouping(); }
+  function cleanup() {
+    chip.removeEventListener('pointermove', onMove);
+    chip.removeEventListener('pointerup', onUp);
+    chip.removeEventListener('pointercancel', onCancel);
+    try { chip.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (ghost) ghost.remove();
+    if (hoverZone) hoverZone.classList.remove('is-over');
+    chip.classList.remove('is-dragging');
+    document.querySelectorAll('#groups-builder .drop-zone').forEach(z => z.classList.remove('is-target'));
+  }
+
+  chip.addEventListener('pointermove', onMove);
+  chip.addEventListener('pointerup', onUp);
+  chip.addEventListener('pointercancel', onCancel);
 }
 
 function autoSplit() {
   const size = parseInt($('auto-split-size').value, 10);
   const names = currentStudentNames();
   const unassigned = names.filter(n => !assignment[n]);
-  if (!unassigned.length) { showToast('Everyone is already assigned'); return; }
-
+  if (!unassigned.length) { showToast('Everyone is already grouped'); return; }
   for (let i = 0; i < unassigned.length; i += size) {
     const chunk = unassigned.slice(i, i + size);
     const g = { id: nextId('g'), name: `Group ${groupDefs.length + 1}` };
     groupDefs.push(g);
     chunk.forEach(n => { assignment[n] = g.id; });
   }
-  renderGroupDefs();
-  renderAssignList();
+  renderGrouping();
   showToast(`Split ${unassigned.length} students into ${Math.ceil(unassigned.length / size)} group${unassigned.length > size ? 's' : ''}`);
 }
 
@@ -693,7 +871,7 @@ async function startSession() {
     groups = [...realGroups, ...soloGroups];
 
     if (!groups.length) {
-      showToast('Assign at least one student to a group or Presenting Solo, or switch to Individual');
+      showToast('Drag at least one student into a group or Presenting Solo, or switch to Individual');
       return;
     }
 
@@ -1259,7 +1437,10 @@ function exportCsv() {
   });
 
   const csv = rows.map(r => r.map(csvField).join(',')).join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  // Lead with a UTF-8 byte-order mark. Without it Excel opens the file in the
+  // system's legacy codepage and names with diacritics arrive mangled —
+  // "Cường" as "CÆ°á»ng". The BOM is what tells Excel the bytes are UTF-8.
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const safeName = (s.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const a = document.createElement('a');
@@ -1279,7 +1460,7 @@ function newSession() {
   savedSessionId = null;
   groupDefs = [];
   assignment = {};
-  activeGroupId = null;
+  heldName = null;
   $('session-name').value = '';
   $('class-name').value = '';
   $('students-input').value = '';
@@ -1287,8 +1468,8 @@ function newSession() {
   selectedRubric = null;
   $('rubric-editor-wrap').style.display = 'none';
   setMode('individual');
-  renderGroupDefs();
-  refreshAssignList();
+  $('group-name-input').value = '';
+  refreshGrouping();
   switchScreen('setup');
 }
 
@@ -1296,17 +1477,22 @@ function newSession() {
 function wireSetupEvents() {
   $('mode-tab-individual').addEventListener('click', () => setMode('individual'));
   $('mode-tab-groups').addEventListener('click', () => setMode('groups'));
-  $('add-group-btn').addEventListener('click', () => addGroupDef());
+  wireZone($('pool-zone'));
+  $('add-group-btn').addEventListener('click', addGroupFromField);
+  $('group-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addGroupFromField(); }
+  });
   $('auto-split-btn').addEventListener('click', autoSplit);
-  $('students-input').addEventListener('input', refreshAssignList);
+  $('students-input').addEventListener('input', refreshGrouping);
   $('rubric-select').addEventListener('change', onRubricSelectChange);
   $('save-rubric-btn').addEventListener('click', saveRubricFromEditor);
   $('start-session-btn').addEventListener('click', startSession);
   $('clear-setup-btn').addEventListener('click', () => {
     if (!confirm('Clear the session setup?')) return;
     $('session-name').value = ''; $('class-name').value = ''; $('students-input').value = '';
-    groupDefs = []; assignment = {}; activeGroupId = null;
-    renderGroupDefs(); refreshAssignList();
+    groupDefs = []; assignment = {}; heldName = null;
+    $('group-name-input').value = '';
+    refreshGrouping();
   });
 }
 function wireLiveEvents() {

@@ -70,6 +70,30 @@ branches are gone:
   four-rectangle mark it replaced was an orphan, since the migration dropped
   that icon from every page header in favour of the wordmark.
 
+### Fixes since, 2026-09-17
+
+Presentation Tracker, two teacher-reported problems:
+
+- **CSV exports were unreadable in Excel for any name with diacritics** —
+  "Cường" arrived as "CÆ°á»ng". The file was always valid UTF-8; without a
+  byte-order mark Excel opens a `.csv` in the system's legacy codepage and
+  mis-decodes it. Both CSV exports (Presentation Tracker and Talk Tracker, the
+  same one-line bug) now lead with `\uFEFF`. Nothing about the field escaping
+  or the column set changed.
+- **Grouping was rebuilt around drag-and-drop.** The old setup screen had two
+  overloaded clicks — click a group row to make it the "active" target, then
+  click student rows to assign them into it, while the same group row also held
+  the rename input. Teachers could not tell what a click would do. Now: a text
+  field names a group ("Name a group", Enter adds it), each group is a box, and
+  students are dragged from an "Ungrouped" column into the box they belong in.
+  Dragging runs on Pointer Events, so mouse, pen and touch share one code path;
+  a press that never moves is a pick-up instead, and the next tap on a box drops
+  the student there — which is also the keyboard route (Enter on a name, Enter
+  on a box, Escape to cancel). Auto-split, the "Presenting solo" target, and the
+  ungrouped-students warning all survive unchanged. Setup state still isn't
+  persisted, so the data model (`groupDefs` + `assignment`) was free to change;
+  only `activeGroupId` was dropped.
+
 ---
 
 ## The design system (single source of truth)
@@ -262,7 +286,7 @@ Standard shared header (`Teacher Toolshed / Presentation Grader`), `css/toolshed
 **Setup screen**
 - Session name (required, red asterisk), Class name (optional) — match Talk Tracker's conventions exactly.
 - Students: from a saved roster (Phase 3) or pasted list.
-- **Grouping:** a mode toggle — *Individual* (auto: one group per student) or *Groups*. In Groups mode: create named groups and assign students to them (drag or click-to-assign), plus an "auto-split into N groups" helper. Unassigned students are shown clearly so nobody gets missed.
+- **Grouping:** a mode toggle — *Individual* (auto: one group per student) or *Groups*. In Groups mode: create named groups and assign students to them, plus an "auto-split into N groups" helper. Unassigned students are shown clearly so nobody gets missed. *(The assignment interaction was rebuilt on 2026-09-17 — see "Fixes since" below. It is drag-and-drop now, not click-to-assign.)*
 - **Rubric:** pick a saved rubric, or build a new one inline via `ToolshedRubric`, or start from none.
 - Time limit per presentation (optional).
 

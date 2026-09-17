@@ -919,7 +919,9 @@ function exportCsv() {
     rows.push(row);
   });
   const csv = rows.map(row => row.map(csvField).join(',')).join('\r\n');
-  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  // UTF-8 BOM — without it Excel reads the file in the system codepage and
+  // names with diacritics arrive mangled ("Cường" as "CÆ°á»ng").
+  const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const safeName = (s.name || 'session').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const a = document.createElement('a');
