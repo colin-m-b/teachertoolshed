@@ -140,7 +140,7 @@ async function needJsQR() {
           than split, in case a name ever contains the separator.
 
    Kept short on purpose: 45-odd characters is a 33x33 QR, which at
-   1.5in printed is ~1.15mm per module — about nine pixels per module
+   2.5in printed is ~1.9mm per module — about fifteen pixels per module
    in a 200 DPI scan, with room to spare for a staple hole.
    ══════════════════════════════════════════════════════════ */
 const PAYLOAD_V = 'TT1';
@@ -263,7 +263,7 @@ function drawQr(doc, text, x, y, size) {
    embedded font — jsPDF's built-in faces are WinAnsi and would turn
    "Nguyễn" into "NguyÅn". Fixed ASCII chrome can stay on helvetica. */
 function coverPage(doc, payload, opts) {
-  const PW = 8.5, QR = 1.6, x = (PW - QR) / 2;
+  const PW = 8.5, QR = 2.5, x = (PW - QR) / 2;
   const FONT = ToolshedPdfFont.register(doc);
   drawQr(doc, payload, x, 1.5, QR);
 
@@ -338,8 +338,7 @@ async function generateCovers() {
       });
     }
 
-    const safe = s => String(s).replace(/[^A-Za-z0-9]+/g, '');
-    doc.save(safe(roster.name) + '_' + safe(assignment) + '_coversheets.pdf');
+    doc.save(safePart(roster.name) + '_' + safePart(assignment) + '_coversheets.pdf');
     showToast('Coversheets ready — ' + n + ' students' + (spares ? ' + ' + spares + ' spare' : ''), 3600);
   } catch (e) {
     showToast('Could not build the PDF: ' + e.message, 5000);
@@ -427,7 +426,7 @@ async function handleFile(file) {
       setProgress(0.02 + 0.93 * (i - 1) / total, 'Reading page ' + i + ' of ' + total + '…');
 
       const page = await doc.getPage(i);
-      // Scale 2 puts a 1.5in QR at roughly 9px per module — plenty for
+      // Scale 2 puts a 2.5in QR at roughly 11px per module — plenty for
       // detection, and cheap enough to repeat a few hundred times.
       const vp = page.getViewport({ scale: 2 });
       canvas.width = vp.width; canvas.height = vp.height;
@@ -686,9 +685,19 @@ function applyInspector() {
 }
 
 /* ── export ─────────────────────────────────────────────── */
+/* Letters that are their own character rather than a base letter plus
+   a mark, so NFD leaves them whole and the ASCII filter would drop them:
+   Đinh would become "inh". */
+const FN_LETTERS = {
+  'Đ': 'D', 'đ': 'd', 'Ð': 'D', 'ð': 'd', 'Ł': 'L', 'ł': 'l',
+  'Ø': 'O', 'ø': 'o', 'Ħ': 'H', 'ħ': 'h', 'ı': 'i', 'Þ': 'Th', 'þ': 'th',
+  'Æ': 'AE', 'æ': 'ae', 'Œ': 'OE', 'œ': 'oe', 'ß': 'ss'
+};
+
 function safePart(s) {
   return String(s || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // Nguyễn → Nguyen, not Nguyn
+    .replace(/[ĐđÐðŁłØøĦħıÞþÆæŒœß]/g, ch => FN_LETTERS[ch])
     .replace(/[^A-Za-z0-9]+/g, '');
 }
 

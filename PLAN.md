@@ -94,6 +94,18 @@ Presentation Tracker, two teacher-reported problems:
   persisted, so the data model (`groupDefs` + `assignment`) was free to change;
   only `activeGroupId` was dropped.
 
+Stack Splitter, two teacher-reported problems (2026-10-15):
+
+- **The coversheet QR is larger** — 2.5in instead of 1.6in, so it is easier
+  to see and reads more reliably from a scan. The name, ID and class lines
+  hang off the QR's size and move down with it.
+- **Names with Đ lost the letter in split filenames** — "Đinh" became "inh".
+  Đ is its own letter, not D plus a mark, so stripping accents after NFD left
+  it whole and the ASCII filter then dropped it. `safePart` now maps Đ/đ (and
+  the other letters that behave the same way: Ł, Ø, Æ, Œ, ß, Þ, ð, Ħ, ı) to
+  ASCII first. The coversheet PDF's own filename now goes through `safePart`
+  too; it had been dropping every accented letter.
+
 ---
 
 ## The design system (single source of truth)
