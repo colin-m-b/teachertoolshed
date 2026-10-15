@@ -140,7 +140,7 @@ async function needJsQR() {
           than split, in case a name ever contains the separator.
 
    Kept short on purpose: 45-odd characters is a 33x33 QR, which at
-   1.5in printed is ~1.15mm per module — about nine pixels per module
+   2.5in printed is ~1.9mm per module — about fifteen pixels per module
    in a 200 DPI scan, with room to spare for a staple hole.
    ══════════════════════════════════════════════════════════ */
 const PAYLOAD_V = 'TT1';
@@ -263,44 +263,49 @@ function drawQr(doc, text, x, y, size) {
    embedded font — jsPDF's built-in faces are WinAnsi and would turn
    "Nguyễn" into "NguyÅn". Fixed ASCII chrome can stay on helvetica. */
 function coverPage(doc, payload, opts) {
-  const PW = 8.5, QR = 1.6, x = (PW - QR) / 2;
+  const PW = 8.5, QR = 2.5, x = (PW - QR) / 2, QB = 1.5 + QR;   // QB: QR's bottom edge
   const FONT = ToolshedPdfFont.register(doc);
   drawQr(doc, payload, x, 1.5, QR);
 
+  // Sized to be read at arm's length off a pile, and shrunk only when a
+  // long name or title would otherwise run off the page.
+  const fit = (text, size, y) => {
+    doc.setFontSize(size);
+    while (size > 10 && doc.getTextWidth(text) > PW - 1.5) doc.setFontSize(--size);
+    doc.text(text, PW / 2, y, { align: 'center' });
+  };
+
   doc.setFont(FONT, 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(120, 120, 120);
-  doc.text(opts.assignment, PW / 2, 1.15, { align: 'center' });
+  doc.setTextColor(70, 70, 70);
+  fit(opts.assignment, 18, 1.15);
 
   doc.setTextColor(20, 20, 20);
-  doc.setFontSize(opts.name ? 20 : 14);
-  doc.text(opts.name || 'Name:', PW / 2, QR + 2.05, { align: 'center' });
-  if (!opts.name) {
-    // A spare is useless without somewhere to actually write.
-    doc.setDrawColor(150, 150, 150);
-    doc.setLineWidth(0.012);
-    doc.line(2.2, QR + 2.5, 6.3, QR + 2.5);
-    doc.line(2.2, QR + 3.0, 6.3, QR + 3.0);
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text('name', 2.2, QR + 2.68);
-    doc.text('ID number', 2.2, QR + 3.18);
-  }
+  fit(opts.name || 'Name:', opts.name ? 34 : 24, QB + 0.7);
 
   if (opts.sid) {
-    doc.setFontSize(13);
-    doc.setTextColor(90, 90, 90);
-    doc.text('ID ' + opts.sid, PW / 2, QR + 2.42, { align: 'center' });
+    doc.setTextColor(50, 50, 50);
+    fit('ID ' + opts.sid, 22, QB + 1.15);
   }
 
-  doc.setFontSize(10);
-  doc.setTextColor(120, 120, 120);
-  doc.text(opts.className, PW / 2, QR + 2.88, { align: 'center' });
+  doc.setTextColor(70, 70, 70);
+  fit(opts.className, 18, QB + 1.6);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(150, 150, 150);
-  doc.text('Put this sheet on top of your work.', PW / 2, 10.4, { align: 'center' });
+  if (!opts.name) {
+    // A spare is useless without somewhere to actually write.
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.015);
+    doc.line(1.75, QB + 2.4, 6.75, QB + 2.4);
+    doc.line(1.75, QB + 3.2, 6.75, QB + 3.2);
+    doc.setFontSize(13);
+    doc.setTextColor(100, 100, 100);
+    doc.text('name', 1.75, QB + 2.65);
+    doc.text('ID number', 1.75, QB + 3.45);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(50, 50, 50);
+  doc.text('Put this sheet on top of your work.', PW / 2, 10.2, { align: 'center' });
 }
 
 async function generateCovers() {
@@ -338,8 +343,7 @@ async function generateCovers() {
       });
     }
 
-    const safe = s => String(s).replace(/[^A-Za-z0-9]+/g, '');
-    doc.save(safe(roster.name) + '_' + safe(assignment) + '_coversheets.pdf');
+    doc.save(safePart(roster.name) + '_' + safePart(assignment) + '_coversheets.pdf');
     showToast('Coversheets ready — ' + n + ' students' + (spares ? ' + ' + spares + ' spare' : ''), 3600);
   } catch (e) {
     showToast('Could not build the PDF: ' + e.message, 5000);
@@ -427,7 +431,7 @@ async function handleFile(file) {
       setProgress(0.02 + 0.93 * (i - 1) / total, 'Reading page ' + i + ' of ' + total + '…');
 
       const page = await doc.getPage(i);
-      // Scale 2 puts a 1.5in QR at roughly 9px per module — plenty for
+      // Scale 2 puts a 2.5in QR at roughly 11px per module — plenty for
       // detection, and cheap enough to repeat a few hundred times.
       const vp = page.getViewport({ scale: 2 });
       canvas.width = vp.width; canvas.height = vp.height;
@@ -686,9 +690,19 @@ function applyInspector() {
 }
 
 /* ── export ─────────────────────────────────────────────── */
+/* Letters that are their own character rather than a base letter plus
+   a mark, so NFD leaves them whole and the ASCII filter would drop them:
+   Đinh would become "inh". */
+const FN_LETTERS = {
+  'Đ': 'D', 'đ': 'd', 'Ð': 'D', 'ð': 'd', 'Ł': 'L', 'ł': 'l',
+  'Ø': 'O', 'ø': 'o', 'Ħ': 'H', 'ħ': 'h', 'ı': 'i', 'Þ': 'Th', 'þ': 'th',
+  'Æ': 'AE', 'æ': 'ae', 'Œ': 'OE', 'œ': 'oe', 'ß': 'ss'
+};
+
 function safePart(s) {
   return String(s || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // Nguyễn → Nguyen, not Nguyn
+    .replace(/[ĐđÐðŁłØøĦħıÞþÆæŒœß]/g, ch => FN_LETTERS[ch])
     .replace(/[^A-Za-z0-9]+/g, '');
 }
 
